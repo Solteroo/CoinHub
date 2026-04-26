@@ -1,17 +1,25 @@
 import { Router, type IRouter, type Request } from "express";
 import { db, usersTable, transactionsTable, type UserRow } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { PlaySlotBody, PlaySpinBody, PlayLuckyBoxBody } from "@workspace/api-zod";
+import {
+  PlaySlotBody,
+  PlaySpinBody,
+  PlayLuckyBoxBody,
+  PlayCrashBody,
+} from "@workspace/api-zod";
 import { requireUser } from "../lib/auth";
 import {
   spinSlot,
   spinWheel,
   generateLuckyBoxes,
   rarityFromMultiplier,
+  rollCrash,
   WHEEL_SEGMENTS,
   SLOT_SYMBOLS,
   MIN_BET,
   MAX_BET,
+  CRASH_MIN_TARGET,
+  CRASH_MAX_TARGET,
 } from "../lib/games";
 
 const router: IRouter = Router();
@@ -150,6 +158,48 @@ router.post("/games/spin", requireUser, async (req, res) => {
         ? `${segment.label} · ${round.netChange >= 0 ? "+" : ""}${round.netChange}`
         : "Şowsuz",
     rarity: segment.rarity,
+  });
+});
+
+router.post("/games/crash", requireUser, async (req, res) => {
+  const user = (req as Request & { user: UserRow }).user;
+  const parsed = PlayCrashBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Goýum nädogry" });
+    return;
+  }
+  const bet = parsed.data.bet;
+  const autoCashout = Math.round(parsed.data.autoCashout * 100) / 100;
+  if (autoCashout < CRASH_MIN_TARGET || autoCashout > CRASH_MAX_TARGET) {
+    res.status(400).json({
+      error: `Maksat ${CRASH_MIN_TARGET}× – ${CRASH_MAX_TARGET}× aralygynda bolmaly`,
+    });
+    return;
+  }
+  const v = validateBet(user, bet);
+  if (!v.ok) {
+    res.status(v.status).json({ error: v.error });
+    return;
+  }
+
+  const crashAt = rollCrash();
+  const cashedOut = crashAt >= autoCashout;
+  const multiplier = cashedOut ? autoCashout : 0;
+  const round = await applyRound(user.id, bet, multiplier, "Bagt uçuşy", "game_crash");
+
+  res.json({
+    bet,
+    autoCashout,
+    crashAt,
+    multiplier,
+    won: round.won,
+    netChange: round.netChange,
+    newBalance: round.newBalance,
+    label: cashedOut
+      ? `${autoCashout.toFixed(2)}× · +${round.netChange}`
+      : `Partlady · ${crashAt.toFixed(2)}×`,
+    rarity: rarityFromMultiplier(multiplier),
+    cashedOut,
   });
 });
 

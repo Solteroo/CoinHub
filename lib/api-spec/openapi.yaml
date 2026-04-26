@@ -18,6 +18,8 @@ tags:
     description: Casino-style game endpoints
   - name: leaderboard
     description: Leaderboard
+  - name: chat
+    description: Global chat
   - name: admin
     description: Admin operations
 paths:
@@ -230,6 +232,98 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LuckyBoxResult"
+
+  /games/crash:
+    post:
+      operationId: playCrash
+      tags: [games]
+      summary: Bagt uçuşy (rocket multiplier with auto-cashout)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+                autoCashout:
+                  type: number
+                  minimum: 1.01
+                  maximum: 50
+              required: [bet, autoCashout]
+      responses:
+        "200":
+          description: Crash result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrashResult"
+
+  /chat/messages:
+    get:
+      operationId: getChatMessages
+      tags: [chat]
+      summary: Soňky çat habarlary
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    post:
+      operationId: postChatMessage
+      tags: [chat]
+      summary: Habar ibermek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+              required: [message]
+      responses:
+        "200":
+          description: Posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+
+  /admin/chat/messages/{messageId}:
+    delete:
+      operationId: adminDeleteChatMessage
+      tags: [admin]
+      summary: Çat habary öçürmek
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
 
   /leaderboard:
     get:
@@ -584,6 +678,48 @@ components:
         rarity:
           type: string
       required: [multiplier, rarity]
+
+    CrashResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        autoCashout:
+          type: number
+        crashAt:
+          type: number
+        multiplier:
+          type: number
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+        cashedOut:
+          type: boolean
+      required: [bet, autoCashout, crashAt, multiplier, won, netChange, newBalance, label, rarity, cashedOut]
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        publicId:
+          type: string
+        username:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+      required: [id, userId, publicId, username, message, createdAt]
 
     LeaderboardEntry:
       type: object

@@ -104,6 +104,28 @@ export interface LuckyBoxResult {
   rarity: string;
 }
 
+export interface CrashResult {
+  bet: number;
+  autoCashout: number;
+  crashAt: number;
+  multiplier: number;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+  cashedOut: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  publicId: string;
+  username: string;
+  message: string;
+  createdAt: string;
+}
+
 export interface LeaderboardEntry {
   rank: number;
   publicId: string;
@@ -171,6 +193,31 @@ export type PlayLuckyBoxBody = {
    * @maximum 8
    */
   pickIndex: number;
+};
+
+export type PlayCrashBody = {
+  /** @minimum 1 */
+  bet: number;
+  /**
+   * @minimum 1.01
+   * @maximum 50
+   */
+  autoCashout: number;
+};
+
+export type GetChatMessagesParams = {
+  /**
+   * @maximum 100
+   */
+  limit?: number;
+};
+
+export type PostChatMessageBody = {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  message: string;
 };
 
 export type AdminLoginBody = {

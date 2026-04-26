@@ -90,6 +90,7 @@ function translateReason(source: string) {
     game_slot: "Slot maşyn",
     game_spin: "Bagt çarhy",
     game_luckybox: "Bagt gutusy",
+    game_crash: "Bagt uçuşy",
     admin_add: "Admin goşdy",
     admin_remove: "Admin aýyrdy",
   };

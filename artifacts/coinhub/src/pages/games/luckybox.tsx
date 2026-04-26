@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePlayLuckyBox, useGetGamesConfig, useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStatsQueryKey, getGetLeaderboardQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, Coins } from "lucide-react";
 import { Link } from "wouter";
 import { BetSelector } from "@/components/BetSelector";
 import { Button } from "@/components/ui/button";
@@ -103,46 +103,56 @@ export default function LuckyBoxGame() {
           {Array.from({ length: 9 }).map((_, i) => {
             const isPicked = pickedIndex === i;
             const reveal = result?.boxes?.[i];
+            const isRevealed = !!result;
             
             return (
-              <motion.div
-                key={i}
-                whileHover={pickedIndex === null && !playing ? { scale: 1.05, y: -5 } : {}}
-                whileTap={pickedIndex === null && !playing ? { scale: 0.95 } : {}}
-                className="aspect-square relative perspective-1000"
-                onClick={() => handleOpen(i)}
-              >
-                <div className={cn(
-                  "w-full h-full transition-all duration-500 preserve-3d relative",
-                  (pickedIndex !== null && result) ? "rotate-y-180" : ""
-                )}>
-                  {/* Front (Closed) */}
-                  <div className={cn(
-                    "absolute inset-0 backface-hidden rounded-2xl border-2 flex flex-col items-center justify-center bg-card gold-glow",
-                    isPicked ? "border-primary" : "border-primary/20"
-                  )}>
-                    <Lock className="w-8 h-8 text-primary/40" />
-                  </div>
-                  
-                  {/* Back (Open) */}
-                  <div className={cn(
-                    "absolute inset-0 backface-hidden rotate-y-180 rounded-2xl border-2 flex flex-col items-center justify-center bg-card overflow-hidden",
-                    isPicked ? "border-primary bg-primary/10 shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "border-primary/10 opacity-60"
-                  )}>
-                    {reveal && (
-                      <>
-                        <span className={cn(
-                          "text-xl font-black italic tabular-nums",
-                          reveal.multiplier > 0 ? "gold-text-gradient" : "text-muted-foreground"
-                        )}>
-                          {reveal.multiplier}x
-                        </span>
-                        {isPicked && <RarityBadge rarity={result.rarity} className="mt-1" />}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
+              <div key={i} className="aspect-square relative">
+                <AnimatePresence mode="wait">
+                  {!isRevealed ? (
+                    <motion.div
+                      key="closed"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleOpen(i)}
+                      className={cn(
+                        "w-full h-full rounded-2xl border-2 flex flex-col items-center justify-center bg-card gold-glow cursor-pointer transition-colors",
+                        isPicked ? "border-primary" : "border-primary/20 hover:border-primary/40"
+                      )}
+                    >
+                      <Lock className="w-8 h-8 text-primary/40" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="revealed"
+                      initial={{ rotateY: 90, opacity: 0 }}
+                      animate={{ rotateY: 0, opacity: 1 }}
+                      transition={{ delay: i * 0.07 }}
+                      className={cn(
+                        "w-full h-full rounded-2xl border-2 flex flex-col items-center justify-center bg-card overflow-hidden transition-all",
+                        isPicked 
+                          ? "border-primary bg-primary/10 scale-110 z-10 gold-glow-strong shadow-[0_0_20px_rgba(212,175,55,0.3)]" 
+                          : "border-primary/10 opacity-60"
+                      )}
+                    >
+                      {reveal && (
+                        <>
+                          <Coins className={cn("w-4 h-4 mb-1", reveal.multiplier > 0 ? "text-primary" : "text-muted-foreground")} />
+                          <span className={cn(
+                            "text-xl font-black italic tabular-nums",
+                            reveal.multiplier > 0 ? "gold-text-gradient" : "text-muted-foreground"
+                          )}>
+                            {reveal.multiplier}x
+                          </span>
+                          {isPicked && <RarityBadge rarity={result.rarity} className="mt-1" />}
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             );
           })}
         </div>

@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { Link } from "wouter";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LayoutGrid, Disc, Package, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ export default function GamesHub() {
             className="from-purple-900/20 to-card border-purple-500/20"
             badge="Premium"
             badgeClass="bg-purple-500/20 text-purple-300"
+            icon={LayoutGrid}
           />
           
           <GameCard 
@@ -30,6 +31,7 @@ export default function GamesHub() {
             className="from-blue-900/20 to-card border-blue-500/20"
             badge="Meşhur"
             badgeClass="bg-blue-500/20 text-blue-300"
+            icon={Disc}
           />
           
           <GameCard 
@@ -39,6 +41,17 @@ export default function GamesHub() {
             className="from-amber-900/20 to-card border-amber-500/20"
             badge="Täze"
             badgeClass="bg-amber-500/20 text-amber-300"
+            icon={Package}
+          />
+
+          <GameCard 
+            title="Bagt Uçuşy" 
+            description="Raketa näçe uçarka? Nagtlaşdyryp ýetişiň!" 
+            href="/games/crash" 
+            className="from-red-900/20 to-card border-red-500/20"
+            badge="Gyzgyn"
+            badgeClass="bg-red-500/20 text-red-300"
+            icon={Rocket}
           />
         </div>
 
@@ -67,7 +80,7 @@ function PayRow({ label, value, isGold }: { label: string, value: string, isGold
   );
 }
 
-function GameCard({ title, description, href, className, badge, badgeClass }: any) {
+function GameCard({ title, description, href, className, badge, badgeClass, icon: Icon }: any) {
   return (
     <Link href={href}>
       <motion.div 
@@ -77,6 +90,7 @@ function GameCard({ title, description, href, className, badge, badgeClass }: an
       >
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-3">
+             {Icon && <Icon className="w-5 h-5 text-primary/70" />}
              <h3 className="font-black text-xl text-white uppercase tracking-tighter italic">{title}</h3>
              {badge && <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold uppercase", badgeClass)}>{badge}</span>}
           </div>

@@ -16,3 +16,5 @@ export type { SlotResult } from "./generated/types/slotResult";
 export type { SpinResult } from "./generated/types/spinResult";
 export type { LuckyBoxResult } from "./generated/types/luckyBoxResult";
 export type { LuckyBoxReveal } from "./generated/types/luckyBoxReveal";
+export type { CrashResult } from "./generated/types/crashResult";
+export type { ChatMessage } from "./generated/types/chatMessage";

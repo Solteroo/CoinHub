@@ -26,15 +26,20 @@ import type {
   AdminUser,
   AdminUserDetail,
   AuthResponse,
+  ChatMessage,
+  CrashResult,
   GamesConfig,
+  GetChatMessagesParams,
   HealthStatus,
   LeaderboardEntry,
   LoginUserBody,
   LuckyBoxResult,
   OkResponse,
+  PlayCrashBody,
   PlayLuckyBoxBody,
   PlaySlotBody,
   PlaySpinBody,
+  PostChatMessageBody,
   RegisterUserBody,
   SlotResult,
   SpinResult,
@@ -922,6 +927,356 @@ export const usePlayLuckyBox = <
   TContext
 > => {
   return useMutation(getPlayLuckyBoxMutationOptions(options));
+};
+
+/**
+ * @summary Bagt uçuşy (rocket multiplier with auto-cashout)
+ */
+export const getPlayCrashUrl = () => {
+  return `/api/games/crash`;
+};
+
+export const playCrash = async (
+  playCrashBody: PlayCrashBody,
+  options?: RequestInit,
+): Promise<CrashResult> => {
+  return customFetch<CrashResult>(getPlayCrashUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playCrashBody),
+  });
+};
+
+export const getPlayCrashMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playCrash>>,
+    TError,
+    { data: BodyType<PlayCrashBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof playCrash>>,
+  TError,
+  { data: BodyType<PlayCrashBody> },
+  TContext
+> => {
+  const mutationKey = ["playCrash"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof playCrash>>,
+    { data: BodyType<PlayCrashBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playCrash(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlayCrashMutationResult = NonNullable<
+  Awaited<ReturnType<typeof playCrash>>
+>;
+export type PlayCrashMutationBody = BodyType<PlayCrashBody>;
+export type PlayCrashMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Bagt uçuşy (rocket multiplier with auto-cashout)
+ */
+export const usePlayCrash = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playCrash>>,
+    TError,
+    { data: BodyType<PlayCrashBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof playCrash>>,
+  TError,
+  { data: BodyType<PlayCrashBody> },
+  TContext
+> => {
+  return useMutation(getPlayCrashMutationOptions(options));
+};
+
+/**
+ * @summary Soňky çat habarlary
+ */
+export const getGetChatMessagesUrl = (params?: GetChatMessagesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/chat/messages?${stringifiedParams}`
+    : `/api/chat/messages`;
+};
+
+export const getChatMessages = async (
+  params?: GetChatMessagesParams,
+  options?: RequestInit,
+): Promise<ChatMessage[]> => {
+  return customFetch<ChatMessage[]>(getGetChatMessagesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetChatMessagesQueryKey = (params?: GetChatMessagesParams) => {
+  return [`/api/chat/messages`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetChatMessagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getChatMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetChatMessagesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getChatMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetChatMessagesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatMessages>>> = ({
+    signal,
+  }) => getChatMessages(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getChatMessages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetChatMessagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getChatMessages>>
+>;
+export type GetChatMessagesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Soňky çat habarlary
+ */
+
+export function useGetChatMessages<
+  TData = Awaited<ReturnType<typeof getChatMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetChatMessagesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getChatMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetChatMessagesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Habar ibermek
+ */
+export const getPostChatMessageUrl = () => {
+  return `/api/chat/messages`;
+};
+
+export const postChatMessage = async (
+  postChatMessageBody: PostChatMessageBody,
+  options?: RequestInit,
+): Promise<ChatMessage> => {
+  return customFetch<ChatMessage>(getPostChatMessageUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(postChatMessageBody),
+  });
+};
+
+export const getPostChatMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postChatMessage>>,
+    TError,
+    { data: BodyType<PostChatMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postChatMessage>>,
+  TError,
+  { data: BodyType<PostChatMessageBody> },
+  TContext
+> => {
+  const mutationKey = ["postChatMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postChatMessage>>,
+    { data: BodyType<PostChatMessageBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postChatMessage(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostChatMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postChatMessage>>
+>;
+export type PostChatMessageMutationBody = BodyType<PostChatMessageBody>;
+export type PostChatMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Habar ibermek
+ */
+export const usePostChatMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postChatMessage>>,
+    TError,
+    { data: BodyType<PostChatMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof postChatMessage>>,
+  TError,
+  { data: BodyType<PostChatMessageBody> },
+  TContext
+> => {
+  return useMutation(getPostChatMessageMutationOptions(options));
+};
+
+/**
+ * @summary Çat habary öçürmek
+ */
+export const getAdminDeleteChatMessageUrl = (messageId: string) => {
+  return `/api/admin/chat/messages/${messageId}`;
+};
+
+export const adminDeleteChatMessage = async (
+  messageId: string,
+  options?: RequestInit,
+): Promise<OkResponse> => {
+  return customFetch<OkResponse>(getAdminDeleteChatMessageUrl(messageId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getAdminDeleteChatMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteChatMessage>>,
+    TError,
+    { messageId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminDeleteChatMessage>>,
+  TError,
+  { messageId: string },
+  TContext
+> => {
+  const mutationKey = ["adminDeleteChatMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminDeleteChatMessage>>,
+    { messageId: string }
+  > = (props) => {
+    const { messageId } = props ?? {};
+
+    return adminDeleteChatMessage(messageId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminDeleteChatMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminDeleteChatMessage>>
+>;
+
+export type AdminDeleteChatMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Çat habary öçürmek
+ */
+export const useAdminDeleteChatMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteChatMessage>>,
+    TError,
+    { messageId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminDeleteChatMessage>>,
+  TError,
+  { messageId: string },
+  TContext
+> => {
+  return useMutation(getAdminDeleteChatMessageMutationOptions(options));
 };
 
 /**

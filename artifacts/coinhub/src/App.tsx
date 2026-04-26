@@ -10,6 +10,8 @@ import GamesHub from "@/pages/games/index";
 import SpinGame from "@/pages/games/spin";
 import LuckyBoxGame from "@/pages/games/luckybox";
 import SlotGame from "@/pages/games/slot";
+import CrashGame from "@/pages/games/crash";
+import Chat from "@/pages/chat";
 import Wallet from "@/pages/wallet";
 import Profile from "@/pages/profile";
 import Leaderboard from "@/pages/leaderboard";
@@ -37,6 +39,8 @@ function Router() {
       <Route path="/games/spin" component={SpinGame} />
       <Route path="/games/luckybox" component={LuckyBoxGame} />
       <Route path="/games/slot" component={SlotGame} />
+      <Route path="/games/crash" component={CrashGame} />
+      <Route path="/chat" component={Chat} />
       <Route path="/wallet" component={Wallet} />
       <Route path="/profile" component={Profile} />
       <Route path="/leaderboard" component={Leaderboard} />

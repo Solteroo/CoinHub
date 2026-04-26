@@ -209,6 +209,86 @@ export const PlayLuckyBoxResponse = zod.object({
 });
 
 /**
+ * @summary Bagt uçuşy (rocket multiplier with auto-cashout)
+ */
+
+export const playCrashBodyAutoCashoutMin = 1.01;
+export const playCrashBodyAutoCashoutMax = 50;
+
+export const PlayCrashBody = zod.object({
+  bet: zod.number().min(1),
+  autoCashout: zod
+    .number()
+    .min(playCrashBodyAutoCashoutMin)
+    .max(playCrashBodyAutoCashoutMax),
+});
+
+export const PlayCrashResponse = zod.object({
+  bet: zod.number(),
+  autoCashout: zod.number(),
+  crashAt: zod.number(),
+  multiplier: zod.number(),
+  won: zod.number(),
+  netChange: zod.number(),
+  newBalance: zod.number(),
+  label: zod.string(),
+  rarity: zod.string(),
+  cashedOut: zod.boolean(),
+});
+
+/**
+ * @summary Soňky çat habarlary
+ */
+export const getChatMessagesQueryLimitDefault = 50;
+export const getChatMessagesQueryLimitMax = 100;
+
+export const GetChatMessagesQueryParams = zod.object({
+  limit: zod.coerce
+    .number()
+    .max(getChatMessagesQueryLimitMax)
+    .default(getChatMessagesQueryLimitDefault),
+});
+
+export const GetChatMessagesResponseItem = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  publicId: zod.string(),
+  username: zod.string(),
+  message: zod.string(),
+  createdAt: zod.string(),
+});
+export const GetChatMessagesResponse = zod.array(GetChatMessagesResponseItem);
+
+/**
+ * @summary Habar ibermek
+ */
+export const postChatMessageBodyMessageMax = 200;
+
+export const PostChatMessageBody = zod.object({
+  message: zod.string().min(1).max(postChatMessageBodyMessageMax),
+});
+
+export const PostChatMessageResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  publicId: zod.string(),
+  username: zod.string(),
+  message: zod.string(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Çat habary öçürmek
+ */
+export const AdminDeleteChatMessageParams = zod.object({
+  messageId: zod.coerce.string(),
+});
+
+export const AdminDeleteChatMessageResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
  * @summary Lider tagtasy
  */
 export const GetLeaderboardResponseItem = zod.object({

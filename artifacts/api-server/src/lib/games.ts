@@ -142,6 +142,26 @@ export function generateLuckyBoxes(): LuckyBoxReveal[] {
   });
 }
 
+// ─── CRASH (rocket) ──────────────────────────────────────────────────────────
+// Provably-fair-style crash: server rolls a crashAt ≥ 1.00. If user's
+// autoCashout target is ≤ crashAt, payout = bet × autoCashout. Otherwise the
+// rocket explodes before reaching the target → user loses bet.
+//
+// Distribution (≈96% RTP for any target T in [1.01, 50]):
+//   - 4% of rounds → instant crash at 1.00× (house cut bucket)
+//   - 96% of rounds → crashAt = clamp(1 / (1 - u), 1.01, 50) where u ∈ [0,1)
+// P(crashAt ≥ T) = 0.96 / T  →  E[payout|cashout T] = 0.96 × bet
+export const CRASH_MIN_TARGET = 1.1;
+export const CRASH_MAX_TARGET = 50;
+
+export function rollCrash(): number {
+  const r = Math.random();
+  if (r < 0.04) return 1.0;
+  const u = (r - 0.04) / 0.96;
+  const raw = 1 / Math.max(0.0001, 1 - u);
+  return Math.min(50, Math.max(1.01, Math.floor(raw * 100) / 100));
+}
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 export function pickWeighted<T extends { weight: number }>(items: T[]): T {
   const total = items.reduce((s, i) => s + i.weight, 0);
