@@ -4,6 +4,8 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
+This workspace contains the **CoinHub** project — a virtual coin economy game platform in Türkmen language with a mobile-app PWA aesthetic and a dark + gold premium theme.
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
@@ -15,6 +17,36 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **Frontend**: React 19 + Vite + Wouter + TanStack Query + Tailwind + Framer Motion
+
+## Artifacts
+
+- `artifacts/coinhub` — CoinHub PWA frontend (web, previewPath `/`)
+- `artifacts/api-server` — Express API backend
+- `artifacts/mockup-sandbox` — design canvas
+
+## CoinHub Features
+
+- Auth: register/login (username + password, scrypt hashed, cookie sessions `coinhub_sid`)
+- New users start with **50 coins** and a unique `publicId` (e.g. `CHXXXXXX`)
+- 3 mini games: Spin Wheel, Lucky Box, Tap (1 coin/tap, max 200 per submit, 1.5s cooldown)
+- Daily bonus: base 25 + 10 per streak day, capped at 250, 20h cooldown
+- Leaderboard (top 100), Wallet (transaction history), Profile (with VIP contact links)
+- Admin panel at `/admin` (separate password-only session, cookie `coinhub_admin`)
+  - Dashboard stats, user lookup (by username or publicId), manual coin add/subtract, transaction log
+
+## Admin Access
+
+- Admin password is read from the `ADMIN_PASSWORD` env var. **Default fallback: `admin123`** (set the env var in production!).
+- Admin login endpoint: `POST /api/admin/login` with `{ password }`.
+
+## Brand / Contact
+
+- Brand: **CoinHub**
+- Phone: **+99361403543**
+- IMO: **+918826816138**
+- Language: Türkmen (UI copy is fully localized)
+- No real payments, no crypto
 
 ## Key Commands
 
@@ -23,5 +55,6 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
+- `pnpm --filter @workspace/coinhub run dev` — run CoinHub frontend locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

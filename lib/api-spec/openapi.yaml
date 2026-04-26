@@ -3,20 +3,29 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CoinHub API - virtual coin economy platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: User authentication
+  - name: user
+    description: Current user operations
+  - name: games
+    description: Game endpoints
+  - name: leaderboard
+    description: Leaderboard
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +33,361 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Täze ulanyjy döretmek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 24
+                password:
+                  type: string
+                  minLength: 4
+                  maxLength: 64
+              required: [username, password]
+      responses:
+        "200":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Ulanyjy girmek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required: [username, password]
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Çykmak
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /me:
+    get:
+      operationId: getMe
+      tags: [user]
+      summary: Häzirki ulanyjy maglumaty
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /me/transactions:
+    get:
+      operationId: getMyTransactions
+      tags: [user]
+      summary: Meniň amallarym taryhy
+      responses:
+        "200":
+          description: Transactions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /me/stats:
+    get:
+      operationId: getMyStats
+      tags: [user]
+      summary: Meniň statistikalarym
+      responses:
+        "200":
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
+  /games/spin:
+    post:
+      operationId: playSpin
+      tags: [games]
+      summary: Pökgi aýlamak
+      responses:
+        "200":
+          description: Spin result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameResult"
+
+  /games/luckybox:
+    post:
+      operationId: playLuckyBox
+      tags: [games]
+      summary: Bagt gutusy açmak
+      responses:
+        "200":
+          description: Lucky box result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameResult"
+
+  /games/tap:
+    post:
+      operationId: playTap
+      tags: [games]
+      summary: Basmak oýny - teňňe ýygnamak
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taps:
+                  type: integer
+                  minimum: 1
+                  maximum: 200
+              required: [taps]
+      responses:
+        "200":
+          description: Tap result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameResult"
+
+  /games/daily-bonus:
+    post:
+      operationId: claimDailyBonus
+      tags: [games]
+      summary: Günlük baýrak
+      responses:
+        "200":
+          description: Daily bonus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameResult"
+
+  /games/daily-bonus/status:
+    get:
+      operationId: getDailyBonusStatus
+      tags: [games]
+      summary: Günlük baýrak ýagdaýy
+      responses:
+        "200":
+          description: Daily bonus status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyBonusStatus"
+
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [leaderboard]
+      summary: Lider tagtasy
+      responses:
+        "200":
+          description: Top users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin girmek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+              required: [password]
+      responses:
+        "200":
+          description: Admin logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      summary: Admin çykmak
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /admin/me:
+    get:
+      operationId: adminMe
+      tags: [admin]
+      summary: Admin sessiýa barlamak
+      responses:
+        "200":
+          description: Admin status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStatus"
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: Ähli ulanyjylar
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+
+  /admin/users/{userId}:
+    get:
+      operationId: adminGetUser
+      tags: [admin]
+      summary: Ulanyjyny görmek
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetail"
+
+  /admin/users/{userId}/coins:
+    post:
+      operationId: adminAdjustCoins
+      tags: [admin]
+      summary: Ulanyja teňňe goşmak / aýyrmak
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+              required: [amount, reason]
+      responses:
+        "200":
+          description: Adjusted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetail"
+
+  /admin/transactions:
+    get:
+      operationId: adminListTransactions
+      tags: [admin]
+      summary: Ähli amallar taryhy
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /admin/stats:
+    get:
+      operationId: adminStats
+      tags: [admin]
+      summary: Admin paneliň umumy statistikasy
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +395,154 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    OkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+      required: [user]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        publicId:
+          type: string
+        username:
+          type: string
+        coins:
+          type: integer
+        createdAt:
+          type: string
+        isAdmin:
+          type: boolean
+      required: [id, publicId, username, coins, createdAt, isAdmin]
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        amount:
+          type: integer
+        reason:
+          type: string
+        source:
+          type: string
+        createdAt:
+          type: string
+      required: [id, userId, amount, reason, source, createdAt]
+
+    UserStats:
+      type: object
+      properties:
+        totalEarned:
+          type: integer
+        totalSpent:
+          type: integer
+        gamesPlayed:
+          type: integer
+        rank:
+          type: integer
+          nullable: true
+      required: [totalEarned, totalSpent, gamesPlayed]
+
+    GameResult:
+      type: object
+      properties:
+        won:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        segmentIndex:
+          type: integer
+          nullable: true
+        rarity:
+          type: string
+          nullable: true
+      required: [won, newBalance, label]
+
+    DailyBonusStatus:
+      type: object
+      properties:
+        canClaim:
+          type: boolean
+        nextClaimAt:
+          type: string
+          nullable: true
+        streak:
+          type: integer
+      required: [canClaim, streak]
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        publicId:
+          type: string
+        username:
+          type: string
+        coins:
+          type: integer
+      required: [rank, publicId, username, coins]
+
+    AdminStatus:
+      type: object
+      properties:
+        isAdmin:
+          type: boolean
+      required: [isAdmin]
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+        publicId:
+          type: string
+        username:
+          type: string
+        coins:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, publicId, username, coins, createdAt]
+
+    AdminUserDetail:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AdminUser"
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+      required: [user, transactions]
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalCoinsInCirculation:
+          type: integer
+        totalTransactions:
+          type: integer
+        coinsAddedToday:
+          type: integer
+      required: [totalUsers, totalCoinsInCirculation, totalTransactions, coinsAddedToday]

@@ -1,2 +1,14 @@
 export * from "./generated/api";
-export * from "./generated/types";
+export type { HealthStatus } from "./generated/types/healthStatus";
+export type { User } from "./generated/types/user";
+export type { Transaction } from "./generated/types/transaction";
+export type { GameResult } from "./generated/types/gameResult";
+export type { LeaderboardEntry } from "./generated/types/leaderboardEntry";
+export type { AdminUser } from "./generated/types/adminUser";
+export type { AdminUserDetail } from "./generated/types/adminUserDetail";
+export type { AdminStats } from "./generated/types/adminStats";
+export type { AdminStatus } from "./generated/types/adminStatus";
+export type { AuthResponse } from "./generated/types/authResponse";
+export type { OkResponse } from "./generated/types/okResponse";
+export type { UserStats } from "./generated/types/userStats";
+export type { DailyBonusStatus } from "./generated/types/dailyBonusStatus";
