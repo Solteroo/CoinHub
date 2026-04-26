@@ -6,10 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface GameResult {
-  won: number;
-  newBalance: number;
-  label: string;
-  segmentIndex?: number | null;
-  rarity?: string | null;
-}
+export type PlayLuckyBoxBody = {
+  /** @minimum 1 */
+  bet: number;
+  /**
+   * @minimum 0
+   * @maximum 8
+   */
+  pickIndex: number;
+};

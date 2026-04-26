@@ -28,12 +28,16 @@ This workspace contains the **CoinHub** project — a virtual coin economy game 
 ## CoinHub Features
 
 - Auth: register/login (username + password, scrypt hashed, cookie sessions `coinhub_sid`)
-- New users start with **50 coins** and a unique `publicId` (e.g. `CHXXXXXX`)
-- 3 mini games: Spin Wheel, Lucky Box, Tap (1 coin/tap, max 200 per submit, 1.5s cooldown)
-- Daily bonus: base 25 + 10 per streak day, capped at 250, 20h cooldown
-- Leaderboard (top 100), Wallet (transaction history), Profile (with VIP contact links)
+- New users start with **200 coins** and a unique 8-digit numeric `publicId` (e.g. `81036355`)
+- 3 wager-based casino games (all with house edge, RTP ~85–92%):
+  - **Slot Maşyn** (3-reel slot, jackpot 150×)
+  - **Bagt Çarhy** (12-segment wheel, top prize 100×)
+  - **Bagt Gutusy** (9 mystery boxes, max 50× pick)
+- Min bet 10, max bet 100 000
+- **No daily bonus** — to top up coins, players must contact the admin via Phone/IMO
+- Leaderboard (top 100), Wallet (transaction history), Profile (with copyable numeric ID + VIP contact links)
 - Admin panel at `/admin` (separate password-only session, cookie `coinhub_admin`)
-  - Dashboard stats, user lookup (by username or publicId), manual coin add/subtract, transaction log
+  - Dashboard stats, user lookup (by username or numeric ID), manual coin add/subtract, transaction log
 
 ## Admin Access
 

@@ -6,10 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type PlayTapBody = {
-  /**
-   * @minimum 1
-   * @maximum 200
-   */
-  taps: number;
-};
+export interface LuckyBoxReveal {
+  multiplier: number;
+  rarity: string;
+}

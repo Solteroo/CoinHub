@@ -26,14 +26,18 @@ import type {
   AdminUser,
   AdminUserDetail,
   AuthResponse,
-  DailyBonusStatus,
-  GameResult,
+  GamesConfig,
   HealthStatus,
   LeaderboardEntry,
   LoginUserBody,
+  LuckyBoxResult,
   OkResponse,
-  PlayTapBody,
+  PlayLuckyBoxBody,
+  PlaySlotBody,
+  PlaySpinBody,
   RegisterUserBody,
+  SlotResult,
+  SpinResult,
   Transaction,
   User,
   UserStats,
@@ -588,16 +592,182 @@ export function useGetMyStats<
 }
 
 /**
- * @summary Pökgi aýlamak
+ * @summary Oýun parametrleri (min/max bet, segmentler)
+ */
+export const getGetGamesConfigUrl = () => {
+  return `/api/games/config`;
+};
+
+export const getGamesConfig = async (
+  options?: RequestInit,
+): Promise<GamesConfig> => {
+  return customFetch<GamesConfig>(getGetGamesConfigUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetGamesConfigQueryKey = () => {
+  return [`/api/games/config`] as const;
+};
+
+export const getGetGamesConfigQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGamesConfig>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getGamesConfig>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetGamesConfigQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGamesConfig>>> = ({
+    signal,
+  }) => getGamesConfig({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getGamesConfig>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetGamesConfigQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGamesConfig>>
+>;
+export type GetGamesConfigQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Oýun parametrleri (min/max bet, segmentler)
+ */
+
+export function useGetGamesConfig<
+  TData = Awaited<ReturnType<typeof getGamesConfig>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getGamesConfig>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetGamesConfigQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Slot maşyn (3 reel)
+ */
+export const getPlaySlotUrl = () => {
+  return `/api/games/slot`;
+};
+
+export const playSlot = async (
+  playSlotBody: PlaySlotBody,
+  options?: RequestInit,
+): Promise<SlotResult> => {
+  return customFetch<SlotResult>(getPlaySlotUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playSlotBody),
+  });
+};
+
+export const getPlaySlotMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playSlot>>,
+    TError,
+    { data: BodyType<PlaySlotBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof playSlot>>,
+  TError,
+  { data: BodyType<PlaySlotBody> },
+  TContext
+> => {
+  const mutationKey = ["playSlot"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof playSlot>>,
+    { data: BodyType<PlaySlotBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playSlot(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlaySlotMutationResult = NonNullable<
+  Awaited<ReturnType<typeof playSlot>>
+>;
+export type PlaySlotMutationBody = BodyType<PlaySlotBody>;
+export type PlaySlotMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Slot maşyn (3 reel)
+ */
+export const usePlaySlot = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playSlot>>,
+    TError,
+    { data: BodyType<PlaySlotBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof playSlot>>,
+  TError,
+  { data: BodyType<PlaySlotBody> },
+  TContext
+> => {
+  return useMutation(getPlaySlotMutationOptions(options));
+};
+
+/**
+ * @summary Bagt çarhy (multiplier)
  */
 export const getPlaySpinUrl = () => {
   return `/api/games/spin`;
 };
 
-export const playSpin = async (options?: RequestInit): Promise<GameResult> => {
-  return customFetch<GameResult>(getPlaySpinUrl(), {
+export const playSpin = async (
+  playSpinBody: PlaySpinBody,
+  options?: RequestInit,
+): Promise<SpinResult> => {
+  return customFetch<SpinResult>(getPlaySpinUrl(), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playSpinBody),
   });
 };
 
@@ -608,14 +778,14 @@ export const getPlaySpinMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof playSpin>>,
     TError,
-    void,
+    { data: BodyType<PlaySpinBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof playSpin>>,
   TError,
-  void,
+  { data: BodyType<PlaySpinBody> },
   TContext
 > => {
   const mutationKey = ["playSpin"];
@@ -629,9 +799,11 @@ export const getPlaySpinMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof playSpin>>,
-    void
-  > = () => {
-    return playSpin(requestOptions);
+    { data: BodyType<PlaySpinBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playSpin(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -640,11 +812,11 @@ export const getPlaySpinMutationOptions = <
 export type PlaySpinMutationResult = NonNullable<
   Awaited<ReturnType<typeof playSpin>>
 >;
-
+export type PlaySpinMutationBody = BodyType<PlaySpinBody>;
 export type PlaySpinMutationError = ErrorType<unknown>;
 
 /**
- * @summary Pökgi aýlamak
+ * @summary Bagt çarhy (multiplier)
  */
 export const usePlaySpin = <
   TError = ErrorType<unknown>,
@@ -653,32 +825,35 @@ export const usePlaySpin = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof playSpin>>,
     TError,
-    void,
+    { data: BodyType<PlaySpinBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof playSpin>>,
   TError,
-  void,
+  { data: BodyType<PlaySpinBody> },
   TContext
 > => {
   return useMutation(getPlaySpinMutationOptions(options));
 };
 
 /**
- * @summary Bagt gutusy açmak
+ * @summary Bagt gutusy (9 sandyk)
  */
 export const getPlayLuckyBoxUrl = () => {
   return `/api/games/luckybox`;
 };
 
 export const playLuckyBox = async (
+  playLuckyBoxBody: PlayLuckyBoxBody,
   options?: RequestInit,
-): Promise<GameResult> => {
-  return customFetch<GameResult>(getPlayLuckyBoxUrl(), {
+): Promise<LuckyBoxResult> => {
+  return customFetch<LuckyBoxResult>(getPlayLuckyBoxUrl(), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playLuckyBoxBody),
   });
 };
 
@@ -689,14 +864,14 @@ export const getPlayLuckyBoxMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof playLuckyBox>>,
     TError,
-    void,
+    { data: BodyType<PlayLuckyBoxBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof playLuckyBox>>,
   TError,
-  void,
+  { data: BodyType<PlayLuckyBoxBody> },
   TContext
 > => {
   const mutationKey = ["playLuckyBox"];
@@ -710,9 +885,11 @@ export const getPlayLuckyBoxMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof playLuckyBox>>,
-    void
-  > = () => {
-    return playLuckyBox(requestOptions);
+    { data: BodyType<PlayLuckyBoxBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playLuckyBox(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -721,11 +898,11 @@ export const getPlayLuckyBoxMutationOptions = <
 export type PlayLuckyBoxMutationResult = NonNullable<
   Awaited<ReturnType<typeof playLuckyBox>>
 >;
-
+export type PlayLuckyBoxMutationBody = BodyType<PlayLuckyBoxBody>;
 export type PlayLuckyBoxMutationError = ErrorType<unknown>;
 
 /**
- * @summary Bagt gutusy açmak
+ * @summary Bagt gutusy (9 sandyk)
  */
 export const usePlayLuckyBox = <
   TError = ErrorType<unknown>,
@@ -734,260 +911,18 @@ export const usePlayLuckyBox = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof playLuckyBox>>,
     TError,
-    void,
+    { data: BodyType<PlayLuckyBoxBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof playLuckyBox>>,
   TError,
-  void,
+  { data: BodyType<PlayLuckyBoxBody> },
   TContext
 > => {
   return useMutation(getPlayLuckyBoxMutationOptions(options));
 };
-
-/**
- * @summary Basmak oýny - teňňe ýygnamak
- */
-export const getPlayTapUrl = () => {
-  return `/api/games/tap`;
-};
-
-export const playTap = async (
-  playTapBody: PlayTapBody,
-  options?: RequestInit,
-): Promise<GameResult> => {
-  return customFetch<GameResult>(getPlayTapUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(playTapBody),
-  });
-};
-
-export const getPlayTapMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof playTap>>,
-    TError,
-    { data: BodyType<PlayTapBody> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof playTap>>,
-  TError,
-  { data: BodyType<PlayTapBody> },
-  TContext
-> => {
-  const mutationKey = ["playTap"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof playTap>>,
-    { data: BodyType<PlayTapBody> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return playTap(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PlayTapMutationResult = NonNullable<
-  Awaited<ReturnType<typeof playTap>>
->;
-export type PlayTapMutationBody = BodyType<PlayTapBody>;
-export type PlayTapMutationError = ErrorType<unknown>;
-
-/**
- * @summary Basmak oýny - teňňe ýygnamak
- */
-export const usePlayTap = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof playTap>>,
-    TError,
-    { data: BodyType<PlayTapBody> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof playTap>>,
-  TError,
-  { data: BodyType<PlayTapBody> },
-  TContext
-> => {
-  return useMutation(getPlayTapMutationOptions(options));
-};
-
-/**
- * @summary Günlük baýrak
- */
-export const getClaimDailyBonusUrl = () => {
-  return `/api/games/daily-bonus`;
-};
-
-export const claimDailyBonus = async (
-  options?: RequestInit,
-): Promise<GameResult> => {
-  return customFetch<GameResult>(getClaimDailyBonusUrl(), {
-    ...options,
-    method: "POST",
-  });
-};
-
-export const getClaimDailyBonusMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof claimDailyBonus>>,
-    TError,
-    void,
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof claimDailyBonus>>,
-  TError,
-  void,
-  TContext
-> => {
-  const mutationKey = ["claimDailyBonus"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof claimDailyBonus>>,
-    void
-  > = () => {
-    return claimDailyBonus(requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type ClaimDailyBonusMutationResult = NonNullable<
-  Awaited<ReturnType<typeof claimDailyBonus>>
->;
-
-export type ClaimDailyBonusMutationError = ErrorType<unknown>;
-
-/**
- * @summary Günlük baýrak
- */
-export const useClaimDailyBonus = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof claimDailyBonus>>,
-    TError,
-    void,
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof claimDailyBonus>>,
-  TError,
-  void,
-  TContext
-> => {
-  return useMutation(getClaimDailyBonusMutationOptions(options));
-};
-
-/**
- * @summary Günlük baýrak ýagdaýy
- */
-export const getGetDailyBonusStatusUrl = () => {
-  return `/api/games/daily-bonus/status`;
-};
-
-export const getDailyBonusStatus = async (
-  options?: RequestInit,
-): Promise<DailyBonusStatus> => {
-  return customFetch<DailyBonusStatus>(getGetDailyBonusStatusUrl(), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getGetDailyBonusStatusQueryKey = () => {
-  return [`/api/games/daily-bonus/status`] as const;
-};
-
-export const getGetDailyBonusStatusQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDailyBonusStatus>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDailyBonusStatus>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetDailyBonusStatusQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getDailyBonusStatus>>
-  > = ({ signal }) => getDailyBonusStatus({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getDailyBonusStatus>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type GetDailyBonusStatusQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getDailyBonusStatus>>
->;
-export type GetDailyBonusStatusQueryError = ErrorType<unknown>;
-
-/**
- * @summary Günlük baýrak ýagdaýy
- */
-
-export function useGetDailyBonusStatus<
-  TData = Awaited<ReturnType<typeof getDailyBonusStatus>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDailyBonusStatus>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetDailyBonusStatusQueryOptions(options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
 
 /**
  * @summary Lider tagtasy

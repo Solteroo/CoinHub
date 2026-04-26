@@ -42,18 +42,66 @@ export interface UserStats {
   rank?: number | null;
 }
 
-export interface GameResult {
-  won: number;
-  newBalance: number;
+export interface WheelSegment {
+  multiplier: number;
   label: string;
-  segmentIndex?: number | null;
-  rarity?: string | null;
+  color: string;
+  rarity: string;
 }
 
-export interface DailyBonusStatus {
-  canClaim: boolean;
-  nextClaimAt?: string | null;
-  streak: number;
+export interface GamesConfig {
+  minBet: number;
+  maxBet: number;
+  wheelSegments: WheelSegment[];
+  slotSymbols: string[];
+}
+
+export interface SlotResult {
+  bet: number;
+  /**
+   * @minItems 3
+   * @maxItems 3
+   */
+  symbols: string[];
+  multiplier: number;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+  outcome: string;
+}
+
+export interface SpinResult {
+  bet: number;
+  segmentIndex: number;
+  multiplier: number;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+}
+
+export interface LuckyBoxReveal {
+  multiplier: number;
+  rarity: string;
+}
+
+export interface LuckyBoxResult {
+  bet: number;
+  pickIndex: number;
+  /**
+   * @minItems 9
+   * @maxItems 9
+   */
+  boxes: LuckyBoxReveal[];
+  multiplier: number;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
 }
 
 export interface LeaderboardEntry {
@@ -105,12 +153,24 @@ export type LoginUserBody = {
   password: string;
 };
 
-export type PlayTapBody = {
+export type PlaySlotBody = {
+  /** @minimum 1 */
+  bet: number;
+};
+
+export type PlaySpinBody = {
+  /** @minimum 1 */
+  bet: number;
+};
+
+export type PlayLuckyBoxBody = {
+  /** @minimum 1 */
+  bet: number;
   /**
-   * @minimum 1
-   * @maximum 200
+   * @minimum 0
+   * @maximum 8
    */
-  taps: number;
+  pickIndex: number;
 };
 
 export type AdminLoginBody = {

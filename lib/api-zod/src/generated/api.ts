@@ -109,62 +109,103 @@ export const GetMyStatsResponse = zod.object({
 });
 
 /**
- * @summary Pökgi aýlamak
+ * @summary Oýun parametrleri (min/max bet, segmentler)
  */
+export const GetGamesConfigResponse = zod.object({
+  minBet: zod.number(),
+  maxBet: zod.number(),
+  wheelSegments: zod.array(
+    zod.object({
+      multiplier: zod.number(),
+      label: zod.string(),
+      color: zod.string(),
+      rarity: zod.string(),
+    }),
+  ),
+  slotSymbols: zod.array(zod.string()),
+});
+
+/**
+ * @summary Slot maşyn (3 reel)
+ */
+
+export const PlaySlotBody = zod.object({
+  bet: zod.number().min(1),
+});
+
+export const playSlotResponseSymbolsMin = 3;
+export const playSlotResponseSymbolsMax = 3;
+
+export const PlaySlotResponse = zod.object({
+  bet: zod.number(),
+  symbols: zod
+    .array(zod.string())
+    .min(playSlotResponseSymbolsMin)
+    .max(playSlotResponseSymbolsMax),
+  multiplier: zod.number(),
+  won: zod.number(),
+  netChange: zod.number(),
+  newBalance: zod.number(),
+  label: zod.string(),
+  rarity: zod.string(),
+  outcome: zod.string(),
+});
+
+/**
+ * @summary Bagt çarhy (multiplier)
+ */
+
+export const PlaySpinBody = zod.object({
+  bet: zod.number().min(1),
+});
+
 export const PlaySpinResponse = zod.object({
+  bet: zod.number(),
+  segmentIndex: zod.number(),
+  multiplier: zod.number(),
   won: zod.number(),
+  netChange: zod.number(),
   newBalance: zod.number(),
   label: zod.string(),
-  segmentIndex: zod.number().nullish(),
-  rarity: zod.string().nullish(),
+  rarity: zod.string(),
 });
 
 /**
- * @summary Bagt gutusy açmak
+ * @summary Bagt gutusy (9 sandyk)
  */
+
+export const playLuckyBoxBodyPickIndexMin = 0;
+export const playLuckyBoxBodyPickIndexMax = 8;
+
+export const PlayLuckyBoxBody = zod.object({
+  bet: zod.number().min(1),
+  pickIndex: zod
+    .number()
+    .min(playLuckyBoxBodyPickIndexMin)
+    .max(playLuckyBoxBodyPickIndexMax),
+});
+
+export const playLuckyBoxResponseBoxesMin = 9;
+export const playLuckyBoxResponseBoxesMax = 9;
+
 export const PlayLuckyBoxResponse = zod.object({
+  bet: zod.number(),
+  pickIndex: zod.number(),
+  boxes: zod
+    .array(
+      zod.object({
+        multiplier: zod.number(),
+        rarity: zod.string(),
+      }),
+    )
+    .min(playLuckyBoxResponseBoxesMin)
+    .max(playLuckyBoxResponseBoxesMax),
+  multiplier: zod.number(),
   won: zod.number(),
+  netChange: zod.number(),
   newBalance: zod.number(),
   label: zod.string(),
-  segmentIndex: zod.number().nullish(),
-  rarity: zod.string().nullish(),
-});
-
-/**
- * @summary Basmak oýny - teňňe ýygnamak
- */
-export const playTapBodyTapsMax = 200;
-
-export const PlayTapBody = zod.object({
-  taps: zod.number().min(1).max(playTapBodyTapsMax),
-});
-
-export const PlayTapResponse = zod.object({
-  won: zod.number(),
-  newBalance: zod.number(),
-  label: zod.string(),
-  segmentIndex: zod.number().nullish(),
-  rarity: zod.string().nullish(),
-});
-
-/**
- * @summary Günlük baýrak
- */
-export const ClaimDailyBonusResponse = zod.object({
-  won: zod.number(),
-  newBalance: zod.number(),
-  label: zod.string(),
-  segmentIndex: zod.number().nullish(),
-  rarity: zod.string().nullish(),
-});
-
-/**
- * @summary Günlük baýrak ýagdaýy
- */
-export const GetDailyBonusStatusResponse = zod.object({
-  canClaim: zod.boolean(),
-  nextClaimAt: zod.string().nullish(),
-  streak: zod.number(),
+  rarity: zod.string(),
 });
 
 /**

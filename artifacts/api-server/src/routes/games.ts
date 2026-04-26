@@ -1,159 +1,189 @@
 import { Router, type IRouter, type Request } from "express";
 import { db, usersTable, transactionsTable, type UserRow } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { PlayTapBody } from "@workspace/api-zod";
+import { PlaySlotBody, PlaySpinBody, PlayLuckyBoxBody } from "@workspace/api-zod";
 import { requireUser } from "../lib/auth";
 import {
-  SPIN_SEGMENTS,
-  BOX_REWARDS,
-  pickWeighted,
-  TAP_COIN_PER_TAP,
-  TAP_MAX_PER_SUBMIT,
-  TAP_COOLDOWN_MS,
-  dailyBonusForStreak,
-  nextDailyClaimAt,
-  streakStillValid,
+  spinSlot,
+  spinWheel,
+  generateLuckyBoxes,
+  rarityFromMultiplier,
+  WHEEL_SEGMENTS,
+  SLOT_SYMBOLS,
+  MIN_BET,
+  MAX_BET,
 } from "../lib/games";
 
 const router: IRouter = Router();
 
-async function awardCoins(
+interface PlayedRound {
+  bet: number;
+  multiplier: number;
+  won: number;          // gross win (paid back, includes bet on a 1× multiplier)
+  netChange: number;    // net change in balance (won - bet)
+  newBalance: number;
+  reason: string;
+  source: string;
+}
+
+async function applyRound(
   userId: string,
-  amount: number,
+  bet: number,
+  multiplier: number,
   reason: string,
   source: string,
-): Promise<number> {
+): Promise<PlayedRound> {
+  const won = Math.floor(bet * multiplier);
+  const netChange = won - bet;
+
+  // Single atomic balance update.
   const [updated] = await db
     .update(usersTable)
-    .set({ coins: sql`${usersTable.coins} + ${amount}` })
+    .set({ coins: sql`${usersTable.coins} + ${netChange}` })
     .where(eq(usersTable.id, userId))
     .returning({ coins: usersTable.coins });
-  if (amount !== 0) {
-    await db.insert(transactionsTable).values({
-      userId,
-      amount,
-      reason,
-      source,
-    });
-  }
-  return updated?.coins ?? 0;
+
+  await db.insert(transactionsTable).values({
+    userId,
+    amount: netChange,
+    reason: `${reason} (goýum: ${bet})`,
+    source,
+  });
+
+  return {
+    bet,
+    multiplier,
+    won,
+    netChange,
+    newBalance: updated?.coins ?? 0,
+    reason,
+    source,
+  };
 }
+
+function validateBet(user: UserRow, bet: number): { ok: true } | { ok: false; status: number; error: string } {
+  if (!Number.isInteger(bet) || bet < MIN_BET) {
+    return { ok: false, status: 400, error: `Iň pes goýum ${MIN_BET} teňňe` };
+  }
+  if (bet > MAX_BET) {
+    return { ok: false, status: 400, error: `Iň ýokary goýum ${MAX_BET} teňňe` };
+  }
+  if (user.coins < bet) {
+    return { ok: false, status: 400, error: "Teňňäňiz ýeterli däl" };
+  }
+  return { ok: true };
+}
+
+router.get("/games/config", (_req, res) => {
+  res.json({
+    minBet: MIN_BET,
+    maxBet: MAX_BET,
+    wheelSegments: WHEEL_SEGMENTS.map((s) => ({
+      multiplier: s.multiplier,
+      label: s.label,
+      color: s.color,
+      rarity: s.rarity,
+    })),
+    slotSymbols: [...SLOT_SYMBOLS],
+  });
+});
+
+router.post("/games/slot", requireUser, async (req, res) => {
+  const user = (req as Request & { user: UserRow }).user;
+  const parsed = PlaySlotBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Goýum nädogry" });
+    return;
+  }
+  const bet = parsed.data.bet;
+  const v = validateBet(user, bet);
+  if (!v.ok) {
+    res.status(v.status).json({ error: v.error });
+    return;
+  }
+
+  const result = spinSlot();
+  const round = await applyRound(user.id, bet, result.multiplier, "Slot maşyn", "game_slot");
+
+  res.json({
+    bet,
+    symbols: result.symbols,
+    multiplier: result.multiplier,
+    won: round.won,
+    netChange: round.netChange,
+    newBalance: round.newBalance,
+    label:
+      result.multiplier > 0
+        ? `${result.label} · +${round.netChange}`
+        : "Şowsuz",
+    rarity: result.rarity,
+    outcome: result.outcome,
+  });
+});
 
 router.post("/games/spin", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
-  const { item, index } = pickWeighted(SPIN_SEGMENTS);
-  const newBalance = await awardCoins(
-    user.id,
-    item.value,
-    "Pökgi aýlamak",
-    "game_spin",
-  );
+  const parsed = PlaySpinBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Goýum nädogry" });
+    return;
+  }
+  const bet = parsed.data.bet;
+  const v = validateBet(user, bet);
+  if (!v.ok) {
+    res.status(v.status).json({ error: v.error });
+    return;
+  }
+
+  const { segmentIndex, segment } = spinWheel();
+  const round = await applyRound(user.id, bet, segment.multiplier, "Bagt çarhy", "game_spin");
+
   res.json({
-    won: item.value,
-    newBalance,
-    label: item.value > 0 ? `+${item.value} teňňe` : "Şu gezek bagt ýok",
-    segmentIndex: index,
-    rarity: item.rarity,
+    bet,
+    segmentIndex,
+    multiplier: segment.multiplier,
+    won: round.won,
+    netChange: round.netChange,
+    newBalance: round.newBalance,
+    label:
+      segment.multiplier > 0
+        ? `${segment.label} · ${round.netChange >= 0 ? "+" : ""}${round.netChange}`
+        : "Şowsuz",
+    rarity: segment.rarity,
   });
 });
 
 router.post("/games/luckybox", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
-  const { item } = pickWeighted(BOX_REWARDS);
-  const newBalance = await awardCoins(
-    user.id,
-    item.value,
-    "Bagt gutusy",
-    "game_luckybox",
-  );
-  res.json({
-    won: item.value,
-    newBalance,
-    label: item.value > 0 ? `+${item.value} teňňe` : "Boş guty",
-    rarity: item.rarity,
-  });
-});
-
-router.post("/games/tap", requireUser, async (req, res) => {
-  const user = (req as Request & { user: UserRow }).user;
-  const parsed = PlayTapBody.safeParse(req.body);
+  const parsed = PlayLuckyBoxBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Nädogry maglumat" });
+    res.status(400).json({ error: "Goýum nädogry" });
     return;
   }
-  const taps = Math.min(parsed.data.taps, TAP_MAX_PER_SUBMIT);
-  if (user.lastTapAt) {
-    const since = Date.now() - user.lastTapAt.getTime();
-    if (since < TAP_COOLDOWN_MS) {
-      res.status(429).json({ error: "Çalt urýaňyz, biraz garaşyň" });
-      return;
-    }
-  }
-  const earned = taps * TAP_COIN_PER_TAP;
-  const newBalance = await awardCoins(
-    user.id,
-    earned,
-    `Basmak oýny ×${taps}`,
-    "game_tap",
-  );
-  await db
-    .update(usersTable)
-    .set({ lastTapAt: new Date() })
-    .where(eq(usersTable.id, user.id));
-  res.json({
-    won: earned,
-    newBalance,
-    label: `+${earned} teňňe`,
-    rarity: "common",
-  });
-});
-
-router.get("/games/daily-bonus/status", requireUser, async (req, res) => {
-  const user = (req as Request & { user: UserRow }).user;
-  if (!user.lastDailyClaimAt) {
-    res.json({ canClaim: true, nextClaimAt: null, streak: user.dailyStreak });
+  const { bet, pickIndex } = parsed.data;
+  const v = validateBet(user, bet);
+  if (!v.ok) {
+    res.status(v.status).json({ error: v.error });
     return;
   }
-  const next = nextDailyClaimAt(user.lastDailyClaimAt);
-  const canClaim = Date.now() >= next.getTime();
-  res.json({
-    canClaim,
-    nextClaimAt: canClaim ? null : next.toISOString(),
-    streak: user.dailyStreak,
-  });
-});
 
-router.post("/games/daily-bonus", requireUser, async (req, res) => {
-  const user = (req as Request & { user: UserRow }).user;
-  if (user.lastDailyClaimAt) {
-    const next = nextDailyClaimAt(user.lastDailyClaimAt);
-    if (Date.now() < next.getTime()) {
-      res.status(429).json({ error: "Indiki baýraga entek wagt bar" });
-      return;
-    }
-  }
-  const newStreak =
-    user.lastDailyClaimAt && streakStillValid(user.lastDailyClaimAt)
-      ? user.dailyStreak + 1
-      : 1;
-  const reward = dailyBonusForStreak(newStreak);
-
-  const newBalance = await awardCoins(
-    user.id,
-    reward,
-    `Günlük baýrak (${newStreak}-nji gün)`,
-    "daily_bonus",
-  );
-  await db
-    .update(usersTable)
-    .set({ lastDailyClaimAt: new Date(), dailyStreak: newStreak })
-    .where(eq(usersTable.id, user.id));
+  const boxes = generateLuckyBoxes();
+  const picked = boxes[pickIndex]!;
+  const round = await applyRound(user.id, bet, picked.multiplier, "Bagt gutusy", "game_luckybox");
 
   res.json({
-    won: reward,
-    newBalance,
-    label: `+${reward} teňňe (${newStreak}-nji gün)`,
-    rarity: newStreak >= 7 ? "epic" : newStreak >= 3 ? "rare" : "common",
+    bet,
+    pickIndex,
+    boxes,
+    multiplier: picked.multiplier,
+    won: round.won,
+    netChange: round.netChange,
+    newBalance: round.newBalance,
+    label:
+      picked.multiplier > 0
+        ? `${picked.multiplier}× · ${round.netChange >= 0 ? "+" : ""}${round.netChange}`
+        : "Boş guty",
+    rarity: rarityFromMultiplier(picked.multiplier),
   });
 });
 

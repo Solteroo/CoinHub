@@ -80,8 +80,8 @@ export default function Splash() {
       >
         <Logo className="w-24 h-24 mb-6" />
         <h1 className="text-4xl font-bold tracking-tighter gold-text-gradient mb-2">CoinHub</h1>
-        <p className="text-muted-foreground text-center text-sm max-w-[250px]">
-          Wirtual teňňe oýunlaryna hoş geldiňiz
+        <p className="text-muted-foreground text-center text-sm max-w-[250px] font-medium uppercase tracking-widest">
+          Premium kazino oýunlary
         </p>
       </motion.div>
 

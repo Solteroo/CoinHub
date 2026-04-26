@@ -6,8 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface DailyBonusStatus {
-  canClaim: boolean;
-  nextClaimAt?: string | null;
-  streak: number;
-}
+export type PlaySpinBody = {
+  /** @minimum 1 */
+  bet: number;
+};

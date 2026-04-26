@@ -10,6 +10,7 @@ import {
   generatePublicId,
 } from "../lib/auth";
 import { serializeUser } from "../lib/serializers";
+import { STARTING_COINS } from "../lib/games";
 
 const router: IRouter = Router();
 
@@ -47,7 +48,7 @@ router.post("/auth/register", async (req, res) => {
       username,
       publicId,
       passwordHash: hashPassword(password),
-      coins: 50,
+      coins: STARTING_COINS,
     })
     .returning();
   if (!user) {

@@ -1,53 +1,91 @@
 import { Layout } from "@/components/layout/Layout";
 import { Link } from "wouter";
-import { Gamepad2, Gift, MousePointerClick, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function GamesHub() {
   return (
     <Layout>
-      <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold gold-text-gradient mb-6">Oýunlar</h1>
+      <div className="p-4 space-y-6 pb-24">
+        <header className="pt-4">
+          <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter">Oýunlar</h1>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Uly utuşlar garaşýar</p>
+        </header>
         
-        <GameCard 
-          title="Pökgi" 
-          description="Çarhy aýlaň we baýrak gazanyň" 
-          href="/games/spin" 
-          icon={Gamepad2}
-        />
-        
-        <GameCard 
-          title="Bagt gutusy" 
-          description="Syrly gutularyň birini saýlaň" 
-          href="/games/luckybox" 
-          icon={Gift}
-        />
-        
-        <GameCard 
-          title="Basmak oýny" 
-          description="Tiz basyp teňňe ýygnaň" 
-          href="/games/tap" 
-          icon={MousePointerClick}
-        />
+        <div className="space-y-4">
+          <GameCard 
+            title="Slot Maşyn" 
+            description="3 reel, klassiki kazino duýgusy. 777 uly jekpot!" 
+            href="/games/slot" 
+            className="from-purple-900/20 to-card border-purple-500/20"
+            badge="Premium"
+            badgeClass="bg-purple-500/20 text-purple-300"
+          />
+          
+          <GameCard 
+            title="Bagt Çarhy" 
+            description="Çarhy aýlaň we 100x çenli multipliýator gazanyň." 
+            href="/games/spin" 
+            className="from-blue-900/20 to-card border-blue-500/20"
+            badge="Meşhur"
+            badgeClass="bg-blue-500/20 text-blue-300"
+          />
+          
+          <GameCard 
+            title="Bagt Gutusy" 
+            description="9 sandykdan birini saýlaň. Içinde näme bar?" 
+            href="/games/luckybox" 
+            className="from-amber-900/20 to-card border-amber-500/20"
+            badge="Täze"
+            badgeClass="bg-amber-500/20 text-amber-300"
+          />
+        </div>
+
+        <div className="bg-card/30 border border-primary/10 rounded-2xl p-6">
+          <h3 className="text-sm font-bold text-white uppercase mb-4 tracking-widest">Utuş tablisasy</h3>
+          <div className="space-y-3">
+            <PayRow label="JEKPOT (777)" value="150x" isGold />
+            <PayRow label="Ýyldyzlar" value="30x" />
+            <PayRow label="Gabyklar" value="12x" />
+            <PayRow label="Serediler" value="6x" />
+            <PayRow label="Güller" value="3.5x" />
+            <PayRow label="BAR" value="2.2x" />
+          </div>
+        </div>
       </div>
     </Layout>
   );
 }
 
-function GameCard({ title, description, href, icon: Icon }: any) {
+function PayRow({ label, value, isGold }: { label: string, value: string, isGold?: boolean }) {
+  return (
+    <div className="flex items-center justify-between text-xs font-bold">
+      <span className={cn("uppercase tracking-wider", isGold ? "gold-text-gradient" : "text-muted-foreground")}>{label}</span>
+      <span className={isGold ? "text-primary" : "text-white"}>{value}</span>
+    </div>
+  );
+}
+
+function GameCard({ title, description, href, className, badge, badgeClass }: any) {
   return (
     <Link href={href}>
-      <div className="bg-card border border-primary/20 hover:border-primary/50 transition-all rounded-3xl p-5 flex items-center justify-between group active:scale-95 cursor-pointer gold-glow">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-            <Icon className="w-7 h-7 text-primary" />
+      <motion.div 
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={cn("bg-gradient-to-br border rounded-3xl p-6 flex items-center justify-between group active:scale-95 cursor-pointer gold-glow relative overflow-hidden", className)}
+      >
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-3">
+             <h3 className="font-black text-xl text-white uppercase tracking-tighter italic">{title}</h3>
+             {badge && <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold uppercase", badgeClass)}>{badge}</span>}
           </div>
-          <div>
-            <h3 className="font-bold text-lg text-white mb-1">{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px]">{description}</p>
         </div>
-        <ChevronRight className="text-primary/50 group-hover:text-primary transition-colors" />
-      </div>
+        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+          <ChevronRight className="w-6 h-6 text-primary" />
+        </div>
+      </motion.div>
     </Link>
   );
 }

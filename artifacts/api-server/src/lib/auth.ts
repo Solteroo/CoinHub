@@ -116,11 +116,11 @@ export function requireAdmin(
   next();
 }
 
+// 8-digit numeric ID (e.g. "10428573"). Always starts 1-9 so no leading zero.
 export function generatePublicId(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let id = "CH";
-  for (let i = 0; i < 6; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
+  let id = String(Math.floor(Math.random() * 9) + 1);
+  for (let i = 0; i < 7; i++) {
+    id += String(Math.floor(Math.random() * 10));
   }
   return id;
 }

@@ -43,7 +43,7 @@ router.get("/me/stats", requireUser, async (req, res) => {
     .select({ c: sql<number>`count(*)::int`.as("c") })
     .from(transactionsTable)
     .where(
-      sql`${transactionsTable.userId} = ${user.id} AND ${transactionsTable.source} IN ('game_spin','game_luckybox','game_tap','daily_bonus')`,
+      sql`${transactionsTable.userId} = ${user.id} AND ${transactionsTable.source} IN ('game_spin','game_luckybox','game_slot')`,
     );
 
   const [rankRow] = await db

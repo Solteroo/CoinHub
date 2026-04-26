@@ -15,7 +15,7 @@ tags:
   - name: user
     description: Current user operations
   - name: games
-    description: Game endpoints
+    description: Casino-style game endpoints
   - name: leaderboard
     description: Leaderboard
   - name: admin
@@ -142,37 +142,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserStats"
 
-  /games/spin:
-    post:
-      operationId: playSpin
+  /games/config:
+    get:
+      operationId: getGamesConfig
       tags: [games]
-      summary: Pökgi aýlamak
+      summary: Oýun parametrleri (min/max bet, segmentler)
       responses:
         "200":
-          description: Spin result
+          description: Config
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameResult"
+                $ref: "#/components/schemas/GamesConfig"
 
-  /games/luckybox:
+  /games/slot:
     post:
-      operationId: playLuckyBox
+      operationId: playSlot
       tags: [games]
-      summary: Bagt gutusy açmak
-      responses:
-        "200":
-          description: Lucky box result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GameResult"
-
-  /games/tap:
-    post:
-      operationId: playTap
-      tags: [games]
-      summary: Basmak oýny - teňňe ýygnamak
+      summary: Slot maşyn (3 reel)
       requestBody:
         required: true
         content:
@@ -180,44 +167,69 @@ paths:
             schema:
               type: object
               properties:
-                taps:
+                bet:
                   type: integer
                   minimum: 1
-                  maximum: 200
-              required: [taps]
+              required: [bet]
       responses:
         "200":
-          description: Tap result
+          description: Slot result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameResult"
+                $ref: "#/components/schemas/SlotResult"
 
-  /games/daily-bonus:
+  /games/spin:
     post:
-      operationId: claimDailyBonus
+      operationId: playSpin
       tags: [games]
-      summary: Günlük baýrak
+      summary: Bagt çarhy (multiplier)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+              required: [bet]
       responses:
         "200":
-          description: Daily bonus
+          description: Spin result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameResult"
+                $ref: "#/components/schemas/SpinResult"
 
-  /games/daily-bonus/status:
-    get:
-      operationId: getDailyBonusStatus
+  /games/luckybox:
+    post:
+      operationId: playLuckyBox
       tags: [games]
-      summary: Günlük baýrak ýagdaýy
+      summary: Bagt gutusy (9 sandyk)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+                pickIndex:
+                  type: integer
+                  minimum: 0
+                  maximum: 8
+              required: [bet, pickIndex]
       responses:
         "200":
-          description: Daily bonus status
+          description: Lucky box result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DailyBonusStatus"
+                $ref: "#/components/schemas/LuckyBoxResult"
 
   /leaderboard:
     get:
@@ -459,34 +471,119 @@ components:
           nullable: true
       required: [totalEarned, totalSpent, gamesPlayed]
 
-    GameResult:
+    GamesConfig:
       type: object
       properties:
+        minBet:
+          type: integer
+        maxBet:
+          type: integer
+        wheelSegments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WheelSegment"
+        slotSymbols:
+          type: array
+          items:
+            type: string
+      required: [minBet, maxBet, wheelSegments, slotSymbols]
+
+    WheelSegment:
+      type: object
+      properties:
+        multiplier:
+          type: number
+        label:
+          type: string
+        color:
+          type: string
+        rarity:
+          type: string
+      required: [multiplier, label, color, rarity]
+
+    SlotResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        symbols:
+          type: array
+          items:
+            type: string
+          minItems: 3
+          maxItems: 3
+        multiplier:
+          type: number
         won:
+          type: integer
+        netChange:
           type: integer
         newBalance:
           type: integer
         label:
           type: string
-        segmentIndex:
-          type: integer
-          nullable: true
         rarity:
           type: string
-          nullable: true
-      required: [won, newBalance, label]
+        outcome:
+          type: string
+      required: [bet, symbols, multiplier, won, netChange, newBalance, label, rarity, outcome]
 
-    DailyBonusStatus:
+    SpinResult:
       type: object
       properties:
-        canClaim:
-          type: boolean
-        nextClaimAt:
-          type: string
-          nullable: true
-        streak:
+        bet:
           type: integer
-      required: [canClaim, streak]
+        segmentIndex:
+          type: integer
+        multiplier:
+          type: number
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+      required: [bet, segmentIndex, multiplier, won, netChange, newBalance, label, rarity]
+
+    LuckyBoxResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        pickIndex:
+          type: integer
+        boxes:
+          type: array
+          items:
+            $ref: "#/components/schemas/LuckyBoxReveal"
+          minItems: 9
+          maxItems: 9
+        multiplier:
+          type: number
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+      required: [bet, pickIndex, boxes, multiplier, won, netChange, newBalance, label, rarity]
+
+    LuckyBoxReveal:
+      type: object
+      properties:
+        multiplier:
+          type: number
+        rarity:
+          type: string
+      required: [multiplier, rarity]
 
     LeaderboardEntry:
       type: object
