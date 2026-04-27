@@ -13,6 +13,11 @@ export const usersTable = pgTable(
     lastDailyClaimAt: timestamp("last_daily_claim_at", { withTimezone: true }),
     dailyStreak: integer("daily_streak").notNull().default(0),
     lastTapAt: timestamp("last_tap_at", { withTimezone: true }),
+    email: text("email"),
+    bio: text("bio"),
+    avatarColor: text("avatar_color").notNull().default("#D4AF37"),
+    chatBanUntil: timestamp("chat_ban_until", { withTimezone: true }),
+    lastBonusAt: timestamp("last_bonus_at", { withTimezone: true }),
   },
   (t) => [index("users_coins_idx").on(t.coins)],
 );

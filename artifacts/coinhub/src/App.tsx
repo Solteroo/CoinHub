@@ -16,6 +16,19 @@ import Wallet from "@/pages/wallet";
 import Profile from "@/pages/profile";
 import Leaderboard from "@/pages/leaderboard";
 
+import Settings from "@/pages/settings";
+import EditProfile from "@/pages/edit-profile";
+import FAQ from "@/pages/faq";
+import About from "@/pages/about";
+import News from "@/pages/news";
+import Notifications from "@/pages/notifications";
+import Friends from "@/pages/friends";
+import DmList from "@/pages/dm";
+import DmThread from "@/pages/dm-thread";
+import PublicProfile from "@/pages/public-profile";
+import VIP from "@/pages/vip";
+import Transfer from "@/pages/transfer";
+
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminUserDetail from "@/pages/admin/user-detail";
@@ -44,12 +57,25 @@ function Router() {
       <Route path="/wallet" component={Wallet} />
       <Route path="/profile" component={Profile} />
       <Route path="/leaderboard" component={Leaderboard} />
-      
+
+      <Route path="/settings" component={Settings} />
+      <Route path="/edit-profile" component={EditProfile} />
+      <Route path="/faq" component={FAQ} />
+      <Route path="/about" component={About} />
+      <Route path="/news" component={News} />
+      <Route path="/notifications" component={Notifications} />
+      <Route path="/friends" component={Friends} />
+      <Route path="/dm" component={DmList} />
+      <Route path="/dm/:userId" component={DmThread} />
+      <Route path="/u/:publicId" component={PublicProfile} />
+      <Route path="/vip" component={VIP} />
+      <Route path="/transfer" component={Transfer} />
+
       <Route path="/admin" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/users/:userId" component={AdminUserDetail} />
       <Route path="/admin/transactions" component={AdminTransactions} />
-      
+
       <Route component={NotFound} />
     </Switch>
   );

@@ -13,4 +13,10 @@ export interface User {
   coins: number;
   createdAt: string;
   isAdmin: boolean;
+  email?: string | null;
+  bio?: string | null;
+  avatarColor: string;
+  bonusReady: boolean;
+  unreadNotifications: number;
+  unreadDms: number;
 }

@@ -11,6 +11,8 @@ export interface ChatMessage {
   userId: string;
   publicId: string;
   username: string;
+  avatarColor: string;
+  isAdmin: boolean;
   message: string;
   createdAt: string;
 }

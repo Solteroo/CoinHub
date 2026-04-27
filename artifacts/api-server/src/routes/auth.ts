@@ -14,13 +14,18 @@ import { STARTING_COINS } from "../lib/games";
 
 const router: IRouter = Router();
 
+const AVATAR_COLORS = ["#D4AF37", "#E94E77", "#3DA5D9", "#7CB518", "#9B5DE5", "#F77F00"];
+function pickAvatarColor(): string {
+  return AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)] ?? "#D4AF37";
+}
+
 router.post("/auth/register", async (req, res) => {
   const parsed = RegisterUserBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Maglumatlar nädogry" });
     return;
   }
-  const { username, password } = parsed.data;
+  const { username, password, email } = parsed.data;
   const existing = await db
     .select()
     .from(usersTable)
@@ -49,6 +54,8 @@ router.post("/auth/register", async (req, res) => {
       publicId,
       passwordHash: hashPassword(password),
       coins: STARTING_COINS,
+      email: email ?? null,
+      avatarColor: pickAvatarColor(),
     })
     .returning();
   if (!user) {
@@ -56,7 +63,7 @@ router.post("/auth/register", async (req, res) => {
     return;
   }
   createSession(res, user.id);
-  res.json({ user: serializeUser(user) });
+  res.json({ user: serializeUser(user, { bonusReady: true }) });
 });
 
 router.post("/auth/login", async (req, res) => {

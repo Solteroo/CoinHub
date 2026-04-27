@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request } from "express";
 import { db, chatMessagesTable, usersTable, type UserRow } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { PostChatMessageBody } from "@workspace/api-zod";
 import { requireUser, requireAdmin } from "../lib/auth";
 
@@ -21,6 +21,8 @@ router.get("/chat/messages", async (req, res) => {
       createdAt: chatMessagesTable.createdAt,
       username: usersTable.username,
       publicId: usersTable.publicId,
+      avatarColor: usersTable.avatarColor,
+      isAdmin: usersTable.isAdmin,
     })
     .from(chatMessagesTable)
     .innerJoin(usersTable, eq(chatMessagesTable.userId, usersTable.id))
@@ -36,6 +38,8 @@ router.get("/chat/messages", async (req, res) => {
         userId: r.userId,
         publicId: r.publicId,
         username: r.username,
+        avatarColor: r.avatarColor,
+        isAdmin: r.isAdmin === 1,
         message: r.message,
         createdAt: r.createdAt.toISOString(),
       })),
@@ -44,6 +48,11 @@ router.get("/chat/messages", async (req, res) => {
 
 router.post("/chat/messages", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
+  if (user.chatBanUntil && user.chatBanUntil.getTime() > Date.now()) {
+    const mins = Math.ceil((user.chatBanUntil.getTime() - Date.now()) / 60000);
+    res.status(403).json({ error: `Çatda gadagan edildiňiz. ${mins} minut galdy` });
+    return;
+  }
   const parsed = PostChatMessageBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Habar nädogry" });
@@ -78,6 +87,8 @@ router.post("/chat/messages", requireUser, async (req, res) => {
     userId: inserted.userId,
     publicId: user.publicId,
     username: user.username,
+    avatarColor: user.avatarColor,
+    isAdmin: user.isAdmin === 1,
     message: inserted.message,
     createdAt: inserted.createdAt.toISOString(),
   });
@@ -96,7 +107,35 @@ router.delete("/admin/chat/messages/:messageId", requireAdmin, async (req, res) 
   res.json({ ok: true });
 });
 
-// silence unused warning
-void sql;
+router.get("/admin/chat/messages", requireAdmin, async (_req, res) => {
+  const rows = await db
+    .select({
+      id: chatMessagesTable.id,
+      userId: chatMessagesTable.userId,
+      message: chatMessagesTable.message,
+      createdAt: chatMessagesTable.createdAt,
+      username: usersTable.username,
+      publicId: usersTable.publicId,
+      avatarColor: usersTable.avatarColor,
+      isAdmin: usersTable.isAdmin,
+    })
+    .from(chatMessagesTable)
+    .innerJoin(usersTable, eq(chatMessagesTable.userId, usersTable.id))
+    .where(eq(chatMessagesTable.deleted, 0))
+    .orderBy(desc(chatMessagesTable.createdAt))
+    .limit(200);
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      userId: r.userId,
+      publicId: r.publicId,
+      username: r.username,
+      avatarColor: r.avatarColor,
+      isAdmin: r.isAdmin === 1,
+      message: r.message,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  );
+});
 
 export default router;

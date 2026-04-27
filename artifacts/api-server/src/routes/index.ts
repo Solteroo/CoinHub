@@ -5,6 +5,8 @@ import meRouter from "./me";
 import gamesRouter from "./games";
 import leaderboardRouter from "./leaderboard";
 import chatRouter from "./chat";
+import socialRouter from "./social";
+import newsRouter from "./news";
 import adminRouter from "./admin";
 
 const router: IRouter = Router();
@@ -15,6 +17,8 @@ router.use(meRouter);
 router.use(gamesRouter);
 router.use(leaderboardRouter);
 router.use(chatRouter);
+router.use(socialRouter);
+router.use(newsRouter);
 router.use(adminRouter);
 
 export default router;

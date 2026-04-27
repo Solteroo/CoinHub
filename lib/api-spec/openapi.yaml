@@ -20,6 +20,12 @@ tags:
     description: Leaderboard
   - name: chat
     description: Global chat
+  - name: social
+    description: Friends, DMs, public profiles
+  - name: news
+    description: News and announcements
+  - name: notifications
+    description: User notifications
   - name: admin
     description: Admin operations
 paths:
@@ -56,6 +62,9 @@ paths:
                   type: string
                   minLength: 4
                   maxLength: 64
+                email:
+                  type: string
+                  format: email
               required: [username, password]
       responses:
         "200":
@@ -143,6 +152,418 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserStats"
+
+  /me/profile:
+    patch:
+      operationId: updateMyProfile
+      tags: [user]
+      summary: Profil maglumatlary täzelemek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bio:
+                  type: string
+                  maxLength: 200
+                avatarColor:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /me/transfer:
+    post:
+      operationId: transferCoins
+      tags: [user]
+      summary: Başga ulanyja TMT geçirmek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipientPublicId:
+                  type: string
+                amount:
+                  type: integer
+                  minimum: 1
+                note:
+                  type: string
+                  maxLength: 100
+              required: [recipientPublicId, amount]
+      responses:
+        "200":
+          description: Transfer success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferResult"
+
+  /me/claim-bonus:
+    post:
+      operationId: claimBonus
+      tags: [user]
+      summary: 3 günlük bonusy almak
+      responses:
+        "200":
+          description: Bonus result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BonusResult"
+
+  /me/notifications:
+    get:
+      operationId: getMyNotifications
+      tags: [notifications]
+      summary: Meniň bildirişlerim
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /me/notifications/mark-read:
+    post:
+      operationId: markNotificationsRead
+      tags: [notifications]
+      summary: Bildirişleri okaldy diýip belgilemek
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /users/search:
+    get:
+      operationId: searchUsers
+      tags: [social]
+      summary: ID/at boýunça ulanyjy tapmak
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicUser"
+
+  /users/{publicId}:
+    get:
+      operationId: getPublicProfile
+      tags: [social]
+      summary: Açyk profil
+      parameters:
+        - in: path
+          name: publicId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfile"
+
+  /friends:
+    get:
+      operationId: getFriends
+      tags: [social]
+      summary: Dostlarym (we sargyt edenler)
+      responses:
+        "200":
+          description: Friends
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FriendList"
+
+  /friends/request:
+    post:
+      operationId: sendFriendRequest
+      tags: [social]
+      summary: Dostluk sorag ibermek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                publicId:
+                  type: string
+              required: [publicId]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /friends/{userId}/accept:
+    post:
+      operationId: acceptFriendRequest
+      tags: [social]
+      summary: Sorag kabul etmek
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /friends/{userId}:
+    delete:
+      operationId: removeFriend
+      tags: [social]
+      summary: Dosty pozmak / sorag ret etmek
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /dm/threads:
+    get:
+      operationId: getDmThreads
+      tags: [social]
+      summary: Şahsy ýazyşmalar
+      responses:
+        "200":
+          description: Threads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DmThread"
+
+  /dm/{userId}/messages:
+    get:
+      operationId: getDmMessages
+      tags: [social]
+      summary: Bir adam bilen ýazyşma
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DmMessage"
+    post:
+      operationId: sendDmMessage
+      tags: [social]
+      summary: Şahsy habar ibermek
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+              required: [message]
+      responses:
+        "200":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DmMessage"
+
+  /news:
+    get:
+      operationId: getNews
+      tags: [news]
+      summary: Tazelikler
+      responses:
+        "200":
+          description: News
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NewsPost"
+
+  /admin/news:
+    post:
+      operationId: adminCreateNews
+      tags: [admin]
+      summary: Tazelik döretmek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+              required: [title, body]
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsPost"
+
+  /admin/news/{newsId}:
+    delete:
+      operationId: adminDeleteNews
+      tags: [admin]
+      summary: Tazelik öçürmek
+      parameters:
+        - in: path
+          name: newsId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /admin/users/{userId}/set-admin:
+    post:
+      operationId: adminSetAdmin
+      tags: [admin]
+      summary: Ulanyjyny admin owner edip belgilemek
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isAdmin:
+                  type: boolean
+              required: [isAdmin]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /admin/users/{userId}/ban-chat:
+    post:
+      operationId: adminBanChat
+      tags: [admin]
+      summary: Ulanyjyny çatda gadagan etmek
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                minutes:
+                  type: integer
+                  minimum: 0
+              required: [minutes]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /admin/owner:
+    get:
+      operationId: getAdminOwner
+      tags: [admin]
+      summary: Admin owner ulanyjynyň açyk maglumatlary
+      responses:
+        "200":
+          description: Owner public profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicUser"
 
   /games/config:
     get:
@@ -532,7 +953,21 @@ components:
           type: string
         isAdmin:
           type: boolean
-      required: [id, publicId, username, coins, createdAt, isAdmin]
+        email:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        avatarColor:
+          type: string
+        bonusReady:
+          type: boolean
+        unreadNotifications:
+          type: integer
+        unreadDms:
+          type: integer
+      required: [id, publicId, username, coins, createdAt, isAdmin, avatarColor, bonusReady, unreadNotifications, unreadDms]
 
     Transaction:
       type: object
@@ -715,11 +1150,175 @@ components:
           type: string
         username:
           type: string
+        avatarColor:
+          type: string
+        isAdmin:
+          type: boolean
         message:
           type: string
         createdAt:
           type: string
-      required: [id, userId, publicId, username, message, createdAt]
+      required: [id, userId, publicId, username, avatarColor, isAdmin, message, createdAt]
+
+    PublicUser:
+      type: object
+      properties:
+        id:
+          type: string
+        publicId:
+          type: string
+        username:
+          type: string
+        avatarColor:
+          type: string
+        isAdmin:
+          type: boolean
+      required: [id, publicId, username, avatarColor, isAdmin]
+
+    PublicProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        publicId:
+          type: string
+        username:
+          type: string
+        avatarColor:
+          type: string
+        isAdmin:
+          type: boolean
+        bio:
+          type: string
+          nullable: true
+        coins:
+          type: integer
+        rank:
+          type: integer
+          nullable: true
+        gamesPlayed:
+          type: integer
+        createdAt:
+          type: string
+        friendStatus:
+          type: string
+          description: "none | pending_outgoing | pending_incoming | friends | self"
+      required: [id, publicId, username, avatarColor, isAdmin, coins, gamesPlayed, createdAt, friendStatus]
+
+    TransferResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        senderBalance:
+          type: integer
+        recipient:
+          $ref: "#/components/schemas/PublicUser"
+        amount:
+          type: integer
+      required: [ok, senderBalance, recipient, amount]
+
+    BonusResult:
+      type: object
+      properties:
+        granted:
+          type: boolean
+        amount:
+          type: integer
+        newBalance:
+          type: integer
+        nextAvailableAt:
+          type: string
+          nullable: true
+      required: [granted, amount, newBalance]
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        kind:
+          type: string
+        readAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, title, body, kind, createdAt]
+
+    FriendEntry:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/PublicUser"
+        since:
+          type: string
+      required: [user, since]
+
+    FriendList:
+      type: object
+      properties:
+        friends:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendEntry"
+        incoming:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendEntry"
+        outgoing:
+          type: array
+          items:
+            $ref: "#/components/schemas/FriendEntry"
+      required: [friends, incoming, outgoing]
+
+    DmThread:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/PublicUser"
+        lastMessage:
+          type: string
+        lastAt:
+          type: string
+        unread:
+          type: integer
+      required: [user, lastMessage, lastAt, unread]
+
+    DmMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        fromId:
+          type: string
+        toId:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+        readAt:
+          type: string
+          nullable: true
+      required: [id, fromId, toId, message, createdAt]
+
+    NewsPost:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        createdAt:
+          type: string
+      required: [id, title, body, createdAt]
 
     LeaderboardEntry:
       type: object

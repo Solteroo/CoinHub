@@ -1,29 +1,199 @@
-import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
-import { Coins } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import {
+  useGetMe,
+  getGetMeQueryKey,
+  useSearchUsers,
+  useLogoutUser,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, Crown, HelpCircle, Info, LogOut, ShieldCheck, Coins } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { CoinCounter } from "@/components/ui/coin-counter";
-import { Link } from "wouter";
+import { Avatar } from "@/components/Avatar";
+import { OwnerBadge } from "@/components/OwnerBadge";
+import { fmtCoins, cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function TopHeader() {
+  const [location, setLocation] = useLocation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const dq = useDebounce(q, 300);
+  const { data: results = [] } = useSearchUsers({ q: dq }, { query: { enabled: dq.length >= 2 } });
+  const logout = useLogoutUser();
+  const qc = useQueryClient();
+
+  const showBack = location !== "/home" && location !== "/";
+
+  const handleLogout = () => {
+    logout.mutate(undefined, {
+      onSuccess: () => {
+        qc.clear();
+        setDrawerOpen(false);
+        setLocation("/");
+      },
+    });
+  };
+
+  const goAndClose = (href: string) => {
+    setDrawerOpen(false);
+    setLocation(href);
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-primary/10">
-      <div className="max-w-md mx-auto flex items-center justify-between h-14 px-4">
-        <Link href="/home" className="flex items-center gap-2">
-          <Logo className="w-8 h-8" />
-          <span className="font-bold text-lg tracking-tight gold-text-gradient">CoinHub</span>
+    <header className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl border-b border-primary/10">
+      <div className="max-w-md mx-auto h-14 px-3 flex items-center gap-2">
+        {showBack ? (
+          <button
+            onClick={() => setLocation("/home")}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95"
+            aria-label="Yzyna"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        ) : (
+          <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95"
+                aria-label="Menýu"
+              >
+                <Menu className="w-5 h-5" />
+                {(user?.unreadNotifications ?? 0) + (user?.unreadDms ?? 0) > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-destructive" />
+                )}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] bg-background border-primary/20 p-0">
+              <SheetHeader className="p-5 border-b border-primary/10">
+                <SheetTitle className="text-left">
+                  {user ? (
+                    <Link href="/profile">
+                      <button onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 w-full">
+                        <Avatar username={user.username} color={user.avatarColor} size="md" />
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-white truncate">{user.username}</span>
+                            {user.isAdmin && <OwnerBadge size="xs" />}
+                          </div>
+                          <span className="text-[10px] font-mono text-muted-foreground">#{user.publicId}</span>
+                        </div>
+                      </button>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Logo className="w-7 h-7" />
+                      <span className="font-bold gold-text-gradient">CoinHub</span>
+                    </div>
+                  )}
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="p-3 space-y-1">
+                <DrawerItem icon={Settings} label="Sazlamalar" onClick={() => goAndClose("/settings")} />
+                <DrawerItem icon={Bell} label="Bildirişler" onClick={() => goAndClose("/notifications")} badge={user?.unreadNotifications} />
+                <DrawerItem icon={Users} label="Dostlar" onClick={() => goAndClose("/friends")} />
+                <DrawerItem icon={Newspaper} label="Tazelikler" onClick={() => goAndClose("/news")} />
+                <DrawerItem icon={Crown} label="VIP sargyt" onClick={() => goAndClose("/vip")} highlight />
+                <DrawerItem icon={HelpCircle} label="Sorag-jogap" onClick={() => goAndClose("/faq")} />
+                <DrawerItem icon={Info} label="CoinHub hakda" onClick={() => goAndClose("/about")} />
+                {user?.isAdmin && (
+                  <DrawerItem icon={ShieldCheck} label="Admin paneli" onClick={() => goAndClose("/admin/dashboard")} />
+                )}
+                <div className="border-t border-primary/10 my-2" />
+                <DrawerItem icon={LogOut} label="Çykmak" onClick={handleLogout} destructive />
+              </nav>
+            </SheetContent>
+          </Sheet>
+        )}
+
+        <Link href="/home" className="flex items-center gap-1.5">
+          <Logo className="w-7 h-7" />
+          <span className="font-black text-base tracking-tight gold-text-gradient hidden xs:inline">CoinHub</span>
         </Link>
-        
+
+        <div className="flex-1" />
+
+        <button
+          onClick={() => setSearchOpen((v) => !v)}
+          className={cn("w-9 h-9 rounded-lg flex items-center justify-center active:scale-95", searchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}
+          aria-label="Gözle"
+        >
+          {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+        </button>
+
         {user && (
           <Link href="/wallet">
-            <div className="flex items-center gap-2 bg-card border border-primary/20 px-3 py-1.5 rounded-full gold-glow transition-transform active:scale-95">
-              <Coins className="w-4 h-4 text-primary" />
-              <CoinCounter value={user.coins} className="font-bold text-primary tabular-nums" />
+            <div className="flex items-center gap-1.5 bg-card border border-primary/20 px-3 py-1.5 rounded-full gold-glow active:scale-95">
+              <Coins className="w-3.5 h-3.5 text-primary" />
+              <span className="font-black text-primary text-sm tabular-nums">{fmtCoins(user.coins)}</span>
+              <span className="text-[9px] font-bold text-primary/70 tracking-widest">TMT</span>
             </div>
           </Link>
         )}
       </div>
+
+      {searchOpen && (
+        <div className="border-t border-primary/10 px-3 py-2 bg-background/95">
+          <input
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="ID ýa-da ulanyjy ady..."
+            className="w-full bg-card border border-primary/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {dq.length >= 2 && (
+            <div className="mt-2 max-h-72 overflow-y-auto space-y-1">
+              {results.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3">Tapylmady</p>
+              )}
+              {results.map((u) => (
+                <Link key={u.id} href={`/u/${u.publicId}`}>
+                  <button
+                    onClick={() => { setSearchOpen(false); setQ(""); }}
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-card text-left active:scale-[0.99]"
+                  >
+                    <Avatar username={u.username} color={u.avatarColor} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-bold text-white truncate">{u.username}</p>
+                        {u.isAdmin && <OwnerBadge size="xs" />}
+                      </div>
+                      <p className="text-[10px] font-mono text-muted-foreground">#{u.publicId}</p>
+                    </div>
+                  </button>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </header>
+  );
+}
+
+function DrawerItem({ icon: Icon, label, onClick, badge, highlight, destructive }: { icon: any; label: string; onClick: () => void; badge?: number; highlight?: boolean; destructive?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider active:scale-[0.99] transition-all",
+        destructive ? "text-destructive hover:bg-destructive/10" :
+        highlight ? "text-primary bg-primary/10 hover:bg-primary/15" :
+        "text-white/90 hover:bg-card hover:text-primary",
+      )}
+    >
+      <Icon className="w-4 h-4" />
+      <span className="flex-1 text-left">{label}</span>
+      {badge ? <span className="bg-destructive text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-5 text-center">{badge}</span> : null}
+    </button>
   );
 }

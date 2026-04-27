@@ -17,4 +17,5 @@ export type RegisterUserBody = {
    * @maxLength 64
    */
   password: string;
+  email?: string;
 };

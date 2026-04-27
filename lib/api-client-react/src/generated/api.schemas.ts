@@ -20,6 +20,12 @@ export interface User {
   coins: number;
   createdAt: string;
   isAdmin: boolean;
+  email?: string | null;
+  bio?: string | null;
+  avatarColor: string;
+  bonusReady: boolean;
+  unreadNotifications: number;
+  unreadDms: number;
 }
 
 export interface AuthResponse {
@@ -122,7 +128,89 @@ export interface ChatMessage {
   userId: string;
   publicId: string;
   username: string;
+  avatarColor: string;
+  isAdmin: boolean;
   message: string;
+  createdAt: string;
+}
+
+export interface PublicUser {
+  id: string;
+  publicId: string;
+  username: string;
+  avatarColor: string;
+  isAdmin: boolean;
+}
+
+export interface PublicProfile {
+  id: string;
+  publicId: string;
+  username: string;
+  avatarColor: string;
+  isAdmin: boolean;
+  bio?: string | null;
+  coins: number;
+  rank?: number | null;
+  gamesPlayed: number;
+  createdAt: string;
+  /** none | pending_outgoing | pending_incoming | friends | self */
+  friendStatus: string;
+}
+
+export interface TransferResult {
+  ok: boolean;
+  senderBalance: number;
+  recipient: PublicUser;
+  amount: number;
+}
+
+export interface BonusResult {
+  granted: boolean;
+  amount: number;
+  newBalance: number;
+  nextAvailableAt?: string | null;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  kind: string;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface FriendEntry {
+  user: PublicUser;
+  since: string;
+}
+
+export interface FriendList {
+  friends: FriendEntry[];
+  incoming: FriendEntry[];
+  outgoing: FriendEntry[];
+}
+
+export interface DmThread {
+  user: PublicUser;
+  lastMessage: string;
+  lastAt: string;
+  unread: number;
+}
+
+export interface DmMessage {
+  id: string;
+  fromId: string;
+  toId: string;
+  message: string;
+  createdAt: string;
+  readAt?: string | null;
+}
+
+export interface NewsPost {
+  id: string;
+  title: string;
+  body: string;
   createdAt: string;
 }
 
@@ -168,11 +256,65 @@ export type RegisterUserBody = {
    * @maxLength 64
    */
   password: string;
+  email?: string;
 };
 
 export type LoginUserBody = {
   username: string;
   password: string;
+};
+
+export type UpdateMyProfileBody = {
+  /** @maxLength 200 */
+  bio?: string;
+  avatarColor?: string;
+  email?: string;
+};
+
+export type TransferCoinsBody = {
+  recipientPublicId: string;
+  /** @minimum 1 */
+  amount: number;
+  /** @maxLength 100 */
+  note?: string;
+};
+
+export type SearchUsersParams = {
+  q: string;
+};
+
+export type SendFriendRequestBody = {
+  publicId: string;
+};
+
+export type SendDmMessageBody = {
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  message: string;
+};
+
+export type AdminCreateNewsBody = {
+  /**
+   * @minLength 1
+   * @maxLength 100
+   */
+  title: string;
+  /**
+   * @minLength 1
+   * @maxLength 1000
+   */
+  body: string;
+};
+
+export type AdminSetAdminBody = {
+  isAdmin: boolean;
+};
+
+export type AdminBanChatBody = {
+  /** @minimum 0 */
+  minutes: number;
 };
 
 export type PlaySlotBody = {

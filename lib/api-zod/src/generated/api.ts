@@ -32,6 +32,7 @@ export const RegisterUserBody = zod.object({
     .string()
     .min(registerUserBodyPasswordMin)
     .max(registerUserBodyPasswordMax),
+  email: zod.string().email().optional(),
 });
 
 export const RegisterUserResponse = zod.object({
@@ -42,6 +43,12 @@ export const RegisterUserResponse = zod.object({
     coins: zod.number(),
     createdAt: zod.string(),
     isAdmin: zod.boolean(),
+    email: zod.string().nullish(),
+    bio: zod.string().nullish(),
+    avatarColor: zod.string(),
+    bonusReady: zod.boolean(),
+    unreadNotifications: zod.number(),
+    unreadDms: zod.number(),
   }),
 });
 
@@ -61,6 +68,12 @@ export const LoginUserResponse = zod.object({
     coins: zod.number(),
     createdAt: zod.string(),
     isAdmin: zod.boolean(),
+    email: zod.string().nullish(),
+    bio: zod.string().nullish(),
+    avatarColor: zod.string(),
+    bonusReady: zod.boolean(),
+    unreadNotifications: zod.number(),
+    unreadDms: zod.number(),
   }),
 });
 
@@ -81,6 +94,12 @@ export const GetMeResponse = zod.object({
   coins: zod.number(),
   createdAt: zod.string(),
   isAdmin: zod.boolean(),
+  email: zod.string().nullish(),
+  bio: zod.string().nullish(),
+  avatarColor: zod.string(),
+  bonusReady: zod.boolean(),
+  unreadNotifications: zod.number(),
+  unreadDms: zod.number(),
 });
 
 /**
@@ -106,6 +125,343 @@ export const GetMyStatsResponse = zod.object({
   totalSpent: zod.number(),
   gamesPlayed: zod.number(),
   rank: zod.number().nullish(),
+});
+
+/**
+ * @summary Profil maglumatlary täzelemek
+ */
+export const updateMyProfileBodyBioMax = 200;
+
+export const UpdateMyProfileBody = zod.object({
+  bio: zod.string().max(updateMyProfileBodyBioMax).optional(),
+  avatarColor: zod.string().optional(),
+  email: zod.string().email().optional(),
+});
+
+export const UpdateMyProfileResponse = zod.object({
+  id: zod.string(),
+  publicId: zod.string(),
+  username: zod.string(),
+  coins: zod.number(),
+  createdAt: zod.string(),
+  isAdmin: zod.boolean(),
+  email: zod.string().nullish(),
+  bio: zod.string().nullish(),
+  avatarColor: zod.string(),
+  bonusReady: zod.boolean(),
+  unreadNotifications: zod.number(),
+  unreadDms: zod.number(),
+});
+
+/**
+ * @summary Başga ulanyja TMT geçirmek
+ */
+
+export const transferCoinsBodyNoteMax = 100;
+
+export const TransferCoinsBody = zod.object({
+  recipientPublicId: zod.string(),
+  amount: zod.number().min(1),
+  note: zod.string().max(transferCoinsBodyNoteMax).optional(),
+});
+
+export const TransferCoinsResponse = zod.object({
+  ok: zod.boolean(),
+  senderBalance: zod.number(),
+  recipient: zod.object({
+    id: zod.string(),
+    publicId: zod.string(),
+    username: zod.string(),
+    avatarColor: zod.string(),
+    isAdmin: zod.boolean(),
+  }),
+  amount: zod.number(),
+});
+
+/**
+ * @summary 3 günlük bonusy almak
+ */
+export const ClaimBonusResponse = zod.object({
+  granted: zod.boolean(),
+  amount: zod.number(),
+  newBalance: zod.number(),
+  nextAvailableAt: zod.string().nullish(),
+});
+
+/**
+ * @summary Meniň bildirişlerim
+ */
+export const GetMyNotificationsResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  body: zod.string(),
+  kind: zod.string(),
+  readAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const GetMyNotificationsResponse = zod.array(
+  GetMyNotificationsResponseItem,
+);
+
+/**
+ * @summary Bildirişleri okaldy diýip belgilemek
+ */
+export const MarkNotificationsReadResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary ID/at boýunça ulanyjy tapmak
+ */
+export const SearchUsersQueryParams = zod.object({
+  q: zod.coerce.string(),
+});
+
+export const SearchUsersResponseItem = zod.object({
+  id: zod.string(),
+  publicId: zod.string(),
+  username: zod.string(),
+  avatarColor: zod.string(),
+  isAdmin: zod.boolean(),
+});
+export const SearchUsersResponse = zod.array(SearchUsersResponseItem);
+
+/**
+ * @summary Açyk profil
+ */
+export const GetPublicProfileParams = zod.object({
+  publicId: zod.coerce.string(),
+});
+
+export const GetPublicProfileResponse = zod.object({
+  id: zod.string(),
+  publicId: zod.string(),
+  username: zod.string(),
+  avatarColor: zod.string(),
+  isAdmin: zod.boolean(),
+  bio: zod.string().nullish(),
+  coins: zod.number(),
+  rank: zod.number().nullish(),
+  gamesPlayed: zod.number(),
+  createdAt: zod.string(),
+  friendStatus: zod
+    .string()
+    .describe("none | pending_outgoing | pending_incoming | friends | self"),
+});
+
+/**
+ * @summary Dostlarym (we sargyt edenler)
+ */
+export const GetFriendsResponse = zod.object({
+  friends: zod.array(
+    zod.object({
+      user: zod.object({
+        id: zod.string(),
+        publicId: zod.string(),
+        username: zod.string(),
+        avatarColor: zod.string(),
+        isAdmin: zod.boolean(),
+      }),
+      since: zod.string(),
+    }),
+  ),
+  incoming: zod.array(
+    zod.object({
+      user: zod.object({
+        id: zod.string(),
+        publicId: zod.string(),
+        username: zod.string(),
+        avatarColor: zod.string(),
+        isAdmin: zod.boolean(),
+      }),
+      since: zod.string(),
+    }),
+  ),
+  outgoing: zod.array(
+    zod.object({
+      user: zod.object({
+        id: zod.string(),
+        publicId: zod.string(),
+        username: zod.string(),
+        avatarColor: zod.string(),
+        isAdmin: zod.boolean(),
+      }),
+      since: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Dostluk sorag ibermek
+ */
+export const SendFriendRequestBody = zod.object({
+  publicId: zod.string(),
+});
+
+export const SendFriendRequestResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Sorag kabul etmek
+ */
+export const AcceptFriendRequestParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const AcceptFriendRequestResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Dosty pozmak / sorag ret etmek
+ */
+export const RemoveFriendParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const RemoveFriendResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Şahsy ýazyşmalar
+ */
+export const GetDmThreadsResponseItem = zod.object({
+  user: zod.object({
+    id: zod.string(),
+    publicId: zod.string(),
+    username: zod.string(),
+    avatarColor: zod.string(),
+    isAdmin: zod.boolean(),
+  }),
+  lastMessage: zod.string(),
+  lastAt: zod.string(),
+  unread: zod.number(),
+});
+export const GetDmThreadsResponse = zod.array(GetDmThreadsResponseItem);
+
+/**
+ * @summary Bir adam bilen ýazyşma
+ */
+export const GetDmMessagesParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const GetDmMessagesResponseItem = zod.object({
+  id: zod.string(),
+  fromId: zod.string(),
+  toId: zod.string(),
+  message: zod.string(),
+  createdAt: zod.string(),
+  readAt: zod.string().nullish(),
+});
+export const GetDmMessagesResponse = zod.array(GetDmMessagesResponseItem);
+
+/**
+ * @summary Şahsy habar ibermek
+ */
+export const SendDmMessageParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const sendDmMessageBodyMessageMax = 500;
+
+export const SendDmMessageBody = zod.object({
+  message: zod.string().min(1).max(sendDmMessageBodyMessageMax),
+});
+
+export const SendDmMessageResponse = zod.object({
+  id: zod.string(),
+  fromId: zod.string(),
+  toId: zod.string(),
+  message: zod.string(),
+  createdAt: zod.string(),
+  readAt: zod.string().nullish(),
+});
+
+/**
+ * @summary Tazelikler
+ */
+export const GetNewsResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  body: zod.string(),
+  createdAt: zod.string(),
+});
+export const GetNewsResponse = zod.array(GetNewsResponseItem);
+
+/**
+ * @summary Tazelik döretmek
+ */
+export const adminCreateNewsBodyTitleMax = 100;
+
+export const adminCreateNewsBodyBodyMax = 1000;
+
+export const AdminCreateNewsBody = zod.object({
+  title: zod.string().min(1).max(adminCreateNewsBodyTitleMax),
+  body: zod.string().min(1).max(adminCreateNewsBodyBodyMax),
+});
+
+export const AdminCreateNewsResponse = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  body: zod.string(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Tazelik öçürmek
+ */
+export const AdminDeleteNewsParams = zod.object({
+  newsId: zod.coerce.string(),
+});
+
+export const AdminDeleteNewsResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Ulanyjyny admin owner edip belgilemek
+ */
+export const AdminSetAdminParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const AdminSetAdminBody = zod.object({
+  isAdmin: zod.boolean(),
+});
+
+export const AdminSetAdminResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Ulanyjyny çatda gadagan etmek
+ */
+export const AdminBanChatParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const adminBanChatBodyMinutesMin = 0;
+
+export const AdminBanChatBody = zod.object({
+  minutes: zod.number().min(adminBanChatBodyMinutesMin),
+});
+
+export const AdminBanChatResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Admin owner ulanyjynyň açyk maglumatlary
+ */
+export const GetAdminOwnerResponse = zod.object({
+  id: zod.string(),
+  publicId: zod.string(),
+  username: zod.string(),
+  avatarColor: zod.string(),
+  isAdmin: zod.boolean(),
 });
 
 /**
@@ -254,6 +610,8 @@ export const GetChatMessagesResponseItem = zod.object({
   userId: zod.string(),
   publicId: zod.string(),
   username: zod.string(),
+  avatarColor: zod.string(),
+  isAdmin: zod.boolean(),
   message: zod.string(),
   createdAt: zod.string(),
 });
@@ -273,6 +631,8 @@ export const PostChatMessageResponse = zod.object({
   userId: zod.string(),
   publicId: zod.string(),
   username: zod.string(),
+  avatarColor: zod.string(),
+  isAdmin: zod.boolean(),
   message: zod.string(),
   createdAt: zod.string(),
 });

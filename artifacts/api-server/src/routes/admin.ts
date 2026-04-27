@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, transactionsTable } from "@workspace/db";
+import { db, usersTable, transactionsTable, notificationsTable } from "@workspace/db";
 import { and, desc, eq, gte, ilike, or, sql, sum } from "drizzle-orm";
 import {
   AdminLoginBody,
@@ -163,6 +163,51 @@ router.get("/admin/transactions", requireAdmin, async (req, res) => {
         .limit(300)
     : await baseQuery.orderBy(desc(transactionsTable.createdAt)).limit(300);
   res.json(rows.map(serializeTransaction));
+});
+
+router.post("/admin/users/:userId/set-admin", requireAdmin, async (req, res) => {
+  const userId = String(req.params["userId"] ?? "");
+  const isAdmin = Boolean((req.body ?? {}).isAdmin) ? 1 : 0;
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(or(eq(usersTable.id, userId), eq(usersTable.publicId, userId)))
+    .limit(1);
+  if (!user) {
+    res.status(404).json({ error: "Ulanyjy tapylmady" });
+    return;
+  }
+  await db.update(usersTable).set({ isAdmin }).where(eq(usersTable.id, user.id));
+  res.json({ ok: true });
+});
+
+router.post("/admin/users/:userId/ban-chat", requireAdmin, async (req, res) => {
+  const userId = String(req.params["userId"] ?? "");
+  const minutes = Math.max(0, Math.floor(Number((req.body ?? {}).minutes ?? 0)));
+  if (!userId) {
+    res.status(400).json({ error: "userId gerek" });
+    return;
+  }
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(or(eq(usersTable.id, userId), eq(usersTable.publicId, userId)))
+    .limit(1);
+  if (!user) {
+    res.status(404).json({ error: "Ulanyjy tapylmady" });
+    return;
+  }
+  const until = minutes > 0 ? new Date(Date.now() + minutes * 60_000) : null;
+  await db.update(usersTable).set({ chatBanUntil: until }).where(eq(usersTable.id, user.id));
+  if (minutes > 0) {
+    await db.insert(notificationsTable).values({
+      userId: user.id,
+      title: "Çatda gadagan",
+      body: `Çatda ${minutes} minut ýazyp bilmersiňiz.`,
+      kind: "info",
+    });
+  }
+  res.json({ ok: true });
 });
 
 router.get("/admin/stats", requireAdmin, async (_req, res) => {
