@@ -7,11 +7,13 @@ import {
   useLogoutUser,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, Crown, HelpCircle, Info, LogOut, ShieldCheck, Coins } from "lucide-react";
+import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Coins, Globe } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { fmtCoins, cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 import {
   Sheet,
   SheetContent,
@@ -31,6 +33,7 @@ export function TopHeader() {
   const { data: results = [] } = useSearchUsers({ q: dq }, { query: { enabled: dq.length >= 2, queryKey: ["searchUsers", dq] } });
   const logout = useLogoutUser();
   const qc = useQueryClient();
+  const { t } = useI18n();
 
   const showBack = location !== "/home" && location !== "/";
 
@@ -56,7 +59,7 @@ export function TopHeader() {
           <button
             onClick={() => setLocation("/home")}
             className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95"
-            aria-label="Yzyna"
+            aria-label={t("back")}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -65,7 +68,7 @@ export function TopHeader() {
             <SheetTrigger asChild>
               <button
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95"
-                aria-label="Menýu"
+                aria-label="Меню"
               >
                 <Menu className="w-5 h-5" />
                 {(user?.unreadNotifications ?? 0) + (user?.unreadDms ?? 0) > 0 && (
@@ -98,18 +101,23 @@ export function TopHeader() {
                 </SheetTitle>
               </SheetHeader>
               <nav className="p-3 space-y-1">
-                <DrawerItem icon={Settings} label="Sazlamalar" onClick={() => goAndClose("/settings")} />
-                <DrawerItem icon={Bell} label="Bildirişler" onClick={() => goAndClose("/notifications")} badge={user?.unreadNotifications} />
-                <DrawerItem icon={Users} label="Dostlar" onClick={() => goAndClose("/friends")} />
-                <DrawerItem icon={Newspaper} label="Tazelikler" onClick={() => goAndClose("/news")} />
-                <DrawerItem icon={Crown} label="VIP sargyt" onClick={() => goAndClose("/vip")} highlight />
-                <DrawerItem icon={HelpCircle} label="Sorag-jogap" onClick={() => goAndClose("/faq")} />
-                <DrawerItem icon={Info} label="CoinHub hakda" onClick={() => goAndClose("/about")} />
+                <DrawerItem icon={Settings} label={t("settings")} onClick={() => goAndClose("/settings")} />
+                <DrawerItem icon={Bell} label={t("notifications")} onClick={() => goAndClose("/notifications")} badge={user?.unreadNotifications} />
+                <DrawerItem icon={Users} label={t("friends")} onClick={() => goAndClose("/friends")} />
+                <DrawerItem icon={Newspaper} label={t("news")} onClick={() => goAndClose("/news")} />
+                <DrawerItem icon={HelpCircle} label={t("faq")} onClick={() => goAndClose("/faq")} />
+                <DrawerItem icon={Info} label={t("about")} onClick={() => goAndClose("/about")} />
                 {user?.isAdmin && (
-                  <DrawerItem icon={ShieldCheck} label="Admin paneli" onClick={() => goAndClose("/admin/dashboard")} />
+                  <DrawerItem icon={ShieldCheck} label={t("owner_panel")} onClick={() => goAndClose("/admin/dashboard")} highlight />
                 )}
                 <div className="border-t border-primary/10 my-2" />
-                <DrawerItem icon={LogOut} label="Çykmak" onClick={handleLogout} destructive />
+                {/* Language switcher in drawer */}
+                <div className="px-3 py-2 flex items-center gap-3">
+                  <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <LanguageSwitcher compact />
+                </div>
+                <div className="border-t border-primary/10 my-2" />
+                <DrawerItem icon={LogOut} label={t("logout")} onClick={handleLogout} destructive />
               </nav>
             </SheetContent>
           </Sheet>
@@ -125,7 +133,7 @@ export function TopHeader() {
         <button
           onClick={() => setSearchOpen((v) => !v)}
           className={cn("w-9 h-9 rounded-lg flex items-center justify-center active:scale-95", searchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}
-          aria-label="Gözle"
+          aria-label={t("search_label")}
         >
           {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
         </button>
@@ -147,13 +155,13 @@ export function TopHeader() {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="ID ýa-da ulanyjy ady..."
+            placeholder={t("search_ph")}
             className="w-full bg-card border border-primary/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
           />
           {dq.length >= 2 && (
             <div className="mt-2 max-h-72 overflow-y-auto space-y-1">
               {results.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-3">Tapylmady</p>
+                <p className="text-xs text-muted-foreground text-center py-3">{t("search_no_results")}</p>
               )}
               {results.map((u) => (
                 <Link key={u.id} href={`/u/${u.publicId}`}>

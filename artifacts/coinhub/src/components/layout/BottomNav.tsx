@@ -2,23 +2,27 @@ import { Link, useLocation } from "wouter";
 import { Home, Gamepad2, Wallet, User, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useI18n } from "@/i18n";
+import type { TranslationKey } from "@/i18n/translations";
 
-const NAV_ITEMS = [
-  { path: "/home", label: "Ana sahypa", icon: Home },
-  { path: "/games", label: "Oýunlar", icon: Gamepad2 },
-  { path: "/leaderboard", label: "Lider", icon: Trophy, isCenter: true },
-  { path: "/wallet", label: "Gapjyk", icon: Wallet },
-  { path: "/profile", label: "Profil", icon: User },
+const NAV_ITEMS: { path: string; labelKey: TranslationKey; icon: any; isCenter?: boolean }[] = [
+  { path: "/home", labelKey: "nav_home", icon: Home },
+  { path: "/games", labelKey: "nav_games", icon: Gamepad2 },
+  { path: "/leaderboard", labelKey: "nav_top", icon: Trophy, isCenter: true },
+  { path: "/wallet", labelKey: "nav_wallet", icon: Wallet },
+  { path: "/profile", labelKey: "nav_profile", icon: User },
 ];
 
 export function BottomNav() {
   const [location] = useLocation();
+  const { t } = useI18n();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/85 backdrop-blur-2xl border-t border-primary/20 pb-safe">
       <div className="max-w-md mx-auto flex items-center justify-around h-16 px-2 relative">
         {NAV_ITEMS.map((item) => {
           const isActive = location === item.path || (item.path !== "/home" && location.startsWith(item.path));
+          const label = t(item.labelKey);
 
           if (item.isCenter) {
             return (
@@ -38,7 +42,7 @@ export function BottomNav() {
                   "text-[10px] font-bold uppercase tracking-tighter mt-1 transition-colors",
                   isActive ? "text-primary" : "text-muted-foreground",
                 )}>
-                  {item.label}
+                  {label}
                 </span>
               </div>
             );
@@ -56,7 +60,7 @@ export function BottomNav() {
                 "text-[10px] font-medium transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/70",
               )}>
-                {item.label}
+                {label}
               </span>
             </Link>
           );

@@ -2,6 +2,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LanguageProvider } from "@/i18n";
 import NotFound from "@/pages/not-found";
 
 import Splash from "@/pages/splash";
@@ -31,7 +32,6 @@ import Friends from "@/pages/friends";
 import DmList from "@/pages/dm";
 import DmThread from "@/pages/dm-thread";
 import PublicProfile from "@/pages/public-profile";
-import VIP from "@/pages/vip";
 import Transfer from "@/pages/transfer";
 
 import AdminLogin from "@/pages/admin/login";
@@ -78,7 +78,6 @@ function Router() {
       <Route path="/dm" component={DmList} />
       <Route path="/dm/:userId" component={DmThread} />
       <Route path="/u/:publicId" component={PublicProfile} />
-      <Route path="/vip" component={VIP} />
       <Route path="/transfer" component={Transfer} />
 
       <Route path="/admin" component={AdminLogin} />
@@ -93,14 +92,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster theme="dark" richColors />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster theme="dark" richColors />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }
 

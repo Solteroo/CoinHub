@@ -5,8 +5,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
-import { Copy, ChevronRight, LogOut, UserCog, Newspaper, Users, Bell, Crown, HelpCircle, Info, ShieldCheck } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Copy, ChevronRight, LogOut, UserCog, Newspaper, Users, Bell, HelpCircle, Info, ShieldCheck, Globe } from "lucide-react";
 import { fmtDateShort } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export default function Settings() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
@@ -14,12 +16,13 @@ export default function Settings() {
   const logout = useLogoutUser();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   if (!user) return null;
 
   const copyId = () => {
     navigator.clipboard.writeText(user.publicId);
-    toast({ title: "ID nusgalandy" });
+    toast({ title: t("id_copied") });
   };
 
   const handleLogout = () => {
@@ -34,7 +37,7 @@ export default function Settings() {
   return (
     <Layout>
       <div className="p-4 space-y-6 pb-24">
-        <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">Sazlamalar</h1>
+        <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("settings")}</h1>
 
         <div className="bg-card border border-primary/20 rounded-3xl p-6 flex items-center gap-4">
           <Avatar username={user.username} color={user.avatarColor} size="lg" />
@@ -47,20 +50,31 @@ export default function Settings() {
               <span className="font-mono">#{user.publicId}</span>
               <Copy className="w-3 h-3" />
             </button>
-            {user.email && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{user.email}</p>}
-            <p className="text-[10px] text-muted-foreground mt-0.5">Agza boldy: {fmtDateShort(user.createdAt)}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{t("member_since")}: {fmtDateShort(user.createdAt)}</p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Row href="/edit-profile" icon={UserCog} label="Profili üýtget" desc="At, bio, reňk" />
-          <Row href="/notifications" icon={Bell} label="Bildirişler" desc={user.unreadNotifications > 0 ? `${user.unreadNotifications} okalmadyk` : "Soňky habarlar"} badge={user.unreadNotifications > 0 ? user.unreadNotifications : undefined} />
-          <Row href="/friends" icon={Users} label="Dostlar" desc="Sorag we ýazyşmalar" />
-          <Row href="/news" icon={Newspaper} label="Tazelikler" desc="Habarlar we täzelenmeler" />
-          <Row href="/vip" icon={Crown} label="VIP sargyt" desc="Goşmaça mümkinçilikler" />
-          <Row href="/faq" icon={HelpCircle} label="Sorag-jogap" desc="Köp soralýan soraglar" />
-          <Row href="/about" icon={Info} label="CoinHub hakda" desc="Önüm we kontakt" />
-          {user.isAdmin && <Row href="/admin/dashboard" icon={ShieldCheck} label="Admin paneli" desc="Doly dolandyryş" highlight />}
+          <Row href="/edit-profile" icon={UserCog} label={t("edit_profile")} desc={t("edit_profile_desc")} />
+          <Row href="/notifications" icon={Bell} label={t("notifications")} desc={user.unreadNotifications > 0 ? `${user.unreadNotifications} ${t("unread")}` : t("notifications_desc")} badge={user.unreadNotifications > 0 ? user.unreadNotifications : undefined} />
+          <Row href="/friends" icon={Users} label={t("friends")} desc={t("friends_desc")} />
+          <Row href="/news" icon={Newspaper} label={t("news")} desc={t("news_desc")} />
+          <Row href="/faq" icon={HelpCircle} label={t("faq")} desc={t("faq_desc")} />
+          <Row href="/about" icon={Info} label={t("about")} desc={t("about_desc")} />
+          {user.isAdmin && <Row href="/admin/dashboard" icon={ShieldCheck} label={t("owner_panel")} desc={t("owner_panel_desc")} highlight />}
+        </div>
+
+        {/* Language section */}
+        <div className="bg-card border border-primary/15 rounded-2xl p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Globe className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">{t("language")}</p>
+            </div>
+          </div>
+          <LanguageSwitcher />
         </div>
 
         <button
@@ -68,7 +82,7 @@ export default function Settings() {
           className="w-full h-14 rounded-2xl border border-destructive/30 text-destructive flex items-center justify-center gap-2 font-black uppercase tracking-widest text-sm hover:bg-destructive/10 active:scale-[0.99] transition-all"
         >
           <LogOut className="w-4 h-4" />
-          Çykmak
+          {t("logout")}
         </button>
       </div>
     </Layout>
