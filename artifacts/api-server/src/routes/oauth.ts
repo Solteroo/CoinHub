@@ -1,4 +1,4 @@
-import { Router, type IRouter, type Request } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { randomBytes } from "node:crypto";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { STARTING_COINS } from "../lib/games";
 
 const router: IRouter = Router();
 
-const pendingStates = new Map<string, number>();
+const OAUTH_STATE_COOKIE = "coinhub_oauth_state";
 
 const AVATAR_COLORS = ["#D4AF37", "#E94E77", "#3DA5D9", "#7CB518", "#9B5DE5", "#F77F00"];
 function pickAvatarColor(): string {
@@ -20,7 +20,13 @@ function getRedirectUri(_req: Request): string {
   if (primaryDomain) {
     return `https://${primaryDomain}/api/auth/google/callback`;
   }
+  // Fallback for local dev
   return `http://localhost:80/api/auth/google/callback`;
+}
+
+function oauthError(res: Response, code: string) {
+  res.clearCookie(OAUTH_STATE_COOKIE, { path: "/" });
+  res.redirect(`/?error=${code}`);
 }
 
 router.get("/auth/google", (req, res) => {
@@ -31,7 +37,15 @@ router.get("/auth/google", (req, res) => {
   }
 
   const state = randomBytes(16).toString("hex");
-  pendingStates.set(state, Date.now() + 10 * 60 * 1000);
+
+  // Store state in a cookie instead of memory — survives server restarts
+  res.cookie(OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    maxAge: 10 * 60 * 1000, // 10 minutes
+    path: "/",
+  });
 
   const redirectUri = getRedirectUri(req);
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -50,27 +64,31 @@ router.get("/auth/google/callback", async (req, res) => {
   const { code, state, error } = req.query as Record<string, string>;
 
   if (error) {
-    res.redirect("/?error=oauth_denied");
+    oauthError(res, "oauth_denied");
     return;
   }
 
-  const expiry = pendingStates.get(state);
-  if (!expiry || expiry < Date.now()) {
-    res.redirect("/?error=oauth_state");
+  // Validate state against cookie (no in-memory store needed)
+  const cookieState = (req.cookies as Record<string, string>)?.[OAUTH_STATE_COOKIE];
+  if (!cookieState || !state || cookieState !== state) {
+    oauthError(res, "oauth_state");
     return;
   }
-  pendingStates.delete(state);
+
+  // Clear state cookie immediately
+  res.clearCookie(OAUTH_STATE_COOKIE, { path: "/" });
 
   const clientId = process.env["GOOGLE_CLIENT_ID"];
   const clientSecret = process.env["GOOGLE_CLIENT_SECRET"];
   if (!clientId || !clientSecret) {
-    res.redirect("/?error=oauth_not_configured");
+    oauthError(res, "oauth_not_configured");
     return;
   }
 
   try {
     const redirectUri = getRedirectUri(req);
 
+    // Exchange code for tokens
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -83,12 +101,18 @@ router.get("/auth/google/callback", async (req, res) => {
       }).toString(),
     });
 
-    const tokenData = (await tokenRes.json()) as { access_token?: string };
+    const tokenData = (await tokenRes.json()) as {
+      access_token?: string;
+      error?: string;
+      error_description?: string;
+    };
+
     if (!tokenRes.ok || !tokenData.access_token) {
       res.redirect("/?error=oauth_token");
       return;
     }
 
+    // Fetch user profile
     const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -109,6 +133,7 @@ router.get("/auth/google/callback", async (req, res) => {
 
     const ownerEmail = process.env["OWNER_EMAIL"] ?? "";
 
+    // 1. Look up by googleId
     let user = await db
       .select()
       .from(usersTable)
@@ -116,6 +141,7 @@ router.get("/auth/google/callback", async (req, res) => {
       .limit(1)
       .then((r) => r[0] ?? null);
 
+    // 2. Look up by email (link existing account)
     if (!user && email) {
       user = await db
         .select()
@@ -127,13 +153,19 @@ router.get("/auth/google/callback", async (req, res) => {
       if (user && !user.googleId) {
         await db
           .update(usersTable)
-          .set({ googleId, isAdmin: ownerEmail && email === ownerEmail ? 1 : user.isAdmin })
+          .set({
+            googleId,
+            isAdmin: ownerEmail && email === ownerEmail ? 1 : user.isAdmin,
+          })
           .where(eq(usersTable.id, user.id));
       }
     }
 
+    // 3. Create new account
     if (!user) {
-      const rawName = (given_name ?? name ?? email.split("@")[0]).replace(/[^a-zA-Z0-9_]/g, "").slice(0, 18) || "user";
+      const rawName = (given_name ?? name ?? email.split("@")[0])
+        .replace(/[^a-zA-Z0-9_]/g, "")
+        .slice(0, 18) || "user";
       let username = rawName;
       for (let attempt = 1; attempt <= 20; attempt++) {
         const existing = await db
@@ -147,7 +179,11 @@ router.get("/auth/google/callback", async (req, res) => {
 
       let publicId = generatePublicId();
       for (let i = 0; i < 5; i++) {
-        const dup = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.publicId, publicId)).limit(1);
+        const dup = await db
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(eq(usersTable.publicId, publicId))
+          .limit(1);
         if (dup.length === 0) break;
         publicId = generatePublicId();
       }
@@ -174,13 +210,14 @@ router.get("/auth/google/callback", async (req, res) => {
       return;
     }
 
+    // Promote to owner if email matches
     if (ownerEmail && email === ownerEmail && user.isAdmin !== 1) {
       await db.update(usersTable).set({ isAdmin: 1 }).where(eq(usersTable.id, user.id));
     }
 
     createSession(res, user.id);
     res.redirect("/home");
-  } catch (err) {
+  } catch (_err) {
     res.redirect("/?error=oauth_server");
   }
 });

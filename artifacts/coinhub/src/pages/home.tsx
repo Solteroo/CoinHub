@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { Link, useLocation } from "wouter";
+import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import {
   useGetMe,
   getGetMeQueryKey,

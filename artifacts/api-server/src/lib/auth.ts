@@ -1,6 +1,6 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
-import { db, usersTable, type UserRow } from "@workspace/db";
+import { db, usersTable, sessionsTable, type UserRow } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 const SESSION_COOKIE = "coinhub_sid";
@@ -8,9 +8,9 @@ const ADMIN_COOKIE = "coinhub_admin";
 const SESSION_SECRET = process.env["SESSION_SECRET"] ?? "dev-secret-change-me";
 export const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"] ?? "admin123";
 
-const sessions = new Map<string, { userId: string; expiresAt: number }>();
+// Admin sessions remain in-memory (admin panel only, low stakes)
 const adminSessions = new Map<string, number>();
-const SESSION_TTL = 1000 * 60 * 60 * 24 * 30;
+const SESSION_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
@@ -28,9 +28,14 @@ export function verifyPassword(password: string, stored: string | null | undefin
   return timingSafeEqual(candidate, original);
 }
 
-export function createSession(res: Response, userId: string) {
+// ─── DB-backed sessions (survive server restarts) ────────────────────────────
+
+export async function createSession(res: Response, userId: string): Promise<void> {
   const sid = randomBytes(32).toString("hex");
-  sessions.set(sid, { userId, expiresAt: Date.now() + SESSION_TTL });
+  const expiresAt = new Date(Date.now() + SESSION_TTL);
+
+  await db.insert(sessionsTable).values({ sid, userId, expiresAt });
+
   res.cookie(SESSION_COOKIE, sid, {
     httpOnly: true,
     sameSite: "lax",
@@ -40,9 +45,11 @@ export function createSession(res: Response, userId: string) {
   });
 }
 
-export function clearSession(req: Request, res: Response) {
-  const sid = req.cookies?.[SESSION_COOKIE];
-  if (sid) sessions.delete(sid);
+export async function clearSession(req: Request, res: Response): Promise<void> {
+  const sid = req.cookies?.[SESSION_COOKIE] as string | undefined;
+  if (sid) {
+    try { await db.delete(sessionsTable).where(eq(sessionsTable.sid, sid)); } catch { /* ignore */ }
+  }
   res.clearCookie(SESSION_COOKIE, { path: "/" });
 }
 
@@ -59,13 +66,13 @@ export function createAdminSession(res: Response) {
 }
 
 export function clearAdminSession(req: Request, res: Response) {
-  const sid = req.cookies?.[ADMIN_COOKIE];
+  const sid = req.cookies?.[ADMIN_COOKIE] as string | undefined;
   if (sid) adminSessions.delete(sid);
   res.clearCookie(ADMIN_COOKIE, { path: "/" });
 }
 
 export function isAdminAuthed(req: Request): boolean {
-  const sid = req.cookies?.[ADMIN_COOKIE];
+  const sid = req.cookies?.[ADMIN_COOKIE] as string | undefined;
   if (!sid) return false;
   const expiresAt = adminSessions.get(sid);
   if (!expiresAt || expiresAt < Date.now()) {
@@ -76,18 +83,28 @@ export function isAdminAuthed(req: Request): boolean {
 }
 
 export async function getSessionUser(req: Request): Promise<UserRow | null> {
-  const sid = req.cookies?.[SESSION_COOKIE];
+  const sid = req.cookies?.[SESSION_COOKIE] as string | undefined;
   if (!sid) return null;
-  const session = sessions.get(sid);
-  if (!session || session.expiresAt < Date.now()) {
-    if (sid) sessions.delete(sid);
+
+  const [session] = await db
+    .select()
+    .from(sessionsTable)
+    .where(eq(sessionsTable.sid, sid))
+    .limit(1);
+
+  if (!session || session.expiresAt < new Date()) {
+    if (session) {
+      try { await db.delete(sessionsTable).where(eq(sessionsTable.sid, sid)); } catch { /* ignore */ }
+    }
     return null;
   }
+
   const [user] = await db
     .select()
     .from(usersTable)
     .where(eq(usersTable.id, session.userId))
     .limit(1);
+
   return user ?? null;
 }
 
@@ -117,7 +134,6 @@ export function requireAdmin(
   next();
 }
 
-// 8-digit numeric ID (e.g. "10428573"). Always starts 1-9 so no leading zero.
 export function generatePublicId(): string {
   let id = String(Math.floor(Math.random() * 9) + 1);
   for (let i = 0; i < 7; i++) {

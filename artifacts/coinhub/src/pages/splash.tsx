@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useLoginUser, useRegisterUser, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { Logo } from "@/components/Logo";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowLeft, LogIn, UserPlus } from "lucide-react";
+import { Loader2, ArrowLeft, LogIn, UserPlus, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -25,12 +25,27 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+function getOAuthErrorMessage(code: string | null): string | null {
+  if (!code) return null;
+  const map: Record<string, string> = {
+    oauth_denied: "Google girişi ret edildi.",
+    oauth_state: "Howpsuzlyk ýalňyşlygy. Täzeden synanyşyň.",
+    oauth_token: "Google token alynmady. Täzeden synanyşyň.",
+    oauth_userinfo: "Google profilini okap bolmady.",
+    oauth_create_user: "Hasap döredilmedi.",
+    oauth_not_configured: "Google giriş häzir elýeterli däl.",
+    oauth_server: "Server ýalňyşlygy. Biraz soň synanyşyň.",
+  };
+  return map[code] ?? "Google giriş ýalňyş boldy. Täzeden synanyşyň.";
+}
+
 export default function Splash() {
   const [, setLocation] = useLocation();
   const [mode, setMode] = useState<Mode>("choose");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -41,6 +56,17 @@ export default function Splash() {
 
   const loginUser = useLoginUser();
   const registerUser = useRegisterUser();
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const err = sp.get("error");
+    if (err) {
+      setOauthError(err);
+      // Remove error param from URL without reload
+      const clean = window.location.pathname;
+      window.history.replaceState({}, "", clean);
+    }
+  }, []);
 
   if (user) {
     setLocation("/home");
@@ -79,6 +105,7 @@ export default function Splash() {
   };
 
   const handleGoogleLogin = () => {
+    setOauthError(null);
     window.location.href = "/api/auth/google";
   };
 
@@ -115,6 +142,30 @@ export default function Splash() {
       </motion.div>
 
       <div className="w-full max-w-sm z-10 flex-1 flex flex-col px-6">
+        {/* OAuth Error Banner */}
+        <AnimatePresence>
+          {oauthError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.97 }}
+              className="mb-4 bg-destructive/10 border border-destructive/40 rounded-2xl p-4 flex items-start gap-3"
+            >
+              <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-destructive">Google giriş ýalňyş boldy</p>
+                <p className="text-xs text-destructive/80 mt-0.5">{getOAuthErrorMessage(oauthError)}</p>
+              </div>
+              <button
+                onClick={() => setOauthError(null)}
+                className="text-destructive/60 hover:text-destructive text-lg leading-none shrink-0"
+              >
+                ×
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence mode="wait">
           {mode === "choose" ? (
             <motion.div
