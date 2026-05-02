@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRightLeft, Loader2 } from "lucide-react";
 import { fmtCoins } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export default function Transfer() {
   const { data: me } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
@@ -23,6 +24,7 @@ export default function Transfer() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -40,12 +42,12 @@ export default function Transfer() {
       { data: { recipientPublicId: pid, amount: numAmount, note: note.trim() || undefined } },
       {
         onSuccess: (data) => {
-          toast({ title: "Geçirildi", description: `${data.amount} TMT → ${data.recipient.username}` });
+          toast({ title: t("transfer_success"), description: `${data.amount} TMT → ${data.recipient.username}` });
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
           qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
           setLocation("/wallet");
         },
-        onError: (err: any) => toast({ title: "Geçirilmedi", description: err?.message ?? "", variant: "destructive" }),
+        onError: (err: any) => toast({ title: t("error"), description: err?.message ?? "", variant: "destructive" }),
       },
     );
   };
@@ -53,15 +55,15 @@ export default function Transfer() {
   return (
     <Layout>
       <form onSubmit={submit} className="p-4 space-y-6 pb-24">
-        <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">TMT geçir</h1>
+        <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("transfer_title")}</h1>
 
         <div className="bg-card border border-primary/20 rounded-3xl p-6 text-center gold-glow">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Balansyňyz</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("balance_label")}</p>
           <p className="text-3xl font-black gold-text-gradient mt-2 tabular-nums">{fmtCoins(me?.coins ?? 0)} <span className="text-sm">TMT</span></p>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Alyjynyň ID-si (8 belgi)</label>
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("recipient_id")}</label>
           <Input
             value={pid}
             onChange={(e) => setPid(e.target.value.replace(/\D/g, "").slice(0, 8))}
@@ -72,7 +74,7 @@ export default function Transfer() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Möçberi (TMT)</label>
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("amount")} (TMT)</label>
           <Input
             type="number"
             min={1}
@@ -97,11 +99,11 @@ export default function Transfer() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Bellik (islege görä)</label>
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("note_ph")}</label>
           <Input
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 100))}
-            placeholder="Salam"
+            placeholder={t("note_ph")}
             className="bg-card border-primary/20 h-12"
           />
         </div>
@@ -112,7 +114,7 @@ export default function Transfer() {
           className="w-full h-14 rounded-2xl gold-gradient text-black font-black uppercase tracking-widest text-sm flex items-center gap-2"
         >
           {transfer.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRightLeft className="w-5 h-5" />}
-          Geçirim ediň
+          {t("transfer_confirm")}
         </Button>
       </form>
     </Layout>

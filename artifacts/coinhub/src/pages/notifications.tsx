@@ -9,6 +9,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Bell, Gift, MessageCircle, ArrowDownLeft, Users, Info as InfoIcon } from "lucide-react";
 import { fmtDateShort, cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const KIND_ICON: Record<string, any> = {
   bonus: Gift,
@@ -22,6 +23,7 @@ export default function Notifications() {
   const { data: items = [] } = useGetMyNotifications({ query: { queryKey: getGetMyNotificationsQueryKey() } });
   const mark = useMarkNotificationsRead();
   const qc = useQueryClient();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (items.length > 0 && items.some((n) => !n.readAt)) {
@@ -39,14 +41,14 @@ export default function Notifications() {
     <Layout>
       <div className="p-4 space-y-6 pb-24">
         <header>
-          <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">Bildirişler</h1>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Soňky habarlaryňyz</p>
+          <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("notifications")}</h1>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{t("notifications_subtitle")}</p>
         </header>
 
         {items.length === 0 ? (
           <div className="bg-card/40 border border-dashed border-primary/15 rounded-3xl p-10 flex flex-col items-center gap-3 text-center">
             <Bell className="w-10 h-10 text-muted-foreground" />
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Hiç bildiriş ýok</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("no_notif_msg")}</p>
           </div>
         ) : (
           <div className="space-y-2">

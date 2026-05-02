@@ -1,5 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStatsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { BetSelector } from "@/components/BetSelector";
 import { cn, fmtCoins } from "@/lib/utils";
 import { CoinIcon } from "@/components/CoinIcon";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/i18n";
 
 const PAYOUTS = {
   low:    [1.5, 1.2, 1.0, 0.8, 0.5, 0.8, 1.0, 1.2, 1.5],
@@ -33,6 +34,7 @@ export default function PlinkoGame() {
   const [ballRow, setBallRow] = useState(-1);
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleDrop = async () => {
     if (dropping || !user || bet > user.coins) return;
@@ -49,9 +51,8 @@ export default function PlinkoGame() {
         credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) { toast({ title: data.error ?? "Ýalňyşlyk", variant: "destructive" }); setDropping(false); return; }
+      if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); setDropping(false); return; }
 
-      // Animate ball falling row by row
       const path = data.path as number[];
       for (let row = 0; row < path.length; row++) {
         await new Promise((r) => setTimeout(r, 150));
@@ -65,17 +66,15 @@ export default function PlinkoGame() {
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
     } catch {
-      toast({ title: "Ýalňyşlyk", variant: "destructive" });
+      toast({ title: t("error"), variant: "destructive" });
     } finally {
       setDropping(false);
     }
   };
 
-  // Compute ball X position based on path
   const getBallX = () => {
     if (ballPath.length === 0) return 50;
     const pos = ballPath.reduce((acc, dir) => acc + dir, 0);
-    // 8 rows, ball can be 0-8 → map to 0-100%
     return (pos / 8) * 100;
   };
 
@@ -91,30 +90,24 @@ export default function PlinkoGame() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           </Link>
-          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">Plinko</h1>
+          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("game_plinko_title")}</h1>
         </div>
 
         <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
-          <p>Şar çarýasyna goýberilen şar 8 hatar peg-lerden geçip, 9 sebet birinde düşýär. Her sebetiň öz ganalyşy bar.</p>
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
+          <p>{t("drop_ball")} → 8 rows → 9 buckets</p>
         </div>
 
-        {/* Plinko board */}
         <div className="bg-card border border-primary/20 rounded-3xl p-4 relative overflow-hidden gold-glow">
           <div className="relative h-52">
-            {/* Pegs */}
             {Array.from({ length: 8 }, (_, row) => (
               <div key={row} className="absolute w-full flex justify-center" style={{ top: `${(row / 8) * 100}%` }}>
                 {Array.from({ length: row + 2 }, (_, col) => (
-                  <div
-                    key={col}
-                    className="w-2 h-2 rounded-full bg-primary/40 mx-1.5"
-                  />
+                  <div key={col} className="w-2 h-2 rounded-full bg-primary/40 mx-1.5" />
                 ))}
               </div>
             ))}
 
-            {/* Animated ball */}
             <AnimatePresence>
               {dropping && (
                 <motion.div
@@ -127,15 +120,11 @@ export default function PlinkoGame() {
             </AnimatePresence>
           </div>
 
-          {/* Buckets */}
           <div className="grid mt-2" style={{ gridTemplateColumns: `repeat(${payouts.length}, 1fr)`, gap: "2px" }}>
             {payouts.map((p, i) => (
               <div
                 key={i}
-                className={cn(
-                  "h-8 rounded-md flex items-center justify-center text-[10px] font-black transition-all",
-                  result?.bucket === i && "ring-2 ring-white scale-110",
-                )}
+                className={cn("h-8 rounded-md flex items-center justify-center text-[10px] font-black transition-all", result?.bucket === i && "ring-2 ring-white scale-110")}
                 style={{ backgroundColor: colors[i] + "40", borderColor: colors[i], borderWidth: 1 }}
               >
                 <span style={{ color: colors[i] }}>{p}×</span>
@@ -157,7 +146,6 @@ export default function PlinkoGame() {
           </motion.div>
         )}
 
-        {/* Risk selector */}
         <div className="grid grid-cols-3 gap-2">
           {(["low", "medium", "high"] as const).map((r) => (
             <button
@@ -168,7 +156,7 @@ export default function PlinkoGame() {
                 risk === r ? "bg-primary/20 border-primary text-primary" : "bg-card border-primary/15 text-muted-foreground",
               )}
             >
-              {r === "low" ? "Pes" : r === "medium" ? "Orta" : "Ýokary"}
+              {r === "low" ? t("risk_low") : r === "medium" ? t("risk_medium") : t("risk_high")}
             </button>
           ))}
         </div>
@@ -180,12 +168,12 @@ export default function PlinkoGame() {
           disabled={dropping || !user || bet > (user?.coins ?? 0)}
           className="w-full h-14 rounded-2xl gold-gradient text-black font-black text-base uppercase tracking-widest disabled:opacity-50 active:scale-[0.99] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
         >
-          {dropping ? "Düşýär..." : "Şary goýber"}
+          {dropping ? t("dropping") : t("drop_ball")}
         </button>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">Balans: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
-          <span>Maks: ×{risk === "high" ? 16 : risk === "medium" ? 3.0 : 1.5}</span>
+          <span className="flex items-center gap-1">{t("balance_label")}: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
+          <span>{t("max_label")}: ×{risk === "high" ? 16 : risk === "medium" ? 3.0 : 1.5}</span>
         </div>
       </div>
     </Layout>

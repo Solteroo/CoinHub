@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const COLORS = ["#D4AF37", "#E94E77", "#3DA5D9", "#7CB518", "#9B5DE5", "#F77F00", "#06D6A0", "#EF476F"];
 
@@ -18,6 +19,7 @@ export default function EditProfile() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
 
   const [bio, setBio] = useState("");
   const [color, setColor] = useState("#D4AF37");
@@ -39,12 +41,12 @@ export default function EditProfile() {
       { data: { bio, avatarColor: color, email } },
       {
         onSuccess: () => {
-          toast({ title: "Saklandy" });
+          toast({ title: t("saved") });
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
           setLocation("/profile");
         },
         onError: (err: any) => {
-          toast({ title: "Ýalňyşlyk", description: err?.message ?? "Saklanmady", variant: "destructive" });
+          toast({ title: t("error"), description: err?.message ?? "", variant: "destructive" });
         },
       },
     );
@@ -53,7 +55,7 @@ export default function EditProfile() {
   return (
     <Layout>
       <form onSubmit={handleSave} className="p-4 space-y-6 pb-24">
-        <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">Profili üýtget</h1>
+        <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("edit_profile")}</h1>
 
         <div className="flex flex-col items-center gap-4 py-6 bg-card border border-primary/20 rounded-3xl">
           <Avatar username={user.username} color={color} size="xl" />
@@ -61,7 +63,7 @@ export default function EditProfile() {
         </div>
 
         <div className="space-y-3">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Reňk saýlaň</label>
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("choose_color")}</label>
           <div className="grid grid-cols-8 gap-2">
             {COLORS.map((c) => (
               <button
@@ -82,11 +84,11 @@ export default function EditProfile() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Bio (200 belgi)</label>
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Bio (200 {t("bio_counter")})</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value.slice(0, 200))}
-            placeholder="Özüňiz hakda gysga..."
+            placeholder={t("bio_ph")}
             rows={3}
             className="w-full bg-card border border-primary/20 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
           />
@@ -94,7 +96,7 @@ export default function EditProfile() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email (parol dikeltmek üçin)</label>
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("email_recovery")}</label>
           <Input
             type="email"
             value={email}
@@ -109,7 +111,7 @@ export default function EditProfile() {
           disabled={update.isPending}
           className="w-full h-12 rounded-xl gold-gradient text-black font-black uppercase tracking-widest"
         >
-          {update.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Saklamak"}
+          {update.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : t("save")}
         </Button>
       </form>
     </Layout>

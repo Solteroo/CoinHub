@@ -2,98 +2,101 @@ import { Layout } from "@/components/layout/Layout";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const GAMES = [
-  {
-    title: "Slot Maşyn",
-    desc: "3 reel, klassiki kazino duýgusy. 777 uly jekpot!",
-    href: "/games/slot",
-    emoji: "🎰",
-    badge: "Jekpot",
-    badgeClass: "bg-purple-500/20 text-purple-300",
-    glow: "from-purple-900/30 to-card border-purple-500/20",
-  },
-  {
-    title: "Bagt Çarhy",
-    desc: "Çarhy aýlaň we 100x çenli multipliýator gazanyň.",
-    href: "/games/spin",
-    emoji: "🎡",
-    badge: "Meşhur",
-    badgeClass: "bg-blue-500/20 text-blue-300",
-    glow: "from-blue-900/30 to-card border-blue-500/20",
-  },
-  {
-    title: "Bagt Gutusy",
-    desc: "9 sandykdan birini saýlaň. Içinde näme bar?",
-    href: "/games/luckybox",
-    emoji: "📦",
-    badge: "Gyzykly",
-    badgeClass: "bg-amber-500/20 text-amber-300",
-    glow: "from-amber-900/30 to-card border-amber-500/20",
-  },
-  {
-    title: "Bagt Uçuşy",
-    desc: "Raketa näçe uçarka? Wagtynda nagtlaşdyryň!",
-    href: "/games/crash",
-    emoji: "🚀",
-    badge: "Gyzgyn",
-    badgeClass: "bg-red-500/20 text-red-300",
-    glow: "from-red-900/30 to-card border-red-500/20",
-  },
-  {
-    title: "Zar",
-    desc: "1-100 aralygynda san saýlaň, zarlar siziň tarapdamy?",
-    href: "/games/dice",
-    emoji: "🎲",
-    badge: "Strategiýa",
-    badgeClass: "bg-emerald-500/20 text-emerald-300",
-    glow: "from-emerald-900/30 to-card border-emerald-500/20",
-  },
-  {
-    title: "Minalar",
-    desc: "Yşyklandyrylmadyk öýjükleri tapyň, minadan gaçyň!",
-    href: "/games/mines",
-    emoji: "💣",
-    badge: "Dartgynly",
-    badgeClass: "bg-orange-500/20 text-orange-300",
-    glow: "from-orange-900/30 to-card border-orange-500/20",
-  },
-  {
-    title: "Ruletka",
-    desc: "Gyzyl, Gara ýa-da 0-a goý, top nirä düşer?",
-    href: "/games/roulette",
-    emoji: "🎡",
-    badge: "Klassiki",
-    badgeClass: "bg-rose-500/20 text-rose-300",
-    glow: "from-rose-900/30 to-card border-rose-500/20",
-  },
-  {
-    title: "Plinko",
-    desc: "Toplary aşak goýberiň, köp multipliýatora düşüň!",
-    href: "/games/plinko",
-    emoji: "🔵",
-    badge: "Täze",
-    badgeClass: "bg-cyan-500/20 text-cyan-300",
-    glow: "from-cyan-900/30 to-card border-cyan-500/20",
-  },
-  {
-    title: "Hi-Lo",
-    desc: "Indiki kart ýokarmy ýa aşakmy? Dogry tap, köpelt!",
-    href: "/games/hilo",
-    emoji: "🃏",
-    badge: "Çalt",
-    badgeClass: "bg-yellow-500/20 text-yellow-300",
-    glow: "from-yellow-900/30 to-card border-yellow-500/20",
-  },
-];
+import { useI18n } from "@/i18n";
 
 export default function GamesHub() {
+  const { t } = useI18n();
+
+  const GAMES = [
+    {
+      title: t("game_slot_title"),
+      desc: t("game_slot_desc"),
+      href: "/games/slot",
+      emoji: "🎰",
+      badge: t("badge_jackpot"),
+      badgeClass: "bg-purple-500/20 text-purple-300",
+      glow: "from-purple-900/30 to-card border-purple-500/20",
+    },
+    {
+      title: t("game_spin_title"),
+      desc: t("game_spin_desc"),
+      href: "/games/spin",
+      emoji: "🎡",
+      badge: t("badge_popular"),
+      badgeClass: "bg-blue-500/20 text-blue-300",
+      glow: "from-blue-900/30 to-card border-blue-500/20",
+    },
+    {
+      title: t("game_luckybox_title"),
+      desc: t("game_luckybox_desc"),
+      href: "/games/luckybox",
+      emoji: "📦",
+      badge: t("badge_fun"),
+      badgeClass: "bg-amber-500/20 text-amber-300",
+      glow: "from-amber-900/30 to-card border-amber-500/20",
+    },
+    {
+      title: t("game_crash_title"),
+      desc: t("game_crash_desc"),
+      href: "/games/crash",
+      emoji: "🚀",
+      badge: t("badge_hot"),
+      badgeClass: "bg-red-500/20 text-red-300",
+      glow: "from-red-900/30 to-card border-red-500/20",
+    },
+    {
+      title: t("game_dice_title"),
+      desc: t("game_dice_desc"),
+      href: "/games/dice",
+      emoji: "🎲",
+      badge: t("badge_strategy"),
+      badgeClass: "bg-emerald-500/20 text-emerald-300",
+      glow: "from-emerald-900/30 to-card border-emerald-500/20",
+    },
+    {
+      title: t("game_mines_title"),
+      desc: t("game_mines_desc"),
+      href: "/games/mines",
+      emoji: "💣",
+      badge: t("badge_tension"),
+      badgeClass: "bg-orange-500/20 text-orange-300",
+      glow: "from-orange-900/30 to-card border-orange-500/20",
+    },
+    {
+      title: t("game_roulette_title"),
+      desc: t("game_roulette_desc"),
+      href: "/games/roulette",
+      emoji: "🎰",
+      badge: t("badge_classic"),
+      badgeClass: "bg-rose-500/20 text-rose-300",
+      glow: "from-rose-900/30 to-card border-rose-500/20",
+    },
+    {
+      title: t("game_plinko_title"),
+      desc: t("game_plinko_desc"),
+      href: "/games/plinko",
+      emoji: "🔵",
+      badge: t("badge_new"),
+      badgeClass: "bg-cyan-500/20 text-cyan-300",
+      glow: "from-cyan-900/30 to-card border-cyan-500/20",
+    },
+    {
+      title: t("game_hilo_title"),
+      desc: t("game_hilo_desc"),
+      href: "/games/hilo",
+      emoji: "🃏",
+      badge: t("badge_fast"),
+      badgeClass: "bg-yellow-500/20 text-yellow-300",
+      glow: "from-yellow-900/30 to-card border-yellow-500/20",
+    },
+  ];
+
   return (
     <Layout>
       <div className="p-4 space-y-5 pb-28">
         <header className="pt-2">
-          <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter">Oýunlar</h1>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Uly utuşlar garaşýar</p>
+          <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("games")}</h1>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">{t("games_subtitle")}</p>
         </header>
 
         <div className="grid grid-cols-1 gap-3">
@@ -106,7 +109,7 @@ export default function GamesHub() {
   );
 }
 
-function GameCard({ game, index }: { game: typeof GAMES[number]; index: number }) {
+function GameCard({ game, index }: { game: { title: string; desc: string; href: string; emoji: string; badge: string; badgeClass: string; glow: string }; index: number }) {
   return (
     <Link href={game.href}>
       <motion.div

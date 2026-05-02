@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { fmtCoins } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useI18n } from "@/i18n";
 
 export default function Profile() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
@@ -37,12 +38,13 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const logout = useLogoutUser();
   const qc = useQueryClient();
+  const { t } = useI18n();
 
   if (!user) return null;
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(user.publicId);
-    toast({ title: "ID nusgalandy" });
+    toast({ title: t("id_copied") });
   };
 
   const handleLogout = () => {
@@ -88,21 +90,21 @@ export default function Profile() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2">
-          <StatCard icon={Trophy} label="Reýting" value={stats?.rank ? `#${stats.rank}` : "—"} />
-          <StatCard icon={Coins} label="Balans" value={fmtCoins(user.coins)} suffix="TMT" />
-          <StatCard icon={Gamepad2} label="Oýun" value={stats?.gamesPlayed?.toString() ?? "0"} />
+          <StatCard icon={Trophy} label={t("rank_label")} value={stats?.rank ? `#${stats.rank}` : "—"} />
+          <StatCard icon={Coins} label={t("balance_label")} value={fmtCoins(user.coins)} suffix="TMT" />
+          <StatCard icon={Gamepad2} label={t("games_played")} value={stats?.gamesPlayed?.toString() ?? "0"} />
         </div>
 
         {/* Action Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <ActionTile href="/edit-profile" icon={UserCog} label="Profili üýtget" />
-          <ActionTile href="/notifications" icon={Bell} label="Bildirişler" badge={user.unreadNotifications} />
-          <ActionTile href="/dm" icon={MessageCircle} label="Habarlaşmak" badge={user.unreadDms} />
-          <ActionTile href="/friends" icon={Users} label="Dostlar" />
-          <ActionTile href="/transfer" icon={ArrowRightLeft} label="TMT geçir" />
-          <ActionTile href="/vip" icon={Crown} label="VIP sargyt" highlight />
-          <ActionTile href="/settings" icon={SettingsIcon} label="Sazlamalar" />
-          {user.isAdmin && <ActionTile href="/admin/dashboard" icon={ShieldCheck} label="Admin" highlight />}
+          <ActionTile href="/edit-profile" icon={UserCog} label={t("edit_profile")} />
+          <ActionTile href="/notifications" icon={Bell} label={t("notifications")} badge={user.unreadNotifications} />
+          <ActionTile href="/dm" icon={MessageCircle} label={t("messages_label")} badge={user.unreadDms} />
+          <ActionTile href="/friends" icon={Users} label={t("friends")} />
+          <ActionTile href="/transfer" icon={ArrowRightLeft} label={t("transfer")} />
+          <ActionTile href="/vip" icon={Crown} label={t("vip_order")} highlight />
+          <ActionTile href="/settings" icon={SettingsIcon} label={t("settings")} />
+          {user.isAdmin && <ActionTile href="/admin/dashboard" icon={ShieldCheck} label={t("admin_label")} highlight />}
         </div>
 
         <div className="pt-2">
@@ -112,7 +114,7 @@ export default function Profile() {
             className="w-full text-destructive/80 hover:text-destructive hover:bg-destructive/10 h-12 rounded-2xl font-black uppercase tracking-widest"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            Çykmak
+            {t("logout")}
           </Button>
         </div>
       </div>

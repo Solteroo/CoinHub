@@ -15,11 +15,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 function relativeTime(iso: string) {
   const date = new Date(iso);
   const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (diff < 60) return "Häzir";
+  if (diff < 60) return "~";
   if (diff < 3600) return `${Math.floor(diff / 60)} min`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} sg`;
   const dd = String(date.getDate()).padStart(2, "0");
@@ -36,6 +37,7 @@ export default function Chat() {
   const postChat = usePostChatMessage();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
   const [text, setText] = useState("");
   const [banUntil, setBanUntil] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -59,11 +61,11 @@ export default function Chat() {
         onError: (err: any) => {
           if (err?.status === 403 && err?.message?.toLowerCase().includes("ban")) {
             setBanUntil(err?.until ?? null);
-            toast({ title: "Çatdan gadagan edildiňiz", variant: "destructive" });
+            toast({ title: t("chat_banned_toast"), variant: "destructive" });
           } else if (err?.status === 429) {
-            toast({ title: "Çalt ýazýarsyňyz", variant: "destructive" });
+            toast({ title: t("chat_slow_down"), variant: "destructive" });
           } else {
-            toast({ title: "Iberilmedi", description: err?.message ?? "", variant: "destructive" });
+            toast({ title: t("send_failed"), description: err?.message ?? "", variant: "destructive" });
           }
         },
       },
@@ -75,18 +77,18 @@ export default function Chat() {
       <div className="flex flex-col h-[calc(100dvh-56px-64px)]">
         <div className="flex items-center justify-between px-5 py-3 border-b border-primary/10 bg-card/50 backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-black italic gold-text-gradient uppercase tracking-tight">Global Çat</h1>
+            <h1 className="text-base font-black italic gold-text-gradient uppercase tracking-tight">{t("global_chat")}</h1>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
             <Users className="w-3 h-3 text-primary" />
-            <span className="text-[9px] font-bold text-primary uppercase">Online</span>
+            <span className="text-[9px] font-bold text-primary uppercase">{t("online")}</span>
           </div>
         </div>
 
         {banUntil && (
           <div className="bg-destructive/10 border-y border-destructive/30 p-3 flex items-center gap-2 text-xs text-destructive">
             <ShieldAlert className="w-4 h-4 shrink-0" />
-            <span className="flex-1">Çatdan gadagan: {new Date(banUntil).toLocaleString("tk-TM")}</span>
+            <span className="flex-1">{t("chat_banned")}: {new Date(banUntil).toLocaleString()}</span>
           </div>
         )}
 
@@ -136,7 +138,7 @@ export default function Chat() {
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Habar ýazyň..."
+            placeholder={t("chat_ph")}
             maxLength={200}
             className="flex-1 bg-card border border-primary/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
           />

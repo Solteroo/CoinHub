@@ -18,9 +18,11 @@ import { CoinCounter } from "@/components/ui/coin-counter";
 import { ChevronRight, MessageCircle, ArrowUpRight, ArrowDownLeft, Trophy, Rocket, Disc, Package, LayoutGrid, Gift, Newspaper, Loader2, Coins, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: transactions = [] } = useGetMyTransactions({
     query: { queryKey: getGetMyTransactionsQueryKey(), enabled: !!user },
@@ -45,12 +47,12 @@ export default function Home() {
   const handleClaimBonus = () => {
     claimBonus.mutate(undefined, {
       onSuccess: (res: any) => {
-        toast({ title: "Bonus alyndy", description: `+${res.amount ?? 50} Bonus TMT` });
+        toast({ title: t("bonus_claimed"), description: `+${res.amount ?? 50} Bonus TMT` });
         qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
         qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       },
       onError: (err: any) => {
-        toast({ title: "Bonus heniz taýýar däl", description: err?.message ?? "", variant: "destructive" });
+        toast({ title: t("bonus_not_ready"), description: err?.message ?? "", variant: "destructive" });
       },
     });
   };
@@ -62,14 +64,16 @@ export default function Home() {
   return (
     <Layout>
       <div className="p-4 space-y-5 pb-24">
-        {/* Balance Card — shows both coin types */}
+        <PwaInstallBanner />
+
+        {/* Balance Card */}
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="bg-card border border-primary/20 rounded-3xl p-6 text-center relative overflow-hidden gold-glow"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
-          <p className="text-[10px] text-muted-foreground mb-1 relative z-10 font-bold uppercase tracking-widest">Balansyňyz</p>
+          <p className="text-[10px] text-muted-foreground mb-1 relative z-10 font-bold uppercase tracking-widest">{t("your_balance")}</p>
           <div className="flex flex-col items-center justify-center relative z-10">
             <div className="flex items-baseline gap-2">
               <CoinCounter value={user.coins} className="text-5xl font-black gold-text-gradient drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]" />
@@ -82,19 +86,18 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Dual-currency split row */}
           <div className="mt-4 grid grid-cols-2 gap-2 relative z-10">
             <div className="bg-background/50 rounded-xl px-3 py-2 border border-yellow-500/25 flex items-center gap-2">
               <Coins className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
               <div className="text-left min-w-0">
-                <p className="text-[9px] font-bold text-yellow-400/80 uppercase tracking-widest">Real</p>
+                <p className="text-[9px] font-bold text-yellow-400/80 uppercase tracking-widest">{t("real")}</p>
                 <p className="text-sm font-black text-yellow-400 tabular-nums truncate">{fmtCoins(realCoins)}</p>
               </div>
             </div>
             <div className="bg-background/50 rounded-xl px-3 py-2 border border-primary/25 flex items-center gap-2">
               <Star className="w-3.5 h-3.5 text-primary shrink-0" />
               <div className="text-left min-w-0">
-                <p className="text-[9px] font-bold text-primary/80 uppercase tracking-widest">Bonus</p>
+                <p className="text-[9px] font-bold text-primary/80 uppercase tracking-widest">{t("bonus")}</p>
                 <p className="text-sm font-black text-primary tabular-nums truncate">{fmtCoins(bonusCoins)}</p>
               </div>
             </div>
@@ -114,8 +117,8 @@ export default function Home() {
               {claimBonus.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Gift className="w-6 h-6" />}
             </div>
             <div className="flex-1 text-left">
-              <p className="font-black text-white uppercase text-sm tracking-tight">Bonus taýýar</p>
-              <p className="text-[11px] text-white/80">Basyň we +50 Bonus TMT alyň</p>
+              <p className="font-black text-white uppercase text-sm tracking-tight">{t("bonus_ready")}</p>
+              <p className="text-[11px] text-white/80">{t("bonus_ready_tap")}</p>
             </div>
             <ChevronRight className="w-5 h-5 text-primary" />
           </motion.button>
@@ -133,10 +136,10 @@ export default function Home() {
             <MessageCircle className="w-5 h-5" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-bold text-white text-sm">Real Coin almak isleýärsiňizmi?</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Owner bilen göni habarlaşyň</p>
+            <p className="font-bold text-white text-sm">{t("want_real_coins")}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("contact_owner_direct")}</p>
           </div>
-          <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Habar</span>
+          <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{t("msg_label")}</span>
         </motion.button>
 
         {/* News Strip */}
@@ -152,7 +155,7 @@ export default function Home() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Täzelik</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{t("news_latest_label")}</p>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{fmtDateShort(latestNews[0].createdAt)}</span>
                 </div>
                 <p className="text-sm font-bold text-white truncate">{latestNews[0].title}</p>
@@ -165,9 +168,9 @@ export default function Home() {
         {/* Game Grid */}
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-base font-black text-white uppercase tracking-wider">Oýunlar</h2>
+            <h2 className="text-base font-black text-white uppercase tracking-wider">{t("games")}</h2>
             <Link href="/games" className="text-xs font-bold text-primary flex items-center gap-1 group">
-              HEMMESI <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              {t("all_label")} <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
 
@@ -184,8 +187,8 @@ export default function Home() {
           <motion.div whileTap={{ scale: 0.98 }} className="bg-card border border-primary/20 rounded-2xl p-4 flex items-center gap-4 gold-glow">
             <Trophy className="w-6 h-6 text-primary" />
             <div>
-              <p className="text-xs font-black text-white uppercase tracking-tight">Liderler</p>
-              <p className="text-[10px] text-muted-foreground uppercase">Iň gowular</p>
+              <p className="text-xs font-black text-white uppercase tracking-tight">{t("leaderboard")}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">{t("best_players")}</p>
             </div>
             <ChevronRight className="w-4 h-4 text-primary ml-auto" />
           </motion.div>
@@ -193,10 +196,10 @@ export default function Home() {
 
         {/* Recent Activity */}
         <div className="space-y-2">
-          <h2 className="text-sm font-black text-white uppercase tracking-wider px-1">Soňky amallar</h2>
+          <h2 className="text-sm font-black text-white uppercase tracking-wider px-1">{t("recent_txs")}</h2>
           {recent.length === 0 ? (
             <div className="text-center py-6 text-xs text-muted-foreground border border-dashed border-primary/10 rounded-2xl">
-              Amallar ýok
+              {t("no_txs")}
             </div>
           ) : (
             <div className="space-y-2">
@@ -210,7 +213,7 @@ export default function Home() {
                       {tx.amount > 0 ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">{translateReason(tx.source)}</p>
+                      <p className="text-xs font-bold text-white">{translateReason(tx.source, t)}</p>
                       <p className="text-[10px] text-muted-foreground">{fmtDateShort(tx.createdAt)}</p>
                     </div>
                   </div>
@@ -227,20 +230,24 @@ export default function Home() {
   );
 }
 
-function translateReason(source: string) {
-  const map: Record<string, string> = {
-    game_slot: "Slot maşyn",
-    game_spin: "Bagt çarhy",
-    game_luckybox: "Bagt gutusy",
-    game_crash: "Bagt uçuşy",
-    admin_add: "Owner goşdy",
-    admin_remove: "Owner aýyrdy",
-    bonus: "3 günlük Bonus",
-    transfer_in: "TMT geldi",
-    transfer_out: "TMT iberildi",
-    register_bonus: "Hoşgeldiň bonus",
+function translateReason(source: string, t: (k: any) => string) {
+  const map: Record<string, any> = {
+    game_slot: "tx_game_slot",
+    game_spin: "tx_game_spin",
+    game_luckybox: "tx_game_luckybox",
+    game_crash: "tx_game_crash",
+    game_dice: "tx_game_dice",
+    game_roulette: "tx_game_roulette",
+    game_plinko: "tx_game_plinko",
+    game_mines: "tx_game_mines",
+    admin_add: "tx_admin_add",
+    admin_remove: "tx_admin_remove",
+    bonus: "tx_bonus",
+    transfer_in: "tx_transfer_in",
+    transfer_out: "tx_transfer_out",
+    register_bonus: "tx_register_bonus",
   };
-  return map[source] || source;
+  return map[source] ? t(map[source]) : source;
 }
 
 function GameHomeCard({ title, subtitle, href, className, iconColor, icon: Icon }: { title: string; subtitle: string; href: string; className?: string; iconColor?: string; icon: any }) {

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { UserChip } from "@/components/UserChip";
 import { Link } from "wouter";
 import { UserPlus, Check, X, MessageCircle, Loader2 } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 export default function Friends() {
   const { data } = useGetFriends({ query: { queryKey: getGetFriendsQueryKey() } });
@@ -22,6 +23,7 @@ export default function Friends() {
   const remove = useRemoveFriend();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
   const [pid, setPid] = useState("");
 
   const refresh = () => qc.invalidateQueries({ queryKey: getGetFriendsQueryKey() });
@@ -30,18 +32,18 @@ export default function Friends() {
     e.preventDefault();
     const id = pid.trim();
     if (!/^\d{8}$/.test(id)) {
-      toast({ title: "Ýalňyşlyk", description: "8 belgili ID giriziň", variant: "destructive" });
+      toast({ title: t("error"), description: t("id_8digits_hint"), variant: "destructive" });
       return;
     }
     send.mutate(
       { data: { publicId: id } },
       {
         onSuccess: () => {
-          toast({ title: "Sorag iberildi" });
+          toast({ title: t("request_sent") });
           setPid("");
           refresh();
         },
-        onError: (err: any) => toast({ title: "Ýalňyşlyk", description: err?.message ?? "", variant: "destructive" }),
+        onError: (err: any) => toast({ title: t("error"), description: err?.message ?? "", variant: "destructive" }),
       },
     );
   };
@@ -51,7 +53,7 @@ export default function Friends() {
       { userId },
       {
         onSuccess: () => {
-          toast({ title: "Dost edinildi" });
+          toast({ title: t("friend_added") });
           refresh();
         },
       },
@@ -66,14 +68,14 @@ export default function Friends() {
     <Layout>
       <div className="p-4 space-y-6 pb-24">
         <header>
-          <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">Dostlar</h1>
+          <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("friends")}</h1>
         </header>
 
         <form onSubmit={handleSend} className="bg-card border border-primary/20 rounded-2xl p-4 space-y-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-white">Dost goş</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-white">{t("add_friend")}</p>
           <div className="flex gap-2">
             <Input
-              placeholder="8 belgili ID"
+              placeholder={t("id_8digits")}
               value={pid}
               onChange={(e) => setPid(e.target.value.replace(/\D/g, "").slice(0, 8))}
               className="flex-1 bg-background border-primary/20 h-12"
@@ -85,7 +87,7 @@ export default function Friends() {
           </div>
         </form>
 
-        <Section title="Sorag gelen" count={data?.incoming.length ?? 0}>
+        <Section title={t("requests_incoming")} count={data?.incoming.length ?? 0}>
           {data?.incoming.map((f) => (
             <div key={f.user.id} className="bg-card border border-primary/15 rounded-2xl p-3 flex items-center gap-3">
               <UserChip {...f.user} />
@@ -93,14 +95,12 @@ export default function Friends() {
               <button
                 onClick={() => handleAccept(f.user.id)}
                 className="w-9 h-9 rounded-lg bg-primary text-black flex items-center justify-center active:scale-95"
-                aria-label="Kabul et"
               >
                 <Check className="w-4 h-4" strokeWidth={3} />
               </button>
               <button
                 onClick={() => handleRemove(f.user.id)}
                 className="w-9 h-9 rounded-lg bg-destructive/20 text-destructive flex items-center justify-center active:scale-95"
-                aria-label="Ret et"
               >
                 <X className="w-4 h-4" strokeWidth={3} />
               </button>
@@ -108,7 +108,7 @@ export default function Friends() {
           ))}
         </Section>
 
-        <Section title="Dostlar" count={data?.friends.length ?? 0}>
+        <Section title={t("friends")} count={data?.friends.length ?? 0}>
           {data?.friends.map((f) => (
             <div key={f.user.id} className="bg-card border border-primary/15 rounded-2xl p-3 flex items-center gap-3">
               <UserChip {...f.user} />
@@ -119,7 +119,6 @@ export default function Friends() {
               <button
                 onClick={() => handleRemove(f.user.id)}
                 className="w-9 h-9 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center active:scale-95"
-                aria-label="Aýyr"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -127,16 +126,15 @@ export default function Friends() {
           ))}
         </Section>
 
-        <Section title="Iberlen sorag" count={data?.outgoing.length ?? 0}>
+        <Section title={t("requests_outgoing")} count={data?.outgoing.length ?? 0}>
           {data?.outgoing.map((f) => (
             <div key={f.user.id} className="bg-card border border-primary/10 rounded-2xl p-3 flex items-center gap-3">
               <UserChip {...f.user} />
               <div className="flex-1" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Garaşýar</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("pending_label")}</span>
               <button
                 onClick={() => handleRemove(f.user.id)}
                 className="w-9 h-9 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center active:scale-95"
-                aria-label="Yatyr"
               >
                 <X className="w-4 h-4" />
               </button>

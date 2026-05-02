@@ -11,10 +11,12 @@ import { OwnerBadge } from "@/components/OwnerBadge";
 import { fmtCoins, cn } from "@/lib/utils";
 import { Trophy, Crown } from "lucide-react";
 import { motion } from "framer-motion";
+import { useI18n } from "@/i18n";
 
 export default function Leaderboard() {
   const { data: leaderboard = [] } = useGetLeaderboard({ query: { queryKey: getGetLeaderboardQueryKey() } });
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const { t } = useI18n();
 
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
@@ -30,19 +32,16 @@ export default function Leaderboard() {
           >
             <Trophy className="w-8 h-8 text-primary" />
           </motion.div>
-          <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">Lider tagtasy</h1>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mt-1">Iň uly oýunçylar</p>
+          <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("leaderboard")}</h1>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mt-1">{t("leaderboard_subtitle")}</p>
         </div>
 
         {/* Podium */}
         {top3.length > 0 && (
           <div className="grid grid-cols-3 items-end gap-2 mt-4 mb-4">
-            {/* 2nd */}
-            <PodiumSpot rank={2} entry={top3[1]} isMe={top3[1]?.publicId === user?.publicId} />
-            {/* 1st (taller) */}
-            <PodiumSpot rank={1} entry={top3[0]} isMe={top3[0]?.publicId === user?.publicId} primary />
-            {/* 3rd */}
-            <PodiumSpot rank={3} entry={top3[2]} isMe={top3[2]?.publicId === user?.publicId} />
+            <PodiumSpot rank={2} entry={top3[1]} isMe={top3[1]?.publicId === user?.publicId} youLabel={t("you_label")} />
+            <PodiumSpot rank={1} entry={top3[0]} isMe={top3[0]?.publicId === user?.publicId} primary youLabel={t("you_label")} />
+            <PodiumSpot rank={3} entry={top3[2]} isMe={top3[2]?.publicId === user?.publicId} youLabel={t("you_label")} />
           </div>
         )}
 
@@ -70,7 +69,7 @@ export default function Leaderboard() {
                     <div className="flex items-center gap-1.5">
                       <p className={cn("font-bold truncate", isMe ? "text-primary" : "text-white")}>{entry.username}</p>
                       {entry.isAdmin && <OwnerBadge size="xs" />}
-                      {isMe && <span className="text-[8px] font-black bg-primary text-black px-1 py-0.5 rounded uppercase">SIZ</span>}
+                      {isMe && <span className="text-[8px] font-black bg-primary text-black px-1 py-0.5 rounded uppercase">{t("you_label")}</span>}
                     </div>
                     <p className="text-[9px] font-mono text-muted-foreground">#{entry.publicId}</p>
                   </div>
@@ -84,7 +83,7 @@ export default function Leaderboard() {
           })}
           {leaderboard.length === 0 && (
             <div className="text-center py-16 text-xs font-bold uppercase tracking-widest text-muted-foreground border-2 border-dashed border-primary/10 rounded-2xl">
-              Sanaw boş
+              {t("leaderboard_empty")}
             </div>
           )}
         </div>
@@ -93,7 +92,7 @@ export default function Leaderboard() {
   );
 }
 
-function PodiumSpot({ rank, entry, isMe, primary }: { rank: number; entry?: any; isMe?: boolean; primary?: boolean }) {
+function PodiumSpot({ rank, entry, isMe, primary, youLabel }: { rank: number; entry?: any; isMe?: boolean; primary?: boolean; youLabel: string }) {
   if (!entry) return <div />;
   const heightCls = primary ? "h-32" : rank === 2 ? "h-24" : "h-20";
   const colorCls = primary ? "from-primary/40 to-primary/10 border-primary" : rank === 2 ? "from-slate-400/30 to-slate-400/5 border-slate-400/50" : "from-amber-700/30 to-amber-700/5 border-amber-700/60";

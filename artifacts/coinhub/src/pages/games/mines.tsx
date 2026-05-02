@@ -10,6 +10,7 @@ import { BetSelector } from "@/components/BetSelector";
 import { cn, fmtCoins } from "@/lib/utils";
 import { CoinIcon } from "@/components/CoinIcon";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/i18n";
 
 const MULTIPLIERS = [0, 1.2, 1.5, 2.0, 2.8, 4.0, 6.0, 10.0, 20.0];
 
@@ -22,6 +23,7 @@ export default function MinesGame() {
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const maxPicks = 5;
   const currentMult = MULTIPLIERS[Math.min(picks.length, MULTIPLIERS.length - 1)] ?? 0;
@@ -44,7 +46,7 @@ export default function MinesGame() {
         credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) { toast({ title: data.error ?? "Ýalňyşlyk", variant: "destructive" }); return; }
+      if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); return; }
       setResult(data);
       setSubmitted(true);
       if (data.netChange > 0) confetti({ particleCount: 70, spread: 55, origin: { y: 0.6 } });
@@ -52,7 +54,7 @@ export default function MinesGame() {
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
     } catch {
-      toast({ title: "Ýalňyşlyk", variant: "destructive" });
+      toast({ title: t("error"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -83,33 +85,31 @@ export default function MinesGame() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           </Link>
-          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">Minalar</h1>
+          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("game_mines_title")}</h1>
         </div>
 
         <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
-          <p>25 öýjükden saýlaň (iň köp {maxPicks}). 5 mina gizlenendir. Her howpsuz öýjük köp pul. Minany tapmasaňyz ýeňersiňiz.</p>
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
+          <p>25 {t("choose_cell")} ({maxPicks} max). 5 {t("mines_hidden")}.</p>
         </div>
 
-        {/* Potential multiplier */}
         <div className="bg-card border border-primary/20 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Saýlanan</p>
-            <p className="text-lg font-black text-white">{picks.length} öýjük</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("choose_cell")}</p>
+            <p className="text-lg font-black text-white">{picks.length} {t("cells_selected")}</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Potensial</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("bet")}</p>
             <p className="text-lg font-black gold-text-gradient">{picks.length > 0 ? `${currentMult}×` : "—"}</p>
           </div>
           {submitted && result && (
             <div className={cn("text-right", result.netChange > 0 ? "text-emerald-400" : "text-destructive")}>
-              <p className="text-[10px] font-bold uppercase tracking-widest">Netije</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest">{t("win")}</p>
               <p className="text-lg font-black">{result.netChange > 0 ? "+" : ""}{fmtCoins(result.netChange)}</p>
             </div>
           )}
         </div>
 
-        {/* Grid */}
         <div className="grid grid-cols-5 gap-2">
           {Array.from({ length: 25 }, (_, i) => {
             const state = getCellState(i);
@@ -144,7 +144,7 @@ export default function MinesGame() {
             disabled={picks.length === 0 || loading || !user || bet > (user?.coins ?? 0)}
             className="w-full h-14 rounded-2xl gold-gradient text-black font-black text-base uppercase tracking-widest disabled:opacity-50 active:scale-[0.99] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
           >
-            {loading ? "Barlanýar..." : picks.length === 0 ? "Öýjük saýlaň" : `${picks.length} öýjük — Başla`}
+            {loading ? t("checking") : picks.length === 0 ? t("choose_cell") : `${picks.length} ${t("cells_selected")}`}
           </button>
         ) : (
           <button
@@ -152,13 +152,13 @@ export default function MinesGame() {
             className="w-full h-14 rounded-2xl bg-card border border-primary/30 text-primary font-black text-base uppercase tracking-widest active:scale-[0.99] flex items-center justify-center gap-2"
           >
             <RefreshCw className="w-5 h-5" />
-            Täzeden oýna
+            {t("play_again")}
           </button>
         )}
 
         <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">Balans: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
-          <span>5 mina gizlenendir</span>
+          <span className="flex items-center gap-1">{t("balance_label")}: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
+          <span>5 {t("mines_hidden")}</span>
         </div>
       </div>
     </Layout>

@@ -14,6 +14,7 @@ import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
 import { Copy, MessageCircle, UserPlus, Check, X, ArrowRightLeft, Trophy, Gamepad2, Calendar } from "lucide-react";
 import { fmtCoins, fmtDateShort } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export default function PublicProfile() {
   const [, params] = useRoute("/u/:publicId");
@@ -27,11 +28,12 @@ export default function PublicProfile() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
 
   if (isLoading || !profile) {
     return (
       <Layout>
-        <div className="p-8 text-center text-xs text-muted-foreground">Ýüklenýär...</div>
+        <div className="p-8 text-center text-xs text-muted-foreground">{t("loading")}</div>
       </Layout>
     );
   }
@@ -44,18 +46,18 @@ export default function PublicProfile() {
   const handleAdd = () => {
     send.mutate(
       { data: { publicId: profile.publicId } },
-      { onSuccess: () => { toast({ title: "Sorag iberildi" }); refresh(); } },
+      { onSuccess: () => { toast({ title: t("request_sent") }); refresh(); } },
     );
   };
   const handleAccept = () => {
-    accept.mutate({ userId: profile.id }, { onSuccess: () => { toast({ title: "Dost edinildi" }); refresh(); } });
+    accept.mutate({ userId: profile.id }, { onSuccess: () => { toast({ title: t("friend_added") }); refresh(); } });
   };
   const handleRemove = () => {
     remove.mutate({ userId: profile.id }, { onSuccess: refresh });
   };
   const copyId = () => {
     navigator.clipboard.writeText(profile.publicId);
-    toast({ title: "ID nusgalandy" });
+    toast({ title: t("id_copied") });
   };
 
   return (
@@ -77,14 +79,14 @@ export default function PublicProfile() {
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <Stat icon={Trophy} label="Reýting" value={profile.rank ? `#${profile.rank}` : "—"} />
-          <Stat icon={ArrowRightLeft} label="Balans" value={fmtCoins(profile.coins)} suffix="TMT" />
-          <Stat icon={Gamepad2} label="Oýun" value={String(profile.gamesPlayed)} />
+          <Stat icon={Trophy} label={t("rank_label")} value={profile.rank ? `#${profile.rank}` : "—"} />
+          <Stat icon={ArrowRightLeft} label={t("balance_label")} value={fmtCoins(profile.coins)} suffix="TMT" />
+          <Stat icon={Gamepad2} label={t("games_played")} value={String(profile.gamesPlayed)} />
         </div>
 
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground justify-center">
           <Calendar className="w-3 h-3" />
-          Agza boldy: {fmtDateShort(profile.createdAt)}
+          {t("joined_label")}: {fmtDateShort(profile.createdAt)}
         </div>
 
         {profile.friendStatus !== "self" && (
@@ -92,35 +94,35 @@ export default function PublicProfile() {
             <div className="grid grid-cols-2 gap-2">
               <Link href={`/dm/${profile.id}`}>
                 <button className="w-full h-12 rounded-xl bg-primary/10 border border-primary/30 text-primary font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 active:scale-[0.98]">
-                  <MessageCircle className="w-4 h-4" /> Habar ýaz
+                  <MessageCircle className="w-4 h-4" /> {t("write_message")}
                 </button>
               </Link>
               <button
                 onClick={() => setLocation(`/transfer?to=${profile.publicId}`)}
                 className="w-full h-12 rounded-xl gold-gradient text-black font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 active:scale-[0.98]"
               >
-                <ArrowRightLeft className="w-4 h-4" /> TMT geçir
+                <ArrowRightLeft className="w-4 h-4" /> {t("transfer")}
               </button>
             </div>
 
             {profile.friendStatus === "none" && (
               <button onClick={handleAdd} className="w-full h-12 rounded-xl bg-card border border-primary/20 text-white font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 active:scale-[0.98]">
-                <UserPlus className="w-4 h-4" /> Dost goş
+                <UserPlus className="w-4 h-4" /> {t("add_friend")}
               </button>
             )}
             {profile.friendStatus === "pending_outgoing" && (
               <button onClick={handleRemove} className="w-full h-12 rounded-xl bg-card border border-muted text-muted-foreground font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2">
-                <X className="w-4 h-4" /> Sorag iberildi (yatyr)
+                <X className="w-4 h-4" /> {t("friend_request_pending")}
               </button>
             )}
             {profile.friendStatus === "pending_incoming" && (
               <button onClick={handleAccept} className="w-full h-12 rounded-xl gold-gradient text-black font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 active:scale-[0.98]">
-                <Check className="w-4 h-4" /> Sorag kabul et
+                <Check className="w-4 h-4" /> {t("accept_request")}
               </button>
             )}
             {profile.friendStatus === "friends" && (
               <button onClick={handleRemove} className="w-full h-12 rounded-xl bg-card border border-destructive/20 text-destructive font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 active:scale-[0.98]">
-                <X className="w-4 h-4" /> Dostlukdan çykar
+                <X className="w-4 h-4" /> {t("remove_friend")}
               </button>
             )}
           </div>

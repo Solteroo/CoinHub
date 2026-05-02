@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { BetSelector } from "@/components/BetSelector";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/i18n";
 
 export default function SpinGame() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
@@ -19,6 +20,7 @@ export default function SpinGame() {
   const playSpin = usePlaySpin();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (config?.minBet && bet < config.minBet) setBet(config.minBet);
@@ -27,11 +29,10 @@ export default function SpinGame() {
   const handleSpin = () => {
     if (spinning || !user || bet > user.coins || bet < (config?.minBet ?? 1)) return;
     setSpinning(true);
-    
-    // Initial faster spin
+
     controls.start({
       rotate: [0, 1080],
-      transition: { duration: 1.5, ease: "linear", repeat: Infinity }
+      transition: { duration: 1.5, ease: "linear", repeat: Infinity },
     });
 
     playSpin.mutate({ data: { bet } }, {
@@ -39,54 +40,36 @@ export default function SpinGame() {
         const segments = config?.wheelSegments ?? [];
         const segmentCount = segments.length || 12;
         const segmentAngle = 360 / segmentCount;
-        
         const targetSegment = result.segmentIndex ?? 0;
-        
-        // Final rotation: current + several full turns + offset to land on target
-        // We land at the top (0 degrees). 
-        // Segment 0 is at [0, segmentAngle]
-        // To put segment 0 at top, we need rotation to end at something like 360 * n - (0 * angle + angle/2)
         const fullTurns = 6;
         const finalRotation = (fullTurns * 360) + (360 - (targetSegment * segmentAngle + segmentAngle / 2));
 
         controls.stop();
         await controls.start({
           rotate: finalRotation,
-          transition: { duration: 5, ease: [0.15, 0, 0.15, 1] }
+          transition: { duration: 5, ease: [0.15, 0, 0.15, 1] },
         });
 
         if (result.won > 0) {
           if (result.multiplier >= 10) {
-            confetti({
-              particleCount: 150,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
           }
-          toast({
-            title: "Gutlaýarys!",
-            description: `${result.label} multipliýator! ${result.won} teňňe gazandyňyz!`,
-          });
+          toast({ title: t("congrats"), description: `${result.label} ${t("won_multiplier_msg").replace("multipliýator! teňňe gazandyňyz!", "")} ${result.won} TMT` });
         } else {
-          toast({
-            title: "Gynansakda...",
-            description: "Bu gezek utuş bolmady.",
-            variant: "destructive"
-          });
+          toast({ title: t("unlucky"), description: t("no_win_desc"), variant: "destructive" });
         }
 
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetLeaderboardQueryKey() });
-        
         setSpinning(false);
       },
       onError: (err: any) => {
         controls.stop();
         setSpinning(false);
-        toast({ title: "Ýalňyşlyk", description: err.message, variant: "destructive" });
-      }
+        toast({ title: t("error"), description: err.message, variant: "destructive" });
+      },
     });
   };
 
@@ -99,27 +82,24 @@ export default function SpinGame() {
       <div className="p-4 flex flex-col items-center min-h-[calc(100vh-80px)] pb-24">
         <div className="w-full flex justify-start mb-6">
           <Link href="/games" className="text-muted-foreground hover:text-white flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
-            <ArrowLeft className="w-4 h-4" /> Yza gaýt
+            <ArrowLeft className="w-4 h-4" /> {t("back_btn")}
           </Link>
         </div>
 
-        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-6">BAGT ÇARHY</h1>
+        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-6">{t("game_spin_title")}</h1>
 
         <div className="w-full max-w-sm mb-6 bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
-          <p>Goýum möçberini saýlaň. <span className="text-primary font-bold">AÝLAT</span> düwmesine basyň. Çarh aýlanyp, belli bir dilimde durýar. Her dilim öz multipliýatoryny berýär. Nol dilimine düşse — goýum ýitirilýär.</p>
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
+          <p>{t("bet_amount")}. <span className="text-primary font-bold">{t("spin_btn")}</span>.</p>
         </div>
 
         <div className="relative w-80 h-80 mb-12">
-          {/* Gold Outer Ring */}
           <div className="absolute -inset-4 border-8 border-primary/20 rounded-full gold-glow" />
-          
-          {/* Pointer */}
           <div className="absolute top-[-25px] left-1/2 -translate-x-1/2 z-30 filter drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]">
-             <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-primary" />
+            <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-primary" />
           </div>
-          
-          <motion.div 
+
+          <motion.div
             animate={controls}
             className="w-full h-full rounded-full border-4 border-primary/50 relative overflow-hidden bg-background shadow-[0_0_50px_rgba(0,0,0,0.8)]"
             style={{ transformOrigin: "center" }}
@@ -128,41 +108,29 @@ export default function SpinGame() {
               {segments.length > 0 ? segments.map((seg, i) => {
                 const startAngle = i * segmentAngle;
                 const endAngle = startAngle + segmentAngle;
-                
                 const x1 = 50 + 50 * Math.cos(Math.PI * startAngle / 180);
                 const y1 = 50 + 50 * Math.sin(Math.PI * startAngle / 180);
                 const x2 = 50 + 50 * Math.cos(Math.PI * endAngle / 180);
                 const y2 = 50 + 50 * Math.sin(Math.PI * endAngle / 180);
-
                 return (
                   <g key={i}>
                     <path
                       d={`M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`}
                       fill={seg.color}
-                      className="transition-opacity hover:opacity-80"
                       stroke="rgba(0,0,0,0.2)"
                       strokeWidth="0.5"
                     />
                     <text
-                      x="75"
-                      y="50"
-                      fill="white"
-                      fontSize="3.5"
-                      fontWeight="900"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
+                      x="75" y="50" fill="white" fontSize="3.5" fontWeight="900"
+                      textAnchor="middle" dominantBaseline="middle"
                       transform={`rotate(${startAngle + segmentAngle / 2}, 50, 50)`}
                       className="uppercase tracking-tighter"
-                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
                     >
                       {seg.label}
                     </text>
                   </g>
                 );
-              }) : (
-                <circle cx="50" cy="50" r="45" fill="#1a1a24" />
-              )}
-              {/* Center Cap */}
+              }) : <circle cx="50" cy="50" r="45" fill="#1a1a24" />}
               <circle cx="50" cy="50" r="8" fill="#0a0a0f" stroke="#D4AF37" strokeWidth="2" />
               <circle cx="50" cy="50" r="3" fill="#D4AF37" />
             </svg>
@@ -170,24 +138,18 @@ export default function SpinGame() {
         </div>
 
         <div className="w-full max-w-sm space-y-6">
-          <BetSelector 
-            value={bet} 
-            onChange={setBet} 
-            min={config?.minBet ?? 1} 
-            max={user?.coins ?? 0}
-            disabled={spinning}
-          />
+          <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} disabled={spinning} />
 
-          <Button 
-            onClick={handleSpin} 
+          <Button
+            onClick={handleSpin}
             disabled={spinning || !user || user.coins < bet}
             className="w-full h-16 text-2xl gold-gradient text-black font-black uppercase italic tracking-widest rounded-2xl shadow-lg active:scale-95 transition-all"
           >
-            {spinning ? "AÝLANÝAR..." : "AÝLAT"}
+            {spinning ? t("spinning") : t("spin_btn")}
           </Button>
-          
+
           <p className="text-[10px] text-center text-muted-foreground uppercase tracking-[0.3em] font-bold">
-            Iň uly multipliýator: {Math.max(...(config?.wheelSegments?.map(s => s.multiplier) || [0]))}x
+            {t("max_multiplier_label")}: {Math.max(...(config?.wheelSegments?.map(s => s.multiplier) || [0]))}x
           </p>
         </div>
       </div>

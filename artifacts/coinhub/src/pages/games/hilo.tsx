@@ -10,6 +10,7 @@ import { BetSelector } from "@/components/BetSelector";
 import { cn, fmtCoins } from "@/lib/utils";
 import { CoinIcon } from "@/components/CoinIcon";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/i18n";
 
 const CARD_NAMES = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const SUITS = ["♠", "♥", "♦", "♣"];
@@ -46,6 +47,7 @@ export default function HiLoGame() {
   const [flipped, setFlipped] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handlePlay = async (choice: "high" | "low") => {
     if (loading || !user || bet > user.coins) return;
@@ -61,7 +63,7 @@ export default function HiLoGame() {
         credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) { toast({ title: data.error ?? "Ýalňyşlyk", variant: "destructive" }); return; }
+      if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); return; }
       await new Promise((r) => setTimeout(r, 200));
       setFlipped(true);
       await new Promise((r) => setTimeout(r, 300));
@@ -71,7 +73,7 @@ export default function HiLoGame() {
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
     } catch {
-      toast({ title: "Ýalňyşlyk", variant: "destructive" });
+      toast({ title: t("error"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -88,15 +90,14 @@ export default function HiLoGame() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           </Link>
-          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">Hi-Lo</h1>
+          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("game_hilo_title")}</h1>
         </div>
 
         <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
-          <p>Kartyň san belli edilýär. <span className="text-primary font-bold">HI</span> (ýokary = 8-K) ýa-da <span className="text-blue-400 font-bold">LO</span> (aşak = A-6) saýlaň. Dogry taraf = ×1.85. 7 — nöl.</p>
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
+          <p><span className="text-primary font-bold">HI</span> (8-K) / <span className="text-blue-400 font-bold">LO</span> (A-6). {t("win_multiplier")}</p>
         </div>
 
-        {/* Card display */}
         <div className="flex flex-col items-center gap-4 py-4">
           <CardDisplay card={result?.card ?? null} suit={suit} flipped={flipped} />
 
@@ -116,30 +117,26 @@ export default function HiLoGame() {
           </AnimatePresence>
         </div>
 
-        {/* Card value guide */}
-        <div className="grid grid-cols-13 gap-px overflow-x-auto">
-          <div className="flex gap-1 overflow-x-auto pb-2">
-            {CARD_NAMES.slice(1).map((name, i) => {
-              const val = i + 1;
-              const isHigh = val >= 8;
-              const isLow = val <= 6;
-              const isMid = val === 7;
-              return (
-                <div key={name} className={cn(
-                  "w-8 h-9 rounded flex flex-col items-center justify-center text-[10px] font-black shrink-0",
-                  isHigh ? "bg-primary/20 text-primary border border-primary/30" :
-                  isLow ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" :
-                  "bg-card text-muted-foreground border border-white/10",
-                )}>
-                  {name}
-                </div>
-              );
-            })}
-          </div>
+        <div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
+          {CARD_NAMES.slice(1).map((name, i) => {
+            const val = i + 1;
+            const isHigh = val >= 8;
+            const isLow = val <= 6;
+            return (
+              <div key={name} className={cn(
+                "w-8 h-9 rounded flex flex-col items-center justify-center text-[10px] font-black shrink-0",
+                isHigh ? "bg-primary/20 text-primary border border-primary/30" :
+                isLow ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" :
+                "bg-card text-muted-foreground border border-white/10",
+              )}>
+                {name}
+              </div>
+            );
+          })}
         </div>
-        <div className="flex gap-2 text-[10px] font-bold">
+        <div className="flex gap-3 text-[10px] font-bold">
           <span className="text-blue-400">■ LO (A-6)</span>
-          <span className="text-muted-foreground">■ 7 = nöl</span>
+          <span className="text-muted-foreground">■ 7 = 0</span>
           <span className="text-primary">■ HI (8-K)</span>
         </div>
 
@@ -169,13 +166,13 @@ export default function HiLoGame() {
             onClick={reset}
             className="w-full h-14 rounded-2xl gold-gradient text-black font-black text-base uppercase tracking-widest active:scale-[0.99]"
           >
-            Täzeden oýna
+            {t("play_again")}
           </button>
         )}
 
         <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">Balans: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
-          <span>Ýeňiş: ×1.85</span>
+          <span className="flex items-center gap-1">{t("balance_label")}: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
+          <span>{t("win_multiplier")}</span>
         </div>
       </div>
     </Layout>

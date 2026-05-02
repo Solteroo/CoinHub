@@ -10,6 +10,7 @@ import { BetSelector } from "@/components/BetSelector";
 import { cn, fmtCoins } from "@/lib/utils";
 import { CoinIcon } from "@/components/CoinIcon";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/i18n";
 
 const DICE_FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
@@ -22,19 +23,16 @@ export default function DiceGame() {
   const [displayDice, setDisplayDice] = useState<[number, number] | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleRoll = async () => {
     if (!choice || rolling || !user || bet > user.coins) return;
     setRolling(true);
     setResult(null);
 
-    // Animate dice rolling
     let ticks = 0;
     const interval = setInterval(() => {
-      setDisplayDice([
-        Math.ceil(Math.random() * 6),
-        Math.ceil(Math.random() * 6),
-      ]);
+      setDisplayDice([Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)]);
       ticks++;
       if (ticks >= 12) clearInterval(interval);
     }, 80);
@@ -47,21 +45,16 @@ export default function DiceGame() {
         credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) {
-        toast({ title: data.error ?? "Ýalňyşlyk", variant: "destructive" });
-        return;
-      }
+      if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); return; }
       clearInterval(interval);
       setDisplayDice([data.dice1, data.dice2]);
       setResult(data);
-      if (data.netChange > 0) {
-        confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
-      }
+      if (data.netChange > 0) confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
     } catch {
-      toast({ title: "Ýalňyşlyk", variant: "destructive" });
+      toast({ title: t("error"), variant: "destructive" });
     } finally {
       setRolling(false);
     }
@@ -76,16 +69,14 @@ export default function DiceGame() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           </Link>
-          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">Zar Oýny</h1>
+          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("game_dice_title")}</h1>
         </div>
 
-        {/* How to play */}
         <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
-          <p>2 zar atylýar. <span className="text-primary font-bold">ÝOKARY</span> = jemi 8-12, <span className="text-blue-400 font-bold">AŞAKY</span> = jemi 2-7. Dogry taraf saýlasaňyz 1.85× gazanarsyňyz.</p>
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
+          <p><span className="text-primary font-bold">{t("dice_high")}</span> / <span className="text-blue-400 font-bold">{t("dice_low")}</span>. {t("win_multiplier")}</p>
         </div>
 
-        {/* Dice display */}
         <div className="bg-card border border-primary/20 rounded-3xl p-8 flex flex-col items-center gap-4 gold-glow">
           <div className="flex gap-6">
             {[0, 1].map((i) => (
@@ -102,7 +93,7 @@ export default function DiceGame() {
 
           {displayDice && !rolling && (
             <div className="text-center">
-              <p className="text-2xl font-black gold-text-gradient">Jemi: {displayDice[0] + displayDice[1]}</p>
+              <p className="text-2xl font-black gold-text-gradient">{t("total_label")}: {displayDice[0] + displayDice[1]}</p>
             </div>
           )}
 
@@ -122,7 +113,6 @@ export default function DiceGame() {
           </AnimatePresence>
         </div>
 
-        {/* Choice buttons */}
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setChoice("high")}
@@ -132,7 +122,7 @@ export default function DiceGame() {
             )}
           >
             <TrendingUp className="w-5 h-5" />
-            Ýokary (8-12)
+            {t("dice_high")}
           </button>
           <button
             onClick={() => setChoice("low")}
@@ -142,7 +132,7 @@ export default function DiceGame() {
             )}
           >
             <TrendingDown className="w-5 h-5" />
-            Aşaky (2-7)
+            {t("dice_low")}
           </button>
         </div>
 
@@ -153,12 +143,12 @@ export default function DiceGame() {
           disabled={rolling || !choice || !user || bet > (user?.coins ?? 0)}
           className="w-full h-14 rounded-2xl gold-gradient text-black font-black text-base uppercase tracking-widest disabled:opacity-50 active:scale-[0.99] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
         >
-          {rolling ? "Atylýar..." : choice ? `${choice === "high" ? "ÝOKARY" : "AŞAKY"} — Zar at` : "Taraf saýlaň"}
+          {rolling ? t("rolling") : choice ? `${choice === "high" ? t("dice_high") : t("dice_low")}` : t("choose_side")}
         </button>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">Balans: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
-          <span>Ýeňiş: ×1.85</span>
+          <span className="flex items-center gap-1">{t("balance_label")}: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
+          <span>{t("win_multiplier")}</span>
         </div>
       </div>
     </Layout>

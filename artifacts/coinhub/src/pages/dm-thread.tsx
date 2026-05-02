@@ -19,11 +19,12 @@ import { OwnerBadge } from "@/components/OwnerBadge";
 import { Send, ArrowLeft, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 function relativeTime(iso: string) {
   const date = new Date(iso);
   const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (diff < 60) return "Häzir";
+  if (diff < 60) return "~";
   if (diff < 3600) return `${Math.floor(diff / 60)} min`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} sg`;
   const dd = String(date.getDate()).padStart(2, "0");
@@ -35,7 +36,7 @@ function PartnerHeader({ partnerId }: { partnerId: string }) {
   const { data: prof } = useGetPublicProfile(partnerId, {
     query: { queryKey: getGetPublicProfileQueryKey(partnerId), enabled: !!partnerId },
   });
-  const username = prof?.username ?? "Ulanyjy";
+  const username = prof?.username ?? "...";
   const color = prof?.avatarColor ?? "#D4AF37";
   const isAdmin = prof?.isAdmin ?? false;
   const publicId = prof?.publicId;
@@ -65,6 +66,7 @@ export default function DmThread() {
   const send = useSendDmMessage();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -72,7 +74,6 @@ export default function DmThread() {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  // Mark thread as opened (refresh /me unread count)
   useEffect(() => {
     if (messages.length > 0) {
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
@@ -94,7 +95,7 @@ export default function DmThread() {
           qc.invalidateQueries({ queryKey: getGetDmThreadsQueryKey() });
           qc.invalidateQueries({ queryKey: getGetMyNotificationsQueryKey() });
         },
-        onError: (err: any) => toast({ title: "Iberilmedi", description: err?.message ?? "", variant: "destructive" }),
+        onError: (err: any) => toast({ title: t("send_failed"), description: err?.message ?? "", variant: "destructive" }),
       },
     );
   };
@@ -136,7 +137,7 @@ export default function DmThread() {
             })}
           </AnimatePresence>
           {messages.length === 0 && (
-            <div className="text-center py-12 text-xs text-muted-foreground">Birinji habary ýazyň</div>
+            <div className="text-center py-12 text-xs text-muted-foreground">{t("dm_ph")}</div>
           )}
           <div ref={scrollRef} />
         </div>
@@ -146,7 +147,7 @@ export default function DmThread() {
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Habar ýazyň..."
+            placeholder={t("dm_ph")}
             maxLength={500}
             className="flex-1 bg-card border border-primary/15 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
           />

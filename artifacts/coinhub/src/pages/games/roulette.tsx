@@ -10,6 +10,7 @@ import { BetSelector } from "@/components/BetSelector";
 import { cn, fmtCoins } from "@/lib/utils";
 import { CoinIcon } from "@/components/CoinIcon";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/i18n";
 
 const RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
@@ -27,6 +28,7 @@ export default function RouletteGame() {
   const [displayNumber, setDisplayNumber] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleSpin = async () => {
     if (!betType || spinning || !user || bet > user.coins) return;
@@ -48,7 +50,7 @@ export default function RouletteGame() {
         credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) { toast({ title: data.error ?? "Ýalňyşlyk", variant: "destructive" }); return; }
+      if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); return; }
       clearInterval(interval);
       setDisplayNumber(data.number);
       setResult(data);
@@ -57,7 +59,7 @@ export default function RouletteGame() {
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
     } catch {
-      toast({ title: "Ýalňyşlyk", variant: "destructive" });
+      toast({ title: t("error"), variant: "destructive" });
     } finally {
       setSpinning(false);
     }
@@ -74,38 +76,33 @@ export default function RouletteGame() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           </Link>
-          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">Ruletka</h1>
+          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("game_roulette_title")}</h1>
         </div>
 
         <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
-          <p>0-36 san aýlanýar. <span className="text-red-500 font-bold">Gyzyl</span>/<span className="text-gray-300 font-bold">Gara</span> = 1.9×. <span className="text-green-500 font-bold">Nol</span> = 14×.</p>
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
+          <p><span className="text-red-500 font-bold">{t("red_bet")}</span> / <span className="text-gray-300 font-bold">{t("black_bet")}</span> / <span className="text-green-500 font-bold">{t("zero_bet")}</span></p>
         </div>
 
-        {/* Roulette wheel display */}
         <div className="bg-card border border-primary/20 rounded-3xl p-8 flex flex-col items-center gap-4 gold-glow">
           <motion.div
             animate={spinning ? { rotate: 360 } : {}}
             transition={{ duration: 1.5, repeat: spinning ? Infinity : 0, ease: "linear" }}
             className="relative w-36 h-36"
           >
-            {/* Wheel */}
             <div className="w-36 h-36 rounded-full border-4 border-primary/40 bg-background flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.2)]">
-              <div
-                className={cn(
-                  "w-24 h-24 rounded-full flex items-center justify-center border-4 transition-all duration-500",
-                  numColor === "red" ? "bg-red-600 border-red-400" :
-                  numColor === "black" ? "bg-gray-900 border-gray-600" :
-                  numColor === "green" ? "bg-green-700 border-green-500" :
-                  "bg-card border-primary/20",
-                )}
-              >
+              <div className={cn(
+                "w-24 h-24 rounded-full flex items-center justify-center border-4 transition-all duration-500",
+                numColor === "red" ? "bg-red-600 border-red-400" :
+                numColor === "black" ? "bg-gray-900 border-gray-600" :
+                numColor === "green" ? "bg-green-700 border-green-500" :
+                "bg-card border-primary/20",
+              )}>
                 <span className="text-3xl font-black text-white">
                   {displayNumber !== null ? displayNumber : "?"}
                 </span>
               </div>
             </div>
-            {/* Ball indicator */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-4 h-4 rounded-full bg-white shadow-lg" />
           </motion.div>
 
@@ -125,7 +122,6 @@ export default function RouletteGame() {
           </AnimatePresence>
         </div>
 
-        {/* Number grid preview (red/black layout) */}
         <div className="grid grid-cols-6 gap-1">
           {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => (
             <div
@@ -144,7 +140,6 @@ export default function RouletteGame() {
           </div>
         </div>
 
-        {/* Bet type selector */}
         <div className="grid grid-cols-3 gap-2">
           {(["red", "black", "zero"] as const).map((type) => (
             <button
@@ -157,7 +152,7 @@ export default function RouletteGame() {
                 type === "zero" && (betType === "zero" ? "bg-green-600 border-green-400 text-white gold-glow" : "bg-green-900/30 border-green-700/40 text-green-400 hover:border-green-600"),
               )}
             >
-              {type === "red" ? "Gyzyl ×1.9" : type === "black" ? "Gara ×1.9" : "Nol ×14"}
+              {type === "red" ? t("red_bet") : type === "black" ? t("black_bet") : t("zero_bet")}
             </button>
           ))}
         </div>
@@ -169,12 +164,12 @@ export default function RouletteGame() {
           disabled={spinning || !betType || !user || bet > (user?.coins ?? 0)}
           className="w-full h-14 rounded-2xl gold-gradient text-black font-black text-base uppercase tracking-widest disabled:opacity-50 active:scale-[0.99] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
         >
-          {spinning ? "Aýlanýar..." : "Ruletka aýlan"}
+          {spinning ? t("roulette_spinning") : t("roulette_spin_btn")}
         </button>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">Balans: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
-          <span>Gyzyl/Gara: ×1.9 · Nol: ×14</span>
+          <span className="flex items-center gap-1">{t("balance_label")}: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
+          <span>{t("red_bet")} · {t("zero_bet")}</span>
         </div>
       </div>
     </Layout>
