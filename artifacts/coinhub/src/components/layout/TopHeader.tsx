@@ -7,7 +7,11 @@ import {
   useGetAdminOwner, getGetAdminOwnerQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Menu, Search, ChevronLeft, ChevronRight, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Globe, Plus } from "lucide-react";
+import {
+  Menu, Search, ChevronLeft, ChevronRight, X,
+  Settings, Newspaper, Users, Bell, HelpCircle, Info,
+  LogOut, ShieldCheck, Plus,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
@@ -47,8 +51,17 @@ export function TopHeader() {
   const vipInfo = user ? getVipLevel(user.coins) : null;
 
   return (
-    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-2xl border-b border-primary/10">
-      <div className="max-w-md mx-auto h-14 px-3 flex items-center gap-2">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-2xl border-b border-primary/10">
+      {/* ── Language strip ── */}
+      <div className="max-w-md mx-auto px-3 flex items-center justify-between border-b border-primary/5 h-9 bg-black/20">
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 select-none">
+          CoinHub
+        </span>
+        <LanguageSwitcher navbar />
+      </div>
+
+      {/* ── Main header row ── */}
+      <div className="max-w-md mx-auto h-13 px-3 flex items-center gap-2 py-2">
         {/* Left: Back or Hamburger */}
         {showBack ? (
           <button
@@ -103,11 +116,6 @@ export function TopHeader() {
                   <DrawerItem icon={ShieldCheck} label={t("owner_panel")} onClick={() => goAndClose("/admin/dashboard")} highlight />
                 )}
                 <div className="border-t border-primary/10 my-2" />
-                <div className="px-3 py-2 flex items-center gap-3">
-                  <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <LanguageSwitcher compact />
-                </div>
-                <div className="border-t border-primary/10 my-2" />
                 <DrawerItem icon={LogOut} label={t("logout")} onClick={handleLogout} destructive />
               </nav>
             </SheetContent>
@@ -115,9 +123,9 @@ export function TopHeader() {
         )}
 
         {/* Logo */}
-        <Link href="/home" className="flex items-center gap-1.5">
+        <Link href="/home" className="flex items-center gap-1.5 shrink-0">
           <Logo className="w-7 h-7" />
-          <span className="font-black text-base tracking-tight gold-text-gradient hidden xs:inline">CoinHub</span>
+          <span className="font-black text-sm tracking-tight gold-text-gradient">CoinHub</span>
         </Link>
 
         <div className="flex-1" />
@@ -139,7 +147,7 @@ export function TopHeader() {
             title={t("deposit_btn")}
           >
             <Plus className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">{t("deposit_btn")}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{t("deposit_btn")}</span>
           </button>
         )}
 
@@ -150,9 +158,9 @@ export function TopHeader() {
               <div
                 className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-black ring-2 ring-offset-1 ring-offset-background cursor-pointer",
-                  vipInfo?.tier === "vip" ? "ring-yellow-400" :
-                  vipInfo?.tier === "gold" ? "ring-yellow-600" :
-                  vipInfo?.tier === "silver" ? "ring-slate-400" :
+                  vipInfo?.tier === "vip"    ? "ring-yellow-400" :
+                  vipInfo?.tier === "gold"   ? "ring-yellow-600" :
+                  vipInfo?.tier === "silver" ? "ring-slate-400"  :
                   "ring-amber-700",
                 )}
                 style={{ background: user.avatarColor ?? "#D4AF37" }}
@@ -164,7 +172,6 @@ export function TopHeader() {
                   {Math.min((user.unreadNotifications ?? 0) + (user.unreadDms ?? 0), 9)}
                 </span>
               )}
-              {/* VIP crown for VIP tier */}
               {vipInfo?.tier === "vip" && (
                 <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] leading-none">👑</span>
               )}
@@ -173,14 +180,12 @@ export function TopHeader() {
         )}
       </div>
 
-      {/* Balance bar under header when logged in */}
+      {/* ── Balance bar (logged in, search closed) ── */}
       {user && !searchOpen && (
         <Link href="/wallet">
           <div className="max-w-md mx-auto px-3 py-1.5 border-t border-primary/5 flex items-center justify-between bg-black/20 cursor-pointer hover:bg-black/30 transition-colors">
+            <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{t("your_balance")}</span>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{t("your_balance")}</span>
-            </div>
-            <div className="flex items-center gap-3">
               <span className="font-black text-primary text-sm tabular-nums">{fmtCoins(user.coins)}</span>
               <span className="text-[9px] font-bold text-primary/70 uppercase tracking-widest">TMT</span>
               <ChevronRight className="w-3 h-3 text-primary/50" />
@@ -189,6 +194,7 @@ export function TopHeader() {
         </Link>
       )}
 
+      {/* ── Search panel ── */}
       {searchOpen && (
         <div className="border-t border-primary/10 px-3 py-2 bg-background/98">
           <input
@@ -200,7 +206,9 @@ export function TopHeader() {
           />
           {dq.length >= 2 && (
             <div className="mt-2 max-h-72 overflow-y-auto space-y-1">
-              {results.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">{t("search_no_results")}</p>}
+              {results.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3">{t("search_no_results")}</p>
+              )}
               {results.map((u) => (
                 <Link key={u.id} href={`/u/${u.publicId}`}>
                   <button
@@ -235,13 +243,17 @@ function DrawerItem({ icon: Icon, label, onClick, badge, highlight, destructive 
       className={cn(
         "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider active:scale-[0.99] transition-all",
         destructive ? "text-destructive hover:bg-destructive/10" :
-        highlight ? "text-primary bg-primary/10 hover:bg-primary/15" :
+        highlight   ? "text-primary bg-primary/10 hover:bg-primary/15" :
         "text-white/90 hover:bg-card hover:text-primary",
       )}
     >
       <Icon className="w-4 h-4" />
       <span className="flex-1 text-left">{label}</span>
-      {badge ? <span className="bg-destructive text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-5 text-center">{badge}</span> : null}
+      {badge ? (
+        <span className="bg-destructive text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-5 text-center">
+          {badge}
+        </span>
+      ) : null}
     </button>
   );
 }

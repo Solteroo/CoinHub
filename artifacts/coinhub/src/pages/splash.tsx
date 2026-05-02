@@ -75,20 +75,28 @@ export default function Splash() {
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center bg-background relative overflow-hidden">
+      {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[15%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-[20%] left-[20%] w-[200px] h-[200px] bg-purple-500/5 rounded-full blur-[80px]" />
       </div>
 
-      <div className="w-full max-w-md flex justify-end px-5 pt-4 z-20">
-        <LanguageSwitcher />
+      {/* ── Sticky top bar with language switcher ── */}
+      <div className="w-full sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-primary/10">
+        <div className="max-w-md mx-auto h-10 px-4 flex items-center justify-between">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 select-none">
+            CoinHub
+          </span>
+          <LanguageSwitcher navbar />
+        </div>
       </div>
 
+      {/* Logo & tagline */}
       <motion.div
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7 }}
-        className="flex flex-col items-center mt-6 mb-8 z-10"
+        className="flex flex-col items-center mt-10 mb-8 z-10"
       >
         <Logo className="w-24 h-24 mb-5" />
         <h1 className="text-4xl font-black tracking-tighter gold-text-gradient mb-2">CoinHub</h1>
@@ -97,6 +105,7 @@ export default function Splash() {
         </p>
       </motion.div>
 
+      {/* Forms */}
       <div className="w-full max-w-sm z-10 flex-1 flex flex-col px-6">
         <AnimatePresence mode="wait">
           {mode === "choose" ? (
@@ -152,13 +161,11 @@ export default function Splash() {
                   {mode === "login" ? t("sign_in_title") : t("register_title")}
                 </h2>
                 {mode === "register" && (
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {t("register_hint")}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1">{t("register_hint")}</p>
                 )}
               </div>
 
-              {/* Email field */}
+              {/* Email */}
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <Input
@@ -172,7 +179,7 @@ export default function Splash() {
                 />
               </div>
 
-              {/* Password field */}
+              {/* Password */}
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <Input
