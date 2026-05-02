@@ -7,9 +7,10 @@ import { useLocation } from "wouter";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
+import { motion } from "framer-motion";
 
 const COLORS = ["#D4AF37", "#E94E77", "#3DA5D9", "#7CB518", "#9B5DE5", "#F77F00", "#06D6A0", "#EF476F"];
 
@@ -21,29 +22,42 @@ export default function EditProfile() {
   const [, setLocation] = useLocation();
   const { t } = useI18n();
 
+  const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [color, setColor] = useState("#D4AF37");
-  const [email, setEmail] = useState("");
+
+  // Detect if user has an auto-generated temp username (set during email registration)
+  const isNewUser = user ? /^[a-zA-Z0-9]+_[A-Z0-9]{4,}$/.test(user.username) : false;
 
   useEffect(() => {
     if (user) {
+      setUsername(isNewUser ? "" : user.username);
       setBio(user.bio ?? "");
       setColor(user.avatarColor ?? "#D4AF37");
-      setEmail(user.email ?? "");
     }
-  }, [user]);
+  }, [user?.id]);
 
   if (!user) return null;
 
+  const displayUsername = username.trim() || (isNewUser ? "" : user.username);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmed = username.trim().replace(/[^a-zA-Z0-9_]/g, "");
+    if (isNewUser && trimmed.length < 3) {
+      toast({ title: t("error"), description: t("username_min_3"), variant: "destructive" });
+      return;
+    }
+    const data: Record<string, string> = { bio, avatarColor: color };
+    if (trimmed.length >= 3) data.username = trimmed;
+
     update.mutate(
-      { data: { bio, avatarColor: color, email } },
+      { data: data as any },
       {
         onSuccess: () => {
           toast({ title: t("saved") });
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
-          setLocation("/profile");
+          setLocation("/home");
         },
         onError: (err: any) => {
           toast({ title: t("error"), description: err?.message ?? "", variant: "destructive" });
@@ -54,65 +68,114 @@ export default function EditProfile() {
 
   return (
     <Layout>
-      <form onSubmit={handleSave} className="p-4 space-y-6 pb-24">
-        <h1 className="text-2xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("edit_profile")}</h1>
-
-        <div className="flex flex-col items-center gap-4 py-6 bg-card border border-primary/20 rounded-3xl">
-          <Avatar username={user.username} color={color} size="xl" />
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">@{user.username}</p>
-        </div>
-
-        <div className="space-y-3">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("choose_color")}</label>
-          <div className="grid grid-cols-8 gap-2">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setColor(c)}
-                className={cn(
-                  "aspect-square rounded-xl flex items-center justify-center transition-all active:scale-90",
-                  color === c ? "ring-2 ring-white scale-110" : "ring-1 ring-white/10",
-                )}
-                style={{ backgroundColor: c }}
-                aria-label={c}
+      <form onSubmit={handleSave} className="pb-28">
+        {/* Hero header */}
+        <div className="relative overflow-hidden hero-grid px-4 pt-5 pb-6">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-[60px] pointer-events-none float-orb" />
+          <div className="relative z-10">
+            {isNewUser ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 mb-2"
               >
-                {color === c && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
-              </button>
-            ))}
+                <Sparkles className="w-5 h-5 text-primary" />
+                <span className="text-xs font-black uppercase tracking-widest text-primary">{t("almost_done")}</span>
+              </motion.div>
+            ) : null}
+            <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter leading-none">
+              {t("edit_profile")}
+            </h1>
+            {isNewUser && (
+              <p className="text-[11px] text-muted-foreground mt-1">{t("set_username_hint")}</p>
+            )}
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Bio (200 {t("bio_counter")})</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value.slice(0, 200))}
-            placeholder={t("bio_ph")}
-            rows={3}
-            className="w-full bg-card border border-primary/20 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
-          />
-          <p className="text-[10px] text-muted-foreground text-right">{bio.length}/200</p>
-        </div>
+        <div className="px-4 space-y-6 pt-4">
+          {/* Avatar preview */}
+          <div className="flex items-center gap-5 py-5 px-5 bg-card border border-primary/15 rounded-3xl">
+            <Avatar username={displayUsername || user.username} color={color} size="lg" />
+            <div>
+              <p className="text-lg font-black text-white">
+                {displayUsername || <span className="text-muted-foreground italic">{t("your_name")}</span>}
+              </p>
+              <p className="text-xs font-mono text-muted-foreground mt-0.5">#{user.publicId}</p>
+            </div>
+          </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("email_recovery")}</label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="email@example.com"
-            className="bg-card border-primary/20 h-12"
-          />
-        </div>
+          {/* Username — shown prominently, required for new users */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5" />
+              {t("username_label")}
+              {isNewUser && <span className="text-destructive">*</span>}
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm pointer-events-none">@</span>
+              <Input
+                value={username}
+                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 24))}
+                placeholder={isNewUser ? t("username_ph_required") : t("username_ph")}
+                className={cn(
+                  "bg-card border-primary/20 h-12 pl-8 font-bold",
+                  isNewUser && "border-primary/50 ring-1 ring-primary/20",
+                )}
+                autoComplete="username"
+                autoFocus={isNewUser}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">{t("username_hint")}</p>
+          </div>
 
-        <Button
-          type="submit"
-          disabled={update.isPending}
-          className="w-full h-12 rounded-xl gold-gradient text-black font-black uppercase tracking-widest"
-        >
-          {update.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : t("save")}
-        </Button>
+          {/* Avatar color */}
+          <div className="space-y-3">
+            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("choose_color")}</label>
+            <div className="grid grid-cols-8 gap-2">
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={cn(
+                    "aspect-square rounded-xl flex items-center justify-center transition-all active:scale-90",
+                    color === c ? "ring-2 ring-white scale-110" : "ring-1 ring-white/10",
+                  )}
+                  style={{ backgroundColor: c }}
+                  aria-label={c}
+                >
+                  {color === c && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value.slice(0, 200))}
+              placeholder={t("bio_ph")}
+              rows={3}
+              className="w-full bg-card border border-primary/20 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+            />
+            <p className="text-[10px] text-muted-foreground text-right">{bio.length}/200</p>
+          </div>
+
+          {/* Save */}
+          <Button
+            type="submit"
+            disabled={update.isPending}
+            className="w-full h-13 rounded-2xl gold-gradient text-black font-black uppercase tracking-widest text-sm neon-pulse"
+          >
+            {update.isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : isNewUser ? t("continue_btn") : t("save")}
+          </Button>
+        </div>
       </form>
     </Layout>
   );

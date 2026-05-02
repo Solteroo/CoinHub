@@ -7,6 +7,6 @@
  */
 
 export type LoginUserBody = {
-  username: string;
+  email: string;
   password: string;
 };

@@ -7,6 +7,11 @@
  */
 
 export type UpdateMyProfileBody = {
+  /**
+   * @minLength 3
+   * @maxLength 24
+   */
+  username?: string;
   /** @maxLength 200 */
   bio?: string;
   avatarColor?: string;

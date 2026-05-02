@@ -17,22 +17,15 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Täze ulanyjy döretmek
  */
-export const registerUserBodyUsernameMin = 3;
-export const registerUserBodyUsernameMax = 24;
-
 export const registerUserBodyPasswordMin = 4;
 export const registerUserBodyPasswordMax = 64;
 
 export const RegisterUserBody = zod.object({
-  username: zod
-    .string()
-    .min(registerUserBodyUsernameMin)
-    .max(registerUserBodyUsernameMax),
+  email: zod.string().email(),
   password: zod
     .string()
     .min(registerUserBodyPasswordMin)
     .max(registerUserBodyPasswordMax),
-  email: zod.string().email().optional(),
 });
 
 export const RegisterUserResponse = zod.object({
@@ -60,7 +53,7 @@ export const RegisterUserResponse = zod.object({
  * @summary Ulanyjy girmek
  */
 export const LoginUserBody = zod.object({
-  username: zod.string(),
+  email: zod.string().email(),
   password: zod.string(),
 });
 
@@ -142,9 +135,17 @@ export const GetMyStatsResponse = zod.object({
 /**
  * @summary Profil maglumatlary täzelemek
  */
+export const updateMyProfileBodyUsernameMin = 3;
+export const updateMyProfileBodyUsernameMax = 24;
+
 export const updateMyProfileBodyBioMax = 200;
 
 export const UpdateMyProfileBody = zod.object({
+  username: zod
+    .string()
+    .min(updateMyProfileBodyUsernameMin)
+    .max(updateMyProfileBodyUsernameMax)
+    .optional(),
   bio: zod.string().max(updateMyProfileBodyBioMax).optional(),
   avatarColor: zod.string().optional(),
   email: zod.string().email().optional(),

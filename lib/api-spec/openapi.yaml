@@ -54,18 +54,14 @@ paths:
             schema:
               type: object
               properties:
-                username:
+                email:
                   type: string
-                  minLength: 3
-                  maxLength: 24
+                  format: email
                 password:
                   type: string
                   minLength: 4
                   maxLength: 64
-                email:
-                  type: string
-                  format: email
-              required: [username, password]
+              required: [email, password]
       responses:
         "200":
           description: Registered
@@ -86,11 +82,12 @@ paths:
             schema:
               type: object
               properties:
-                username:
+                email:
                   type: string
+                  format: email
                 password:
                   type: string
-              required: [username, password]
+              required: [email, password]
       responses:
         "200":
           description: Logged in
@@ -165,6 +162,10 @@ paths:
             schema:
               type: object
               properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 24
                 bio:
                   type: string
                   maxLength: 200

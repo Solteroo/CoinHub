@@ -93,11 +93,28 @@ router.get("/me/stats", requireUser, async (req, res) => {
 router.patch("/me/profile", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
   const body = (req.body ?? {}) as {
+    username?: string;
     bio?: string;
     avatarColor?: string;
     email?: string;
   };
   const updates: Record<string, unknown> = {};
+  if (typeof body.username === "string") {
+    const uname = body.username.trim().replace(/[^a-zA-Z0-9_]/g, "").slice(0, 24);
+    if (uname.length >= 3) {
+      // Check uniqueness
+      const existing = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.username, uname))
+        .limit(1);
+      if (existing.length > 0 && existing[0]?.id !== user.id) {
+        res.status(409).json({ error: "Bu ulanyjy ady eýýäm bar" });
+        return;
+      }
+      updates["username"] = uname;
+    }
+  }
   if (typeof body.bio === "string") {
     const trimmed = body.bio.trim().slice(0, 200);
     updates["bio"] = trimmed.length > 0 ? trimmed : null;

@@ -20,19 +20,22 @@ function pickAvatarColor(): string {
 }
 
 router.post("/auth/register", async (req, res) => {
-  const parsed = RegisterUserBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Maglumatlar nädogry" });
+  const body = (req.body ?? {}) as { email?: string; password?: string };
+  const email = (body.email ?? "").trim().toLowerCase();
+  const password = body.password ?? "";
+
+  if (!email || !password || password.length < 4) {
+    res.status(400).json({ error: "Email we açar söz gerek" });
     return;
   }
-  const { username, password, email } = parsed.data;
-  const existing = await db
-    .select()
+
+  const existingEmail = await db
+    .select({ id: usersTable.id })
     .from(usersTable)
-    .where(eq(usersTable.username, username))
+    .where(eq(usersTable.email, email))
     .limit(1);
-  if (existing.length > 0) {
-    res.status(409).json({ error: "Bu ulanyjy ady eýýäm bar" });
+  if (existingEmail.length > 0) {
+    res.status(409).json({ error: "Bu email eýýäm hasaba alnan" });
     return;
   }
 
@@ -47,14 +50,18 @@ router.post("/auth/register", async (req, res) => {
     publicId = generatePublicId();
   }
 
+  // Auto-generate a temp username from email prefix + publicId suffix
+  const emailPrefix = email.split("@")[0]?.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 14) ?? "user";
+  const tempUsername = `${emailPrefix}_${publicId.toLowerCase()}`;
+
   const [user] = await db
     .insert(usersTable)
     .values({
-      username,
+      username: tempUsername,
       publicId,
       passwordHash: hashPassword(password),
       coins: STARTING_COINS,
-      email: email ?? null,
+      email,
       avatarColor: pickAvatarColor(),
     })
     .returning();
@@ -67,19 +74,23 @@ router.post("/auth/register", async (req, res) => {
 });
 
 router.post("/auth/login", async (req, res) => {
-  const parsed = LoginUserBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Maglumatlar nädogry" });
+  const body = (req.body ?? {}) as { email?: string; password?: string };
+  const email = (body.email ?? "").trim().toLowerCase();
+  const password = body.password ?? "";
+
+  if (!email || !password) {
+    res.status(400).json({ error: "Email we açar söz gerek" });
     return;
   }
-  const { username, password } = parsed.data;
+
   const [user] = await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.username, username))
+    .where(eq(usersTable.email, email))
     .limit(1);
+
   if (!user || !verifyPassword(password, user.passwordHash)) {
-    res.status(401).json({ error: "Ulanyjy ady ýa-da açar söz nädogry" });
+    res.status(401).json({ error: "Email ýa-da açar söz nädogry" });
     return;
   }
   await createSession(res, user.id);

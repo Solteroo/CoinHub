@@ -7,15 +7,10 @@
  */
 
 export type RegisterUserBody = {
-  /**
-   * @minLength 3
-   * @maxLength 24
-   */
-  username: string;
+  email: string;
   /**
    * @minLength 4
    * @maxLength 64
    */
   password: string;
-  email?: string;
 };

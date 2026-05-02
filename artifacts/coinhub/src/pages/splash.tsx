@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowLeft, LogIn, UserPlus } from "lucide-react";
+import { Loader2, ArrowLeft, LogIn, UserPlus, Mail, Lock } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -17,9 +17,8 @@ type Mode = "choose" | "login" | "register";
 export default function Splash() {
   const [, setLocation] = useLocation();
   const [mode, setMode] = useState<Mode>("choose");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -37,12 +36,12 @@ export default function Splash() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
+    if (!email || !password) {
       toast({ title: t("error"), description: t("fill_all"), variant: "destructive" });
       return;
     }
     if (mode === "login") {
-      loginUser.mutate({ data: { username, password } }, {
+      loginUser.mutate({ data: { email, password } as any }, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
           toast({ title: t("welcome") });
@@ -53,11 +52,11 @@ export default function Splash() {
         },
       });
     } else {
-      registerUser.mutate({ data: { username, password, email: email || undefined } as any }, {
+      registerUser.mutate({ data: { email, password } as any }, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-          toast({ title: t("welcome"), description: t("account_created") });
-          setLocation("/home");
+          toast({ title: t("account_created"), description: t("set_username_hint") });
+          setLocation("/edit-profile");
         },
         onError: (err: any) => {
           toast({ title: t("reg_error"), description: err?.message ?? "", variant: "destructive" });
@@ -78,6 +77,7 @@ export default function Splash() {
     <div className="min-h-[100dvh] w-full flex flex-col items-center bg-background relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[15%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[20%] left-[20%] w-[200px] h-[200px] bg-purple-500/5 rounded-full blur-[80px]" />
       </div>
 
       <div className="w-full max-w-md flex justify-end px-5 pt-4 z-20">
@@ -140,41 +140,55 @@ export default function Splash() {
             >
               <button
                 type="button"
-                onClick={() => setMode("choose")}
+                onClick={() => { setMode("choose"); setEmail(""); setPassword(""); }}
                 className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 {t("back")}
               </button>
 
-              <h2 className="text-xl font-black gold-text-gradient uppercase tracking-tight">
-                {mode === "login" ? t("sign_in_title") : t("register_title")}
-              </h2>
+              <div>
+                <h2 className="text-xl font-black gold-text-gradient uppercase tracking-tight">
+                  {mode === "login" ? t("sign_in_title") : t("register_title")}
+                </h2>
+                {mode === "register" && (
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {t("register_hint")}
+                  </p>
+                )}
+              </div>
 
-              <Input
-                placeholder={t("username_ph")}
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="bg-background/50 border-primary/20 focus-visible:ring-primary h-12"
-                autoComplete="username"
-              />
-              <Input
-                type="password"
-                placeholder={t("password_ph")}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-background/50 border-primary/20 focus-visible:ring-primary h-12"
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-              />
-              {mode === "register" && (
+              {/* Email field */}
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <Input
                   type="email"
                   placeholder={t("email_ph")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-background/50 border-primary/20 focus-visible:ring-primary h-12"
+                  className="bg-background/50 border-primary/20 focus-visible:ring-primary h-12 pl-10"
                   autoComplete="email"
+                  inputMode="email"
                 />
+              </div>
+
+              {/* Password field */}
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="password"
+                  placeholder={t("password_ph")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-background/50 border-primary/20 focus-visible:ring-primary h-12 pl-10"
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                />
+              </div>
+
+              {mode === "register" && (
+                <p className="text-[10px] text-muted-foreground/70 bg-primary/5 border border-primary/10 rounded-xl p-3 leading-relaxed">
+                  💡 {t("set_username_hint")}
+                </p>
               )}
 
               <Button
