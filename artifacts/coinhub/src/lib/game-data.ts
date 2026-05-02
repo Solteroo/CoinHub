@@ -1,0 +1,167 @@
+import type { TranslationKey } from "@/i18n/translations";
+
+export type Volatility = "Low" | "Medium" | "High";
+
+export interface GameMeta {
+  titleKey: TranslationKey;
+  descKey: TranslationKey;
+  badgeKey: TranslationKey;
+  href: string;
+  emoji: string;
+  badgeClass: string;
+  gradient: string;
+  border: string;
+  glow: string;
+  accentText: string;
+  rtp: string;
+  maxWin: string;
+  volatility: Volatility;
+  animClass: string;
+}
+
+export const GAME_META: GameMeta[] = [
+  {
+    titleKey: "game_slot_title",
+    descKey: "game_slot_desc",
+    badgeKey: "badge_jackpot",
+    href: "/games/slot",
+    emoji: "🎰",
+    badgeClass: "bg-purple-500/25 text-purple-300 border border-purple-500/30",
+    gradient: "from-purple-950/60 via-purple-900/30 to-card",
+    border: "border-purple-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(168,85,247,0.25)]",
+    accentText: "text-purple-300",
+    rtp: "96%",
+    maxWin: "150×",
+    volatility: "High",
+    animClass: "anim-slot",
+  },
+  {
+    titleKey: "game_spin_title",
+    descKey: "game_spin_desc",
+    badgeKey: "badge_popular",
+    href: "/games/spin",
+    emoji: "🎡",
+    badgeClass: "bg-blue-500/25 text-blue-300 border border-blue-500/30",
+    gradient: "from-blue-950/60 via-blue-900/30 to-card",
+    border: "border-blue-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(59,130,246,0.25)]",
+    accentText: "text-blue-300",
+    rtp: "94%",
+    maxWin: "100×",
+    volatility: "Medium",
+    animClass: "anim-spin",
+  },
+  {
+    titleKey: "game_luckybox_title",
+    descKey: "game_luckybox_desc",
+    badgeKey: "badge_fun",
+    href: "/games/luckybox",
+    emoji: "📦",
+    badgeClass: "bg-amber-500/25 text-amber-300 border border-amber-500/30",
+    gradient: "from-amber-950/60 via-amber-900/30 to-card",
+    border: "border-amber-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(245,158,11,0.25)]",
+    accentText: "text-amber-300",
+    rtp: "95%",
+    maxWin: "50×",
+    volatility: "Medium",
+    animClass: "anim-bounce",
+  },
+  {
+    titleKey: "game_crash_title",
+    descKey: "game_crash_desc",
+    badgeKey: "badge_hot",
+    href: "/games/crash",
+    emoji: "🚀",
+    badgeClass: "bg-red-500/25 text-red-300 border border-red-500/30",
+    gradient: "from-red-950/60 via-red-900/30 to-card",
+    border: "border-red-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(239,68,68,0.25)]",
+    accentText: "text-red-300",
+    rtp: "96%",
+    maxWin: "∞",
+    volatility: "High",
+    animClass: "anim-float",
+  },
+  {
+    titleKey: "game_dice_title",
+    descKey: "game_dice_desc",
+    badgeKey: "badge_strategy",
+    href: "/games/dice",
+    emoji: "🎲",
+    badgeClass: "bg-emerald-500/25 text-emerald-300 border border-emerald-500/30",
+    gradient: "from-emerald-950/60 via-emerald-900/30 to-card",
+    border: "border-emerald-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(16,185,129,0.25)]",
+    accentText: "text-emerald-300",
+    rtp: "96%",
+    maxWin: "1.96×",
+    volatility: "Low",
+    animClass: "anim-shake",
+  },
+  {
+    titleKey: "game_mines_title",
+    descKey: "game_mines_desc",
+    badgeKey: "badge_tension",
+    href: "/games/mines",
+    emoji: "💣",
+    badgeClass: "bg-orange-500/25 text-orange-300 border border-orange-500/30",
+    gradient: "from-orange-950/60 via-orange-900/30 to-card",
+    border: "border-orange-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(249,115,22,0.25)]",
+    accentText: "text-orange-300",
+    rtp: "95%",
+    maxWin: "200×",
+    volatility: "High",
+    animClass: "anim-pulse",
+  },
+  {
+    titleKey: "game_roulette_title",
+    descKey: "game_roulette_desc",
+    badgeKey: "badge_classic",
+    href: "/games/roulette",
+    emoji: "🎯",
+    badgeClass: "bg-rose-500/25 text-rose-300 border border-rose-500/30",
+    gradient: "from-rose-950/60 via-rose-900/30 to-card",
+    border: "border-rose-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(244,63,94,0.25)]",
+    accentText: "text-rose-300",
+    rtp: "97.3%",
+    maxWin: "14×",
+    volatility: "Low",
+    animClass: "anim-spin-slow",
+  },
+  {
+    titleKey: "game_plinko_title",
+    descKey: "game_plinko_desc",
+    badgeKey: "badge_new",
+    href: "/games/plinko",
+    emoji: "🔵",
+    badgeClass: "bg-cyan-500/25 text-cyan-300 border border-cyan-500/30",
+    gradient: "from-cyan-950/60 via-cyan-900/30 to-card",
+    border: "border-cyan-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(6,182,212,0.25)]",
+    accentText: "text-cyan-300",
+    rtp: "95%",
+    maxWin: "100×",
+    volatility: "Medium",
+    animClass: "anim-bounce",
+  },
+  {
+    titleKey: "game_hilo_title",
+    descKey: "game_hilo_desc",
+    badgeKey: "badge_fast",
+    href: "/games/hilo",
+    emoji: "🃏",
+    badgeClass: "bg-yellow-500/25 text-yellow-300 border border-yellow-500/30",
+    gradient: "from-yellow-950/60 via-yellow-900/30 to-card",
+    border: "border-yellow-500/25",
+    glow: "hover:shadow-[0_0_25px_rgba(234,179,8,0.25)]",
+    accentText: "text-yellow-300",
+    rtp: "96%",
+    maxWin: "1.85×",
+    volatility: "Low",
+    animClass: "anim-flip",
+  },
+];

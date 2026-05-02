@@ -3,39 +3,23 @@ import { Layout } from "@/components/layout/Layout";
 import { Link, useLocation } from "wouter";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import {
-  useGetMe,
-  getGetMeQueryKey,
-  useGetMyTransactions,
-  getGetMyTransactionsQueryKey,
+  useGetMe, getGetMeQueryKey,
+  useGetMyTransactions, getGetMyTransactionsQueryKey,
   useClaimBonus,
-  useGetNews,
-  getGetNewsQueryKey,
-  useGetAdminOwner,
-  getGetAdminOwnerQueryKey,
+  useGetNews, getGetNewsQueryKey,
+  useGetAdminOwner, getGetAdminOwnerQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { CoinCounter } from "@/components/ui/coin-counter";
 import { LiveActivityFeed } from "@/components/LiveActivityFeed";
 import { VipLevelBar } from "@/components/VipLevelBar";
+import { GamePreviewModal, type GameModalInfo } from "@/components/GamePreviewModal";
+import { GAME_META } from "@/lib/game-data";
+import { playClick, playWin } from "@/lib/sounds";
 import {
-  ChevronRight,
-  MessageCircle,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Trophy,
-  Rocket,
-  Disc,
-  Package,
-  LayoutGrid,
-  Gift,
-  Newspaper,
-  Loader2,
-  Coins,
-  Star,
-  ArrowRightLeft,
-  Zap,
-  Gamepad2,
+  ChevronRight, MessageCircle, ArrowUpRight, ArrowDownLeft,
+  Trophy, Gift, Newspaper, Loader2, ArrowRightLeft, Zap, Gamepad2, Rocket,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
@@ -58,14 +42,13 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const { t } = useI18n();
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
-  const { data: transactions = [] } = useGetMyTransactions({
-    query: { queryKey: getGetMyTransactionsQueryKey(), enabled: !!user },
-  });
+  const { data: transactions = [] } = useGetMyTransactions({ query: { queryKey: getGetMyTransactionsQueryKey(), enabled: !!user } });
   const { data: news = [] } = useGetNews({ query: { queryKey: getGetNewsQueryKey(), enabled: !!user } });
   const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user } });
   const claimBonus = useClaimBonus();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const [selectedGame, setSelectedGame] = useState<GameModalInfo | null>(null);
 
   const redirected = useRef(false);
   useEffect(() => {
@@ -79,12 +62,11 @@ export default function Home() {
 
   const recent = transactions.slice(0, 5);
   const latestNews = news.slice(0, 1);
-  const bonusCoins = user.bonusCoins ?? 0;
-  const realCoins = user.realCoins ?? 0;
 
   const handleClaimBonus = () => {
     claimBonus.mutate(undefined, {
       onSuccess: (res: any) => {
+        playWin();
         toast({ title: t("bonus_claimed"), description: `+${res.amount ?? 50} Bonus TMT` });
         qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
         qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
@@ -95,80 +77,103 @@ export default function Home() {
     });
   };
 
-  const goAdmin = () => {
-    if (owner) setLocation(`/dm/${owner.id}`);
+  const goAdmin = () => { if (owner) setLocation(`/dm/${owner.id}`); };
+
+  const openGame = (meta: typeof GAME_META[number]) => {
+    playClick();
+    setSelectedGame({
+      title: t(meta.titleKey),
+      desc: t(meta.descKey),
+      href: meta.href,
+      emoji: meta.emoji,
+      badge: t(meta.badgeKey),
+      badgeClass: meta.badgeClass,
+      gradient: meta.gradient,
+      rtp: meta.rtp,
+      maxWin: meta.maxWin,
+      volatility: meta.volatility,
+      accentText: meta.accentText,
+    });
   };
+
+  // Featured game = Crash
+  const featuredMeta = GAME_META.find((g) => g.href === "/games/crash")!;
 
   return (
     <Layout>
       <div className="pb-24">
         <PwaInstallBanner />
 
-        {/* ── HERO SECTION ───────────────────────── */}
+        {/* ── HERO SECTION ──────────────────────── */}
         <div className="relative overflow-hidden hero-grid">
-          {/* Animated background orbs */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-primary/15 rounded-full blur-[80px] pointer-events-none float-orb" />
-          <div className="absolute bottom-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-[60px] pointer-events-none float-orb-2" />
-          <div className="absolute top-1/2 left-1/3 w-40 h-40 bg-primary/8 rounded-full blur-[70px] pointer-events-none float-orb-3" />
+          <div className="absolute top-0 left-0 w-64 h-64 bg-primary/12 rounded-full blur-[80px] pointer-events-none float-orb" />
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-purple-500/8 rounded-full blur-[60px] pointer-events-none float-orb-2" />
+          <div className="absolute top-1/2 left-1/3 w-40 h-40 bg-primary/6 rounded-full blur-[70px] pointer-events-none float-orb-3" />
 
-          <div className="relative z-10 px-4 pt-5 pb-6 space-y-4">
+          <div className="relative z-10 px-4 pt-4 pb-5 space-y-4">
             {/* Welcome + VIP */}
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                  {t("welcome")}, <span className="text-white">{user.username}</span>
-                </p>
-              </div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em]">
+                {t("welcome")}, <span className="text-white">{user.username}</span>
+              </p>
               <VipLevelBar coins={user.coins} compact />
             </div>
 
+            {/* Featured Game Banner */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              onClick={() => openGame(featuredMeta)}
+              className="relative overflow-hidden rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-950/70 via-red-900/40 to-card cursor-pointer active:scale-[0.99] transition-all"
+              style={{ boxShadow: "0 0 30px rgba(239,68,68,0.15)" }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-red-900/20 pointer-events-none" />
+              <div className="relative z-10 p-4 flex items-center gap-4">
+                <div className="text-5xl anim-float select-none drop-shadow-xl">🚀</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-red-500/25 text-red-300 border border-red-500/30 font-black uppercase tracking-wider">
+                      {t("badge_hot")} · FEATURED
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black text-white uppercase italic tracking-tight leading-none">
+                    {t("game_crash_title")}
+                  </h3>
+                  <p className="text-[11px] text-white/60 mt-0.5 line-clamp-1">{t("game_crash_desc")}</p>
+                </div>
+                <div className="shrink-0">
+                  <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center shadow-lg neon-pulse">
+                    <Rocket className="w-5 h-5 text-black" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Big Balance */}
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.92, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="text-center py-2"
+              transition={{ duration: 0.4, delay: 0.15 }}
+              className="text-center py-1"
             >
-              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black mb-1">
-                {t("your_balance")}
-              </p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black mb-1">{t("your_balance")}</p>
               <div className="flex items-baseline justify-center gap-2">
-                <CoinCounter
-                  value={user.coins}
-                  className="text-6xl font-black gold-text-gradient drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]"
-                />
-                <span className="text-2xl font-black gold-text-gradient">TMT</span>
-              </div>
-
-              <div className="flex items-center justify-center gap-3 mt-3">
-                <div className="flex items-center gap-1.5 bg-black/30 px-3 py-1.5 rounded-full border border-yellow-500/20">
-                  <Coins className="w-3 h-3 text-yellow-400" />
-                  <span className="text-[10px] font-black text-yellow-400">{fmtCoins(realCoins)}</span>
-                  <span className="text-[9px] text-yellow-400/60 uppercase">Real</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-black/30 px-3 py-1.5 rounded-full border border-primary/20">
-                  <Star className="w-3 h-3 text-primary" />
-                  <span className="text-[10px] font-black text-primary">{fmtCoins(bonusCoins)}</span>
-                  <span className="text-[9px] text-primary/60 uppercase">Bonus</span>
-                </div>
+                <CoinCounter value={user.coins} className="text-5xl font-black gold-text-gradient drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
+                <span className="text-xl font-black gold-text-gradient">TMT</span>
               </div>
             </motion.div>
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={goAdmin}
-                className="w-full h-12 rounded-2xl gold-gradient text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 neon-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-              >
+              <motion.button whileTap={{ scale: 0.97 }} onClick={goAdmin}
+                className="w-full h-12 rounded-2xl gold-gradient text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 neon-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]">
                 <ArrowDownLeft className="w-4 h-4" />
                 {t("deposit_btn")}
               </motion.button>
               <Link href="/transfer">
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full h-12 rounded-2xl bg-card border border-primary/40 text-primary font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
-                >
+                <motion.button whileTap={{ scale: 0.97 }}
+                  className="w-full h-12 rounded-2xl bg-card border border-primary/40 text-primary font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
                   <ArrowRightLeft className="w-4 h-4" />
                   {t("transfer_btn")}
                 </motion.button>
@@ -177,19 +182,17 @@ export default function Home() {
 
             {/* Jackpot Counter */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="bg-black/40 border border-primary/20 rounded-2xl p-3 flex items-center justify-between"
             >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
                   <Trophy className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-                    {t("jackpot_pool")}
-                  </p>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">{t("jackpot_pool")}</p>
                   <JackpotCounter />
                 </div>
               </div>
@@ -219,24 +222,22 @@ export default function Home() {
                 <p className="font-black text-white uppercase text-sm tracking-tight">{t("bonus_ready")}</p>
                 <p className="text-[11px] text-white/80">{t("bonus_ready_tap")}</p>
               </div>
-              <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center shrink-0">
                 <ChevronRight className="w-4 h-4 text-black" />
               </div>
             </motion.button>
           )}
 
-          {/* Live Activity Feed */}
+          {/* Live Feed */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-black text-white uppercase tracking-wider">{t("live_feed_title")}</h2>
-              </div>
+            <div className="flex items-center gap-2 px-1">
+              <Zap className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-black text-white uppercase tracking-wider">{t("live_feed_title")}</h2>
             </div>
             <LiveActivityFeed />
           </div>
 
-          {/* Games Quick Grid */}
+          {/* Quick Games Grid */}
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
@@ -248,13 +249,20 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <GameCard title={t("game_slot_title")} subtitle="777 · " badge={t("badge_jackpot")} href="/games/slot" emoji="🎰" gradient="from-purple-900/50 to-purple-800/20" border="border-purple-500/30" badgeCls="bg-purple-500/20 text-purple-300" />
-              <GameCard title={t("game_crash_title")} subtitle="Crash · " badge={t("badge_hot")} href="/games/crash" emoji="🚀" gradient="from-red-900/50 to-red-800/20" border="border-red-500/30" badgeCls="bg-red-500/20 text-red-300" />
-              <GameCard title={t("game_spin_title")} subtitle="100× · " badge={t("badge_popular")} href="/games/spin" emoji="🎡" gradient="from-blue-900/50 to-blue-800/20" border="border-blue-500/30" badgeCls="bg-blue-500/20 text-blue-300" />
-              <GameCard title={t("game_plinko_title")} subtitle="Plinko · " badge={t("badge_new")} href="/games/plinko" emoji="🔵" gradient="from-cyan-900/50 to-cyan-800/20" border="border-cyan-500/30" badgeCls="bg-cyan-500/20 text-cyan-300" />
-              <GameCard title={t("game_dice_title")} subtitle="Hi/Lo · " badge={t("badge_strategy")} href="/games/dice" emoji="🎲" gradient="from-emerald-900/50 to-emerald-800/20" border="border-emerald-500/30" badgeCls="bg-emerald-500/20 text-emerald-300" />
-              <GameCard title={t("game_hilo_title")} subtitle="×1.85 · " badge={t("badge_fast")} href="/games/hilo" emoji="🃏" gradient="from-yellow-900/50 to-yellow-800/20" border="border-yellow-500/30" badgeCls="bg-yellow-500/20 text-yellow-300" />
+            <div className="grid grid-cols-3 gap-2">
+              {GAME_META.slice(0, 6).map((meta) => (
+                <QuickGameCard
+                  key={meta.href}
+                  emoji={meta.emoji}
+                  title={t(meta.titleKey)}
+                  badge={t(meta.badgeKey)}
+                  badgeClass={meta.badgeClass}
+                  gradient={meta.gradient}
+                  border={meta.border}
+                  animClass={meta.animClass}
+                  onOpen={() => openGame(meta)}
+                />
+              ))}
             </div>
           </div>
 
@@ -272,7 +280,7 @@ export default function Home() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{t("news_latest_label")}</p>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{fmtDateShort(latestNews[0].createdAt)}</span>
+                    <span className="text-[9px] font-bold uppercase text-muted-foreground">{fmtDateShort(latestNews[0].createdAt)}</span>
                   </div>
                   <p className="text-sm font-bold text-white truncate">{latestNews[0].title}</p>
                   <p className="text-[11px] text-muted-foreground line-clamp-1">{latestNews[0].body}</p>
@@ -311,10 +319,8 @@ export default function Home() {
                 {recent.map((tx) => (
                   <div key={tx.id} className="bg-card/40 border border-primary/5 rounded-xl p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center",
-                        tx.amount > 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive",
-                      )}>
+                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center",
+                        tx.amount > 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive")}>
                         {tx.amount > 0 ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
                       </div>
                       <div>
@@ -332,6 +338,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <GamePreviewModal game={selectedGame} onClose={() => setSelectedGame(null)} />
     </Layout>
   );
 }
@@ -347,38 +355,33 @@ function translateReason(source: string, t: (k: any) => string) {
   return map[source] ? t(map[source]) : source;
 }
 
-function GameCard({
-  title, subtitle, badge, href, emoji, gradient, border, badgeCls,
-}: { title: string; subtitle: string; badge: string; href: string; emoji: string; gradient: string; border: string; badgeCls: string }) {
+function QuickGameCard({ emoji, title, badge, badgeClass, gradient, border, animClass, onOpen }: {
+  emoji: string; title: string; badge: string; badgeClass: string;
+  gradient: string; border: string; animClass: string; onOpen: () => void;
+}) {
   return (
-    <Link href={href}>
-      <motion.div
-        whileTap={{ scale: 0.96 }}
-        whileHover={{ scale: 1.02 }}
-        className={cn(
-          "relative overflow-hidden bg-gradient-to-br border rounded-2xl p-4 flex flex-col gap-2 cursor-pointer group transition-all",
-          gradient, border,
-        )}
-        style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)" }}
-      >
-        <div className="flex items-start justify-between">
-          <div className="text-3xl leading-none">{emoji}</div>
-          <span className={cn("text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wide shrink-0", badgeCls)}>
-            {badge}
-          </span>
+    <motion.div
+      whileTap={{ scale: 0.94 }}
+      onClick={onOpen}
+      className={cn(
+        "relative overflow-hidden bg-gradient-to-br border rounded-2xl p-3 flex flex-col gap-2 cursor-pointer group transition-all",
+        gradient, border,
+      )}
+      style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)" }}
+    >
+      <div className={cn("text-2xl leading-none select-none", animClass)}>{emoji}</div>
+      <div>
+        <h3 className="text-[11px] font-black text-white uppercase tracking-tight leading-tight line-clamp-1">{title}</h3>
+        <span className={cn("inline-block mt-0.5 text-[7px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider", badgeClass)}>
+          {badge}
+        </span>
+      </div>
+      <div className="flex justify-end">
+        <div className="w-5 h-5 rounded-md gold-gradient flex items-center justify-center">
+          <span className="text-black text-[9px] font-black">▶</span>
         </div>
-        <div>
-          <h3 className="text-[13px] font-black text-white uppercase tracking-tight leading-none">{title}</h3>
-          <p className="text-[9px] text-muted-foreground mt-0.5 uppercase tracking-widest">{subtitle}</p>
-        </div>
-        <div className="flex items-center justify-end mt-1">
-          <div className="w-7 h-7 rounded-lg gold-gradient flex items-center justify-center shadow-md">
-            <span className="text-black text-sm font-black leading-none">▶</span>
-          </div>
-        </div>
-        {/* Shine overlay */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-gradient-to-tr from-transparent via-white/3 to-transparent" />
-      </motion.div>
-    </Link>
+      </div>
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none transition-opacity" />
+    </motion.div>
   );
 }

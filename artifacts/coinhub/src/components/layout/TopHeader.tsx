@@ -1,30 +1,24 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  useGetMe,
-  getGetMeQueryKey,
+  useGetMe, getGetMeQueryKey,
   useSearchUsers,
   useLogoutUser,
-  useGetAdminOwner,
-  getGetAdminOwnerQueryKey,
+  useGetAdminOwner, getGetAdminOwnerQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Globe, Plus } from "lucide-react";
+import { Menu, Search, ChevronLeft, ChevronRight, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Globe, Plus } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
 import { VipLevelBar } from "@/components/VipLevelBar";
+import { getVipLevel } from "@/lib/vip-level";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { fmtCoins, cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useDebounce } from "@/hooks/use-debounce";
+import { playClick } from "@/lib/sounds";
 
 export function TopHeader() {
   const [location, setLocation] = useLocation();
@@ -43,41 +37,30 @@ export function TopHeader() {
 
   const handleLogout = () => {
     logout.mutate(undefined, {
-      onSuccess: () => {
-        qc.clear();
-        setDrawerOpen(false);
-        setLocation("/");
-      },
+      onSuccess: () => { qc.clear(); setDrawerOpen(false); setLocation("/"); },
     });
   };
 
-  const goAndClose = (href: string) => {
-    setDrawerOpen(false);
-    setLocation(href);
-  };
+  const goAndClose = (href: string) => { playClick(); setDrawerOpen(false); setLocation(href); };
+  const goDeposit = () => { if (owner) setLocation(`/dm/${owner.id}`); };
 
-  const goDeposit = () => {
-    if (owner) setLocation(`/dm/${owner.id}`);
-  };
+  const vipInfo = user ? getVipLevel(user.coins) : null;
 
   return (
     <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-2xl border-b border-primary/10">
       <div className="max-w-md mx-auto h-14 px-3 flex items-center gap-2">
+        {/* Left: Back or Hamburger */}
         {showBack ? (
           <button
             onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/home")}
             className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95"
-            aria-label={t("back")}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
         ) : (
           <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
             <SheetTrigger asChild>
-              <button
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95"
-                aria-label="Меню"
-              >
+              <button className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95">
                 <Menu className="w-5 h-5" />
                 {(user?.unreadNotifications ?? 0) + (user?.unreadDms ?? 0) > 0 && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
@@ -97,9 +80,7 @@ export function TopHeader() {
                             {user.isAdmin && <OwnerBadge size="xs" />}
                           </div>
                           <span className="text-[10px] font-mono text-muted-foreground">#{user.publicId}</span>
-                          <div className="mt-1.5">
-                            <VipLevelBar coins={user.coins} compact />
-                          </div>
+                          <div className="mt-1.5"><VipLevelBar coins={user.coins} compact /></div>
                         </div>
                       </button>
                     </Link>
@@ -133,6 +114,7 @@ export function TopHeader() {
           </Sheet>
         )}
 
+        {/* Logo */}
         <Link href="/home" className="flex items-center gap-1.5">
           <Logo className="w-7 h-7" />
           <span className="font-black text-base tracking-tight gold-text-gradient hidden xs:inline">CoinHub</span>
@@ -140,13 +122,11 @@ export function TopHeader() {
 
         <div className="flex-1" />
 
+        {/* Search */}
         <button
           onClick={() => setSearchOpen((v) => !v)}
-          className={cn(
-            "w-9 h-9 rounded-lg flex items-center justify-center active:scale-95",
-            searchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary",
-          )}
-          aria-label={t("search_label")}
+          className={cn("w-9 h-9 rounded-lg flex items-center justify-center active:scale-95",
+            searchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}
         >
           {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
         </button>
@@ -155,23 +135,59 @@ export function TopHeader() {
         {user && (
           <button
             onClick={goDeposit}
-            className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/25 active:scale-95 transition-all"
-            aria-label={t("deposit_btn")}
+            className="h-8 px-2.5 rounded-lg bg-primary/15 border border-primary/30 flex items-center gap-1 text-primary hover:bg-primary/25 active:scale-95 transition-all"
             title={t("deposit_btn")}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">{t("deposit_btn")}</span>
           </button>
         )}
 
+        {/* Profile avatar with VIP ring */}
         {user && (
-          <Link href="/wallet">
-            <div className="flex items-center gap-1 bg-card border border-primary/20 px-2.5 py-1.5 rounded-full gold-glow active:scale-95 hover:border-primary/40 transition-colors">
-              <span className="font-black text-primary text-xs tabular-nums">{fmtCoins(user.coins)}</span>
-              <span className="text-[9px] font-bold text-primary/70 tracking-widest">TMT</span>
+          <Link href="/profile">
+            <div className="relative active:scale-95">
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-black ring-2 ring-offset-1 ring-offset-background cursor-pointer",
+                  vipInfo?.tier === "vip" ? "ring-yellow-400" :
+                  vipInfo?.tier === "gold" ? "ring-yellow-600" :
+                  vipInfo?.tier === "silver" ? "ring-slate-400" :
+                  "ring-amber-700",
+                )}
+                style={{ background: user.avatarColor ?? "#D4AF37" }}
+              >
+                {user.username[0]?.toUpperCase() ?? "?"}
+              </div>
+              {(user.unreadNotifications ?? 0) + (user.unreadDms ?? 0) > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-destructive ring-2 ring-background text-[7px] font-black text-white flex items-center justify-center">
+                  {Math.min((user.unreadNotifications ?? 0) + (user.unreadDms ?? 0), 9)}
+                </span>
+              )}
+              {/* VIP crown for VIP tier */}
+              {vipInfo?.tier === "vip" && (
+                <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] leading-none">👑</span>
+              )}
             </div>
           </Link>
         )}
       </div>
+
+      {/* Balance bar under header when logged in */}
+      {user && !searchOpen && (
+        <Link href="/wallet">
+          <div className="max-w-md mx-auto px-3 py-1.5 border-t border-primary/5 flex items-center justify-between bg-black/20 cursor-pointer hover:bg-black/30 transition-colors">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{t("your_balance")}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-black text-primary text-sm tabular-nums">{fmtCoins(user.coins)}</span>
+              <span className="text-[9px] font-bold text-primary/70 uppercase tracking-widest">TMT</span>
+              <ChevronRight className="w-3 h-3 text-primary/50" />
+            </div>
+          </div>
+        </Link>
+      )}
 
       {searchOpen && (
         <div className="border-t border-primary/10 px-3 py-2 bg-background/98">
@@ -184,9 +200,7 @@ export function TopHeader() {
           />
           {dq.length >= 2 && (
             <div className="mt-2 max-h-72 overflow-y-auto space-y-1">
-              {results.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-3">{t("search_no_results")}</p>
-              )}
+              {results.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">{t("search_no_results")}</p>}
               {results.map((u) => (
                 <Link key={u.id} href={`/u/${u.publicId}`}>
                   <button
@@ -212,7 +226,9 @@ export function TopHeader() {
   );
 }
 
-function DrawerItem({ icon: Icon, label, onClick, badge, highlight, destructive }: { icon: any; label: string; onClick: () => void; badge?: number; highlight?: boolean; destructive?: boolean }) {
+function DrawerItem({ icon: Icon, label, onClick, badge, highlight, destructive }: {
+  icon: any; label: string; onClick: () => void; badge?: number; highlight?: boolean; destructive?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
