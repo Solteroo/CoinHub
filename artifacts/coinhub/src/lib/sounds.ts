@@ -62,5 +62,7 @@ export function playOpenModal() {
   tone(900, "sine", c.currentTime + 0.07, 0.12, 0.06);
 }
 
+export const playLose = playLoss;
+
 export function setSoundsEnabled(v: boolean) { _enabled = v; }
 export function isSoundsEnabled() { return _enabled; }

@@ -378,6 +378,12 @@ export const translations = {
     remove_avatar: "Убрать аватар",
     birthday_label: "Дата рождения",
     birthday_hint: "Для поздравлений от платформы",
+
+    // ── Game extra keys ──
+    roll_btn: "БРОСИТЬ",
+    picks: "Выбрано",
+    multiplier: "Множ",
+    hilo_result: "Карта",
   },
 
   en: {
@@ -720,6 +726,12 @@ export const translations = {
     remove_avatar: "Remove avatar",
     birthday_label: "Birthday",
     birthday_hint: "For birthday greetings from the platform",
+
+    // ── Game extra keys ──
+    roll_btn: "ROLL",
+    picks: "Picks",
+    multiplier: "Mult",
+    hilo_result: "Result",
   },
 
   tm: {
@@ -1054,6 +1066,12 @@ export const translations = {
     deposit_msg_ph: "Hatyňyz...",
     deposit_send: "Ibermek",
     deposit_sent: "Sorаg iberildi!",
+
+    // ── Game extra keys ──
+    roll_btn: "AT",
+    picks: "Saýlanan",
+    multiplier: "Köpeld",
+    hilo_result: "Kart",
 
     // ── Avatar & Birthday ──
     choose_avatar: "Awatar saýlaň",
@@ -1404,6 +1422,12 @@ export const translations = {
     remove_avatar: "Avatarni o'chirish",
     birthday_label: "Tug'ilgan kun",
     birthday_hint: "Platforma tabriklaridan foydalanish uchun",
+
+    // ── Game extra keys ──
+    roll_btn: "TASHLASH",
+    picks: "Tanlangan",
+    multiplier: "Ko'paytma",
+    hilo_result: "Karta",
   },
 } as const;
 

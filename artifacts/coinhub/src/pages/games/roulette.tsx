@@ -1,23 +1,29 @@
-import { Layout } from "@/components/layout/Layout";
+import { GameLayout } from "@/components/layout/GameLayout";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStatsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
-import { ChevronLeft } from "lucide-react";
 import { BetSelector } from "@/components/BetSelector";
 import { cn, fmtCoins } from "@/lib/utils";
-import { CoinIcon } from "@/components/CoinIcon";
+import { COIN } from "@/lib/coin";
 import confetti from "canvas-confetti";
 import { useI18n } from "@/i18n";
+import { playWin, playLose, playClick } from "@/lib/sounds";
 
 const RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const ACCENT = "#f43f5e";
 
 function getColor(n: number) {
   if (n === 0) return "green";
   return RED.has(n) ? "red" : "black";
 }
+
+const BET_OPTIONS = [
+  { id: "red", label: "RED", color: "#ef4444", glow: "rgba(239,68,68,0.4)", multiplier: "2×" },
+  { id: "black", label: "BLACK", color: "#6b7280", glow: "rgba(107,114,128,0.4)", multiplier: "2×" },
+  { id: "zero", label: "ZERO", color: "#22c55e", glow: "rgba(34,197,94,0.4)", multiplier: "14×" },
+] as const;
 
 export default function RouletteGame() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
@@ -34,6 +40,7 @@ export default function RouletteGame() {
     if (!betType || spinning || !user || bet > user.coins) return;
     setSpinning(true);
     setResult(null);
+    playClick();
 
     let ticks = 0;
     const interval = setInterval(() => {
@@ -54,7 +61,12 @@ export default function RouletteGame() {
       clearInterval(interval);
       setDisplayNumber(data.number);
       setResult(data);
-      if (data.netChange > 0) confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+      if (data.netChange > 0) {
+        playWin();
+        confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 }, colors: ["#f43f5e", "#fb7185"] });
+      } else {
+        playLose();
+      }
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
@@ -68,110 +80,149 @@ export default function RouletteGame() {
   const numColor = displayNumber === null ? null : getColor(displayNumber);
 
   return (
-    <Layout>
-      <div className="p-4 space-y-5 pb-24">
-        <div className="flex items-center gap-3">
-          <Link href="/games">
-            <button className="w-9 h-9 rounded-xl bg-card border border-primary/15 flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-          </Link>
-          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("game_roulette_title")}</h1>
-        </div>
+    <GameLayout title={t("game_roulette_title")} emoji="🎯" accentColor={ACCENT}>
+      <div className="flex flex-col gap-5 px-4 pt-5">
 
-        <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
-          <p><span className="text-red-500 font-bold">{t("red_bet")}</span> / <span className="text-gray-300 font-bold">{t("black_bet")}</span> / <span className="text-green-500 font-bold">{t("zero_bet")}</span></p>
-        </div>
-
-        <div className="bg-card border border-primary/20 rounded-3xl p-8 flex flex-col items-center gap-4 gold-glow">
+        {/* Roulette wheel visual */}
+        <div className="flex flex-col items-center gap-4">
           <motion.div
-            animate={spinning ? { rotate: 360 } : {}}
-            transition={{ duration: 1.5, repeat: spinning ? Infinity : 0, ease: "linear" }}
-            className="relative w-36 h-36"
+            animate={spinning ? { rotate: 720 * 3 } : {}}
+            transition={spinning ? { duration: 2.5, ease: [0.2, 0, 0.1, 1] } : { duration: 0 }}
+            className="relative w-44 h-44"
           >
-            <div className="w-36 h-36 rounded-full border-4 border-primary/40 bg-background flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.2)]">
-              <div className={cn(
-                "w-24 h-24 rounded-full flex items-center justify-center border-4 transition-all duration-500",
-                numColor === "red" ? "bg-red-600 border-red-400" :
-                numColor === "black" ? "bg-gray-900 border-gray-600" :
-                numColor === "green" ? "bg-green-700 border-green-500" :
-                "bg-card border-primary/20",
-              )}>
-                <span className="text-3xl font-black text-white">
-                  {displayNumber !== null ? displayNumber : "?"}
-                </span>
-              </div>
+            {/* Outer ring */}
+            <div className="absolute inset-0 rounded-full border-4 border-white/10"
+              style={{ boxShadow: `0 0 40px ${ACCENT}30, inset 0 0 40px rgba(0,0,0,0.5)` }} />
+
+            {/* Colored segments preview */}
+            <div className="absolute inset-2 rounded-full overflow-hidden">
+              <svg viewBox="0 0 100 100" className="w-full h-full">
+                {Array.from({ length: 37 }, (_, i) => {
+                  const n = i;
+                  const angle = (i * 360) / 37;
+                  const rad = (angle * Math.PI) / 180;
+                  const rad2 = ((angle + 360/37) * Math.PI) / 180;
+                  const x1 = 50 + 48 * Math.cos(rad - Math.PI/2);
+                  const y1 = 50 + 48 * Math.sin(rad - Math.PI/2);
+                  const x2 = 50 + 48 * Math.cos(rad2 - Math.PI/2);
+                  const y2 = 50 + 48 * Math.sin(rad2 - Math.PI/2);
+                  const c = getColor(n);
+                  return (
+                    <path
+                      key={i}
+                      d={`M 50 50 L ${x1} ${y1} A 48 48 0 0 1 ${x2} ${y2} Z`}
+                      fill={c === "red" ? "#991b1b" : c === "green" ? "#166534" : "#1f2937"}
+                      stroke="rgba(0,0,0,0.5)"
+                      strokeWidth="0.5"
+                    />
+                  );
+                })}
+                <circle cx="50" cy="50" r="18" fill="#06060f" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+              </svg>
             </div>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-4 h-4 rounded-full bg-white shadow-lg" />
+
+            {/* Center number */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                key={displayNumber}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-black text-white shadow-xl"
+                style={{
+                  background: numColor === "red" ? "#dc2626"
+                    : numColor === "green" ? "#16a34a"
+                    : numColor === "black" ? "#374151"
+                    : "#1a1a2e",
+                  boxShadow: numColor === "red" ? "0 0 20px rgba(220,38,38,0.5)"
+                    : numColor === "green" ? "0 0 20px rgba(22,163,74,0.5)"
+                    : undefined,
+                }}
+              >
+                {displayNumber !== null ? displayNumber : "?"}
+              </motion.div>
+            </div>
+
+            {/* Pointer */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-0 h-0"
+              style={{ borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: "14px solid white", filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }} />
           </motion.div>
 
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                initial={{ scale: 0.8, opacity: 0, y: 10 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
                 className={cn(
-                  "px-5 py-2 rounded-xl font-black text-sm uppercase tracking-wider",
-                  result.netChange > 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-destructive/20 text-destructive border border-destructive/30",
+                  "px-8 py-3 rounded-2xl font-black text-lg uppercase tracking-wider border",
+                  result.netChange > 0
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                    : "bg-red-500/20 text-red-400 border-red-500/40",
                 )}
               >
-                {result.netChange > 0 ? `+${fmtCoins(result.netChange)}` : fmtCoins(result.netChange)} TMT
+                {result.netChange > 0 ? `+${fmtCoins(result.netChange)}` : fmtCoins(result.netChange)} {COIN}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="grid grid-cols-6 gap-1">
-          {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => (
-            <div
-              key={n}
-              className={cn(
-                "aspect-square rounded flex items-center justify-center text-[10px] font-bold",
-                RED.has(n) ? "bg-red-700/60" : "bg-gray-800/80",
-                result?.number === n && "ring-2 ring-primary",
-              )}
-            >
-              {n}
-            </div>
-          ))}
-          <div className={cn("aspect-square rounded flex items-center justify-center text-[10px] font-bold bg-green-800/80 col-span-2", result?.number === 0 && "ring-2 ring-primary")}>
-            0
-          </div>
-        </div>
-
+        {/* Bet type selection */}
         <div className="grid grid-cols-3 gap-2">
-          {(["red", "black", "zero"] as const).map((type) => (
+          {BET_OPTIONS.map(({ id, label, color, glow, multiplier }) => (
             <button
-              key={type}
-              onClick={() => setBetType(type)}
-              className={cn(
-                "h-14 rounded-2xl border-2 font-black text-sm uppercase tracking-tight transition-all active:scale-[0.98]",
-                type === "red" && (betType === "red" ? "bg-red-600 border-red-400 text-white" : "bg-red-900/30 border-red-700/40 text-red-400 hover:border-red-600"),
-                type === "black" && (betType === "black" ? "bg-gray-700 border-gray-400 text-white" : "bg-gray-900/30 border-gray-700/40 text-gray-300 hover:border-gray-500"),
-                type === "zero" && (betType === "zero" ? "bg-green-600 border-green-400 text-white gold-glow" : "bg-green-900/30 border-green-700/40 text-green-400 hover:border-green-600"),
-              )}
+              key={id}
+              onClick={() => { setBetType(id); playClick(); }}
+              className="h-16 rounded-2xl flex flex-col items-center justify-center gap-1 font-black text-xs uppercase tracking-tight transition-all active:scale-[0.97] border-2"
+              style={{
+                background: betType === id ? `${color}25` : "rgba(255,255,255,0.03)",
+                borderColor: betType === id ? color : "rgba(255,255,255,0.08)",
+                color: betType === id ? color : "rgba(255,255,255,0.5)",
+                boxShadow: betType === id ? `0 0 20px ${glow}` : undefined,
+              }}
             >
-              {type === "red" ? t("red_bet") : type === "black" ? t("black_bet") : t("zero_bet")}
+              <div className="w-4 h-4 rounded-full" style={{ background: color }} />
+              <span>{label}</span>
+              <span className="text-[9px] opacity-60">{multiplier}</span>
             </button>
           ))}
         </div>
 
+        {/* Number grid (mini) */}
+        <div className="w-full overflow-hidden rounded-xl border border-white/5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="grid" style={{ gridTemplateColumns: "repeat(13, 1fr)", gap: "1px" }}>
+            {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => (
+              <div
+                key={n}
+                className={cn("aspect-square flex items-center justify-center text-[8px] font-bold transition-all",
+                  result?.number === n && "ring-1 ring-white scale-110 z-10"
+                )}
+                style={{ background: RED.has(n) ? "rgba(153,27,27,0.8)" : "rgba(31,41,55,0.8)" }}
+              >
+                {n}
+              </div>
+            ))}
+            <div className={cn("aspect-square flex items-center justify-center text-[8px] font-bold col-span-1",
+              result?.number === 0 && "ring-1 ring-white"
+            )} style={{ background: "rgba(22,101,52,0.8)" }}>0</div>
+          </div>
+        </div>
+
+        {/* Bet selector */}
         <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
 
+        {/* Spin button */}
         <button
           onClick={handleSpin}
           disabled={spinning || !betType || !user || bet > (user?.coins ?? 0)}
-          className="w-full h-14 rounded-2xl gold-gradient text-black font-black text-base uppercase tracking-widest disabled:opacity-50 active:scale-[0.99] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+          className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
+          style={{
+            background: !spinning && betType ? `linear-gradient(135deg, ${ACCENT}, #be123c)` : "rgba(255,255,255,0.07)",
+            boxShadow: !spinning && betType ? `0 0 30px ${ACCENT}50` : undefined,
+            color: !spinning && betType ? "#fff" : "rgba(255,255,255,0.3)",
+          }}
         >
           {spinning ? t("roulette_spinning") : t("roulette_spin_btn")}
         </button>
-
-        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">{t("balance_label")}: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
-          <span>{t("red_bet")} · {t("zero_bet")}</span>
-        </div>
       </div>
-    </Layout>
+    </GameLayout>
   );
 }

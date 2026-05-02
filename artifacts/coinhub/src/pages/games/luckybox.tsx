@@ -1,17 +1,19 @@
-import { Layout } from "@/components/layout/Layout";
+import { GameLayout } from "@/components/layout/GameLayout";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePlayLuckyBox, useGetGamesConfig, useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStatsQueryKey, getGetLeaderboardQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Lock, Coins } from "lucide-react";
-import { Link } from "wouter";
+import { Lock, Unlock, RefreshCw } from "lucide-react";
 import { BetSelector } from "@/components/BetSelector";
-import { Button } from "@/components/ui/button";
 import { RarityBadge } from "@/components/RarityBadge";
 import confetti from "canvas-confetti";
-import { cn } from "@/lib/utils";
+import { cn, fmtCoins } from "@/lib/utils";
+import { COIN } from "@/lib/coin";
 import { useI18n } from "@/i18n";
+import { playWin, playLose, playClick } from "@/lib/sounds";
+
+const ACCENT = "#f59e0b";
 
 export default function LuckyBoxGame() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
@@ -34,13 +36,19 @@ export default function LuckyBoxGame() {
     if (playing || pickedIndex !== null || !user || bet > user.coins) return;
     setPlaying(true);
     setPickedIndex(index);
+    playClick();
 
     playBox.mutate({ data: { bet, pickIndex: index } }, {
       onSuccess: (res) => {
         setResult(res);
         if (res.won > 0) {
-          if (res.multiplier >= 10) confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
-          toast({ title: res.label, description: `${res.won} TMT` });
+          playWin();
+          if (res.multiplier >= 10) {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.5 }, colors: [ACCENT, "#fde68a"] });
+          }
+          toast({ title: `📦 ${res.label}`, description: `+${res.won} ${COIN}` });
+        } else {
+          playLose();
         }
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
@@ -63,111 +71,152 @@ export default function LuckyBoxGame() {
   };
 
   return (
-    <Layout hideNav>
-      <div className="p-4 flex flex-col items-center min-h-[calc(100vh-80px)] pb-24">
-        <div className="w-full flex justify-start mb-6">
-          <Link href="/games" className="text-muted-foreground hover:text-white flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
-            <ArrowLeft className="w-4 h-4" /> {t("back_btn")}
-          </Link>
-        </div>
+    <GameLayout title={t("game_luckybox_title")} emoji="📦" accentColor={ACCENT}>
+      <div className="flex flex-col items-center gap-5 px-4 pt-5">
 
-        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-4 text-center">{t("game_luckybox_title")}</h1>
-
-        <div className="w-full max-w-sm mb-4 bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
-          <p>{t("bet")} → {t("choose_box")}</p>
-        </div>
-
-        <div className="w-full max-w-sm mb-8">
+        {/* Bet selector or result display */}
+        <div className="w-full">
           {pickedIndex === null ? (
-            <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} disabled={playing} />
+            <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} />
           ) : (
-            <div className="bg-card border border-primary/20 rounded-2xl p-4 text-center">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t("bet_placed")}</p>
-              <p className="text-xl font-bold text-primary">{bet}</p>
+            <div
+              className="rounded-2xl p-4 text-center border"
+              style={{ background: `${ACCENT}10`, borderColor: `${ACCENT}30` }}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">{t("bet_placed")}</p>
+              <p className="text-2xl font-black" style={{ color: ACCENT }}>{bet} {COIN}</p>
             </div>
           )}
         </div>
 
-        <div className="text-center mb-6 h-6">
-          {pickedIndex === null && (
-            <p className="text-xs font-bold text-primary animate-pulse uppercase tracking-[0.2em]">{t("choose_box")}</p>
-          )}
-        </div>
+        {/* Instruction */}
+        {pickedIndex === null && (
+          <motion.p
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-xs font-black uppercase tracking-[0.2em]"
+            style={{ color: ACCENT }}
+          >
+            📦 {t("choose_box")}
+          </motion.p>
+        )}
 
-        <div className="grid grid-cols-3 gap-3 w-full max-w-sm mb-12">
+        {/* Result banner */}
+        <AnimatePresence>
+          {result && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className={cn(
+                "w-full text-center py-4 rounded-2xl font-black text-lg uppercase tracking-wider border",
+                result.won > 0
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                  : "bg-white/5 text-white/40 border-white/10",
+              )}
+            >
+              {result.won > 0 ? (
+                <>
+                  <div>{result.label}</div>
+                  <div className="text-3xl mt-1">+{fmtCoins(result.won)} {COIN}</div>
+                </>
+              ) : (
+                <div>{t("unlucky")}</div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Box grid */}
+        <div className="grid grid-cols-3 gap-3 w-full">
           {Array.from({ length: 9 }).map((_, i) => {
             const isPicked = pickedIndex === i;
             const reveal = result?.boxes?.[i];
             const isRevealed = !!result;
+            const hasWin = reveal?.multiplier > 0;
 
             return (
-              <div key={i} className="aspect-square relative">
-                <AnimatePresence mode="wait">
-                  {!isRevealed ? (
-                    <motion.div
-                      key="closed"
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      whileHover={{ scale: 1.05, y: -5 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleOpen(i)}
-                      className={cn(
-                        "w-full h-full rounded-2xl border-2 flex flex-col items-center justify-center bg-card gold-glow cursor-pointer transition-colors",
-                        isPicked ? "border-primary" : "border-primary/20 hover:border-primary/40",
-                      )}
-                    >
-                      <Lock className="w-8 h-8 text-primary/40" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="revealed"
-                      initial={{ rotateY: 90, opacity: 0 }}
-                      animate={{ rotateY: 0, opacity: 1 }}
-                      transition={{ delay: i * 0.07 }}
-                      className={cn(
-                        "w-full h-full rounded-2xl border-2 flex flex-col items-center justify-center bg-card overflow-hidden transition-all",
-                        isPicked
-                          ? "border-primary bg-primary/10 scale-110 z-10 gold-glow-strong shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                          : "border-primary/10 opacity-60",
-                      )}
-                    >
-                      {reveal && (
-                        <>
-                          <Coins className={cn("w-4 h-4 mb-1", reveal.multiplier > 0 ? "text-primary" : "text-muted-foreground")} />
-                          <span className={cn("text-xl font-black italic tabular-nums", reveal.multiplier > 0 ? "gold-text-gradient" : "text-muted-foreground")}>
-                            {reveal.multiplier}x
-                          </span>
-                          {isPicked && <RarityBadge rarity={result.rarity} className="mt-1" />}
-                        </>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <AnimatePresence key={i} mode="wait">
+                {!isRevealed ? (
+                  <motion.button
+                    key="closed"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    whileHover={!playing ? { scale: 1.06, y: -4 } : {}}
+                    whileTap={!playing ? { scale: 0.94 } : {}}
+                    onClick={() => handleOpen(i)}
+                    transition={{ delay: i * 0.03 }}
+                    className="aspect-square rounded-2xl border-2 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all"
+                    style={{
+                      background: isPicked ? `${ACCENT}25` : "rgba(255,255,255,0.04)",
+                      borderColor: isPicked ? ACCENT : "rgba(255,255,255,0.1)",
+                      boxShadow: isPicked ? `0 0 25px ${ACCENT}40` : undefined,
+                    }}
+                  >
+                    <Lock className="w-8 h-8" style={{ color: isPicked ? ACCENT : "rgba(255,255,255,0.2)" }} />
+                    <span className="text-[10px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      #{i + 1}
+                    </span>
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="revealed"
+                    initial={{ rotateY: 90, scale: 0.8 }}
+                    animate={{ rotateY: 0, scale: isPicked ? 1.05 : 1 }}
+                    transition={{ delay: i * 0.06, type: "spring", stiffness: 200, damping: 20 }}
+                    className="aspect-square rounded-2xl border-2 flex flex-col items-center justify-center gap-1"
+                    style={{
+                      background: isPicked && hasWin ? "rgba(52,211,153,0.15)"
+                        : isPicked && !hasWin ? "rgba(239,68,68,0.15)"
+                        : !isPicked && hasWin ? `${ACCENT}10`
+                        : "rgba(255,255,255,0.03)",
+                      borderColor: isPicked && hasWin ? "rgba(52,211,153,0.5)"
+                        : isPicked && !hasWin ? "rgba(239,68,68,0.4)"
+                        : !isPicked && hasWin ? `${ACCENT}40`
+                        : "rgba(255,255,255,0.06)",
+                      boxShadow: isPicked && hasWin ? "0 0 25px rgba(52,211,153,0.3)"
+                        : isPicked && !hasWin ? "0 0 20px rgba(239,68,68,0.2)"
+                        : undefined,
+                    }}
+                  >
+                    {reveal && (
+                      <>
+                        <Unlock className={cn("w-5 h-5", hasWin ? "text-emerald-400" : "text-white/20")} />
+                        <span
+                          className="text-2xl font-black italic tabular-nums"
+                          style={{ color: hasWin ? (isPicked ? "#34d399" : ACCENT) : "rgba(255,255,255,0.2)" }}
+                        >
+                          {reveal.multiplier}×
+                        </span>
+                        {isPicked && result?.rarity && (
+                          <RarityBadge rarity={result.rarity} className="scale-90" />
+                        )}
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             );
           })}
         </div>
 
+        {/* Play again */}
         <AnimatePresence>
           {pickedIndex !== null && !playing && result && (
-            <motion.div
+            <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="w-full max-w-sm"
+              onClick={reset}
+              className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-3 border border-white/10 text-white/60"
+              style={{ background: "rgba(255,255,255,0.05)" }}
             >
-              <Button
-                onClick={reset}
-                className="w-full h-14 bg-card border-2 border-primary/20 text-primary font-bold uppercase tracking-widest rounded-xl hover:bg-primary/10 transition-colors"
-              >
-                {t("play_again")}
-              </Button>
-            </motion.div>
+              <RefreshCw className="w-5 h-5" />
+              {t("play_again")}
+            </motion.button>
           )}
         </AnimatePresence>
       </div>
-    </Layout>
+    </GameLayout>
   );
 }

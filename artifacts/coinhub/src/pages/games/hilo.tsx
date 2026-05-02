@@ -1,42 +1,20 @@
-import { Layout } from "@/components/layout/Layout";
+import { GameLayout } from "@/components/layout/GameLayout";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStatsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
-import { ChevronLeft, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { BetSelector } from "@/components/BetSelector";
 import { cn, fmtCoins } from "@/lib/utils";
-import { CoinIcon } from "@/components/CoinIcon";
+import { COIN } from "@/lib/coin";
 import confetti from "canvas-confetti";
 import { useI18n } from "@/i18n";
+import { playWin, playLose, playClick } from "@/lib/sounds";
 
 const CARD_NAMES = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const SUITS = ["♠", "♥", "♦", "♣"];
-
-function CardDisplay({ card, suit, flipped }: { card: number | null; suit: string; flipped: boolean }) {
-  const isRed = suit === "♥" || suit === "♦";
-  return (
-    <motion.div
-      animate={flipped ? { rotateY: 0 } : { rotateY: 90 }}
-      transition={{ duration: 0.3 }}
-      className={cn(
-        "w-28 h-40 rounded-2xl border-2 flex flex-col items-center justify-center shadow-xl",
-        card !== null ? "bg-white text-black border-gray-200" : "bg-card border-primary/20",
-      )}
-    >
-      {card !== null ? (
-        <div className={cn("text-center", isRed ? "text-red-600" : "text-gray-900")}>
-          <div className="text-4xl font-black">{CARD_NAMES[card]}</div>
-          <div className="text-2xl">{suit}</div>
-        </div>
-      ) : (
-        <div className="text-primary/30 text-5xl">?</div>
-      )}
-    </motion.div>
-  );
-}
+const ACCENT = "#eab308";
 
 export default function HiLoGame() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
@@ -49,11 +27,14 @@ export default function HiLoGame() {
   const { toast } = useToast();
   const { t } = useI18n();
 
+  const isRed = suit === "♥" || suit === "♦";
+
   const handlePlay = async (choice: "high" | "low") => {
     if (loading || !user || bet > user.coins) return;
     setLoading(true);
     setResult(null);
     setFlipped(false);
+    playClick();
 
     try {
       const res = await fetch("/api/games/hilo", {
@@ -66,9 +47,14 @@ export default function HiLoGame() {
       if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); return; }
       await new Promise((r) => setTimeout(r, 200));
       setFlipped(true);
-      await new Promise((r) => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 400));
       setResult(data);
-      if (data.netChange > 0) confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
+      if (data.netChange > 0) {
+        playWin();
+        confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 }, colors: [ACCENT, "#fde047"] });
+      } else {
+        playLose();
+      }
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
@@ -82,99 +68,132 @@ export default function HiLoGame() {
   const reset = () => { setResult(null); setFlipped(false); };
 
   return (
-    <Layout>
-      <div className="p-4 space-y-5 pb-24">
-        <div className="flex items-center gap-3">
-          <Link href="/games">
-            <button className="w-9 h-9 rounded-xl bg-card border border-primary/15 flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-          </Link>
-          <h1 className="text-xl font-black italic gold-text-gradient uppercase tracking-tighter">{t("game_hilo_title")}</h1>
-        </div>
+    <GameLayout title={t("game_hilo_title")} emoji="🃏" accentColor={ACCENT}>
+      <div className="flex flex-col gap-5 px-4 pt-5 items-center">
 
-        <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
-          <p><span className="text-primary font-bold">HI</span> (8-K) / <span className="text-blue-400 font-bold">LO</span> (A-6). {t("win_multiplier")}</p>
-        </div>
-
-        <div className="flex flex-col items-center gap-4 py-4">
-          <CardDisplay card={result?.card ?? null} suit={suit} flipped={flipped} />
+        {/* Card */}
+        <div className="w-full flex flex-col items-center gap-4">
+          <motion.div
+            animate={{ rotateY: flipped ? 0 : 90 }}
+            transition={{ duration: 0.35 }}
+            className="w-36 h-48 rounded-2xl border-2 flex flex-col items-center justify-center shadow-2xl"
+            style={{
+              background: result !== null ? "#fff" : "rgba(255,255,255,0.06)",
+              borderColor: result !== null
+                ? (result.netChange > 0 ? "#22c55e" : "#ef4444")
+                : "rgba(255,255,255,0.15)",
+              boxShadow: result !== null
+                ? (result.netChange > 0 ? "0 0 40px rgba(34,197,94,0.4)" : "0 0 40px rgba(239,68,68,0.3)")
+                : `0 0 30px ${ACCENT}30`,
+            }}
+          >
+            {result !== null ? (
+              <div className={cn("text-center", isRed ? "text-red-600" : "text-gray-900")}>
+                <div className="text-6xl font-black leading-none">{CARD_NAMES[result.card]}</div>
+                <div className="text-4xl leading-none mt-2">{suit}</div>
+              </div>
+            ) : (
+              <div className="text-5xl opacity-20 font-black" style={{ color: ACCENT }}>?</div>
+            )}
+          </motion.div>
 
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                initial={{ y: 10, opacity: 0, scale: 0.9 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
                 className={cn(
-                  "px-6 py-2 rounded-xl font-black text-sm uppercase tracking-wider",
-                  result.netChange > 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-destructive/20 text-destructive border border-destructive/30",
+                  "px-8 py-3 rounded-2xl font-black text-xl uppercase tracking-wider border",
+                  result.netChange > 0
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                    : "bg-red-500/20 text-red-400 border-red-500/40",
                 )}
               >
-                {CARD_NAMES[result.card]} · {result.netChange > 0 ? `+${fmtCoins(result.netChange)}` : fmtCoins(result.netChange)} TMT
+                {CARD_NAMES[result.card]} {suit} · {result.netChange > 0 ? "+" : ""}{fmtCoins(result.netChange)} {COIN}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
+        {/* Card value reference strip */}
+        <div className="w-full flex gap-1 overflow-x-auto pb-1 no-scrollbar">
           {CARD_NAMES.slice(1).map((name, i) => {
             const val = i + 1;
             const isHigh = val >= 8;
             const isLow = val <= 6;
             return (
-              <div key={name} className={cn(
-                "w-8 h-9 rounded flex flex-col items-center justify-center text-[10px] font-black shrink-0",
-                isHigh ? "bg-primary/20 text-primary border border-primary/30" :
-                isLow ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" :
-                "bg-card text-muted-foreground border border-white/10",
-              )}>
+              <div
+                key={name}
+                className="w-9 h-10 rounded-lg flex flex-col items-center justify-center text-[11px] font-black shrink-0 border"
+                style={{
+                  background: isHigh ? `${ACCENT}20` : isLow ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.03)",
+                  borderColor: isHigh ? `${ACCENT}60` : isLow ? "rgba(96,165,250,0.5)" : "rgba(255,255,255,0.07)",
+                  color: isHigh ? ACCENT : isLow ? "#60a5fa" : "rgba(255,255,255,0.3)",
+                }}
+              >
                 {name}
               </div>
             );
           })}
         </div>
-        <div className="flex gap-3 text-[10px] font-bold">
-          <span className="text-blue-400">■ LO (A-6)</span>
-          <span className="text-muted-foreground">■ 7 = 0</span>
-          <span className="text-primary">■ HI (8-K)</span>
+        <div className="w-full flex gap-4 text-[11px] font-bold justify-center">
+          <span style={{ color: "#60a5fa" }}>▲ LO: A–6</span>
+          <span className="text-white/30">7 = 0</span>
+          <span style={{ color: ACCENT }}>▲ HI: 8–K</span>
         </div>
 
-        <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
+        {/* Bet selector */}
+        <div className="w-full">
+          <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
+        </div>
 
+        {/* Play buttons */}
         {!result ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 w-full">
             <button
               onClick={() => handlePlay("high")}
               disabled={loading || !user || bet > (user?.coins ?? 0)}
-              className="h-14 rounded-2xl bg-primary/20 border-2 border-primary text-primary font-black text-sm uppercase tracking-tight flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+              className="h-20 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-2 active:scale-[0.97] disabled:opacity-40 transition-all border-2"
+              style={{
+                background: `${ACCENT}18`,
+                borderColor: `${ACCENT}60`,
+                color: ACCENT,
+                boxShadow: `0 0 25px ${ACCENT}30`,
+              }}
             >
-              <ArrowUp className="w-5 h-5" />
-              HI (8-K)
+              <ArrowUp className="w-6 h-6" />
+              HI (8–K)
+              <span className="text-[9px] font-bold opacity-70">1.85×</span>
             </button>
             <button
               onClick={() => handlePlay("low")}
               disabled={loading || !user || bet > (user?.coins ?? 0)}
-              className="h-14 rounded-2xl bg-blue-500/20 border-2 border-blue-500 text-blue-400 font-black text-sm uppercase tracking-tight flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+              className="h-20 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-2 active:scale-[0.97] disabled:opacity-40 transition-all border-2"
+              style={{
+                background: "rgba(96,165,250,0.15)",
+                borderColor: "rgba(96,165,250,0.5)",
+                color: "#60a5fa",
+                boxShadow: "0 0 25px rgba(96,165,250,0.2)",
+              }}
             >
-              <ArrowDown className="w-5 h-5" />
-              LO (A-6)
+              <ArrowDown className="w-6 h-6" />
+              LO (A–6)
+              <span className="text-[9px] font-bold opacity-70">1.85×</span>
             </button>
           </div>
         ) : (
           <button
             onClick={reset}
-            className="w-full h-14 rounded-2xl gold-gradient text-black font-black text-base uppercase tracking-widest active:scale-[0.99]"
+            className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] transition-all text-black"
+            style={{
+              background: `linear-gradient(135deg, ${ACCENT}, #ca8a04)`,
+              boxShadow: `0 0 30px ${ACCENT}50`,
+            }}
           >
             {t("play_again")}
           </button>
         )}
-
-        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">{t("balance_label")}: <CoinIcon size="xs" /><span className="font-bold text-white">{fmtCoins(user?.coins)}</span></span>
-          <span>{t("win_multiplier")}</span>
-        </div>
       </div>
-    </Layout>
+    </GameLayout>
   );
 }

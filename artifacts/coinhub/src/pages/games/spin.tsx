@@ -1,21 +1,24 @@
-import { Layout } from "@/components/layout/Layout";
+import { GameLayout } from "@/components/layout/GameLayout";
 import { useState, useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { usePlaySpin, useGetGamesConfig, useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStatsQueryKey, getGetLeaderboardQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
 import { BetSelector } from "@/components/BetSelector";
 import confetti from "canvas-confetti";
 import { useI18n } from "@/i18n";
+import { COIN } from "@/lib/coin";
+import { playWin, playLose, playClick } from "@/lib/sounds";
+import { fmtCoins } from "@/lib/utils";
+
+const ACCENT = "#3b82f6";
 
 export default function SpinGame() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: config } = useGetGamesConfig();
   const [bet, setBet] = useState(10);
   const [spinning, setSpinning] = useState(false);
+  const [lastResult, setLastResult] = useState<any>(null);
   const controls = useAnimation();
   const playSpin = usePlaySpin();
   const queryClient = useQueryClient();
@@ -29,6 +32,7 @@ export default function SpinGame() {
   const handleSpin = () => {
     if (spinning || !user || bet > user.coins || bet < (config?.minBet ?? 1)) return;
     setSpinning(true);
+    playClick();
 
     controls.start({
       rotate: [0, 1080],
@@ -50,12 +54,18 @@ export default function SpinGame() {
           transition: { duration: 5, ease: [0.15, 0, 0.15, 1] },
         });
 
+        setLastResult(result);
+
         if (result.won > 0) {
+          playWin();
           if (result.multiplier >= 10) {
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            confetti({ particleCount: 200, spread: 80, origin: { y: 0.5 }, colors: [ACCENT, "#93c5fd", "#ffffff"] });
+          } else {
+            confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
           }
-          toast({ title: t("congrats"), description: `${result.label} ${t("won_multiplier_msg").replace("multipliýator! teňňe gazandyňyz!", "")} ${result.won} TMT` });
+          toast({ title: `🎉 ${result.label}`, description: `+${result.won} ${COIN}` });
         } else {
+          playLose();
           toast({ title: t("unlucky"), description: t("no_win_desc"), variant: "destructive" });
         }
 
@@ -78,34 +88,45 @@ export default function SpinGame() {
   const segmentAngle = 360 / segmentCount;
 
   return (
-    <Layout hideNav>
-      <div className="p-4 flex flex-col items-center min-h-[calc(100vh-80px)] pb-24">
-        <div className="w-full flex justify-start mb-6">
-          <Link href="/games" className="text-muted-foreground hover:text-white flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
-            <ArrowLeft className="w-4 h-4" /> {t("back_btn")}
-          </Link>
-        </div>
+    <GameLayout title={t("game_spin_title")} emoji="🎡" accentColor={ACCENT}>
+      <div className="flex flex-col items-center gap-6 px-4 pt-6">
 
-        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-6">{t("game_spin_title")}</h1>
+        {/* Wheel container */}
+        <div className="relative flex items-center justify-center">
+          {/* Outer glow ring */}
+          <div
+            className="absolute w-[310px] h-[310px] rounded-full"
+            style={{
+              background: `radial-gradient(circle, transparent 48%, ${ACCENT}20 55%, transparent 65%)`,
+              boxShadow: `0 0 60px ${ACCENT}25, 0 0 120px ${ACCENT}10`,
+            }}
+          />
 
-        <div className="w-full max-w-sm mb-6 bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
-          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">{t("how_to_play")}</p>
-          <p>{t("bet_amount")}. <span className="text-primary font-bold">{t("spin_btn")}</span>.</p>
-        </div>
-
-        <div className="relative w-80 h-80 mb-12">
-          <div className="absolute -inset-4 border-8 border-primary/20 rounded-full gold-glow" />
-          <div className="absolute top-[-25px] left-1/2 -translate-x-1/2 z-30 filter drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]">
-            <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-primary" />
+          {/* Pointer */}
+          <div className="absolute top-[-4px] left-1/2 -translate-x-1/2 z-30">
+            <div
+              className="w-0 h-0"
+              style={{
+                borderLeft: "12px solid transparent",
+                borderRight: "12px solid transparent",
+                borderTop: "28px solid white",
+                filter: "drop-shadow(0 0 8px rgba(255,255,255,0.9))",
+              }}
+            />
           </div>
 
+          {/* Wheel */}
           <motion.div
             animate={controls}
-            className="w-full h-full rounded-full border-4 border-primary/50 relative overflow-hidden bg-background shadow-[0_0_50px_rgba(0,0,0,0.8)]"
-            style={{ transformOrigin: "center" }}
+            className="w-72 h-72 rounded-full relative overflow-hidden border-4"
+            style={{
+              transformOrigin: "center",
+              borderColor: `${ACCENT}60`,
+              boxShadow: `0 0 40px ${ACCENT}30, inset 0 0 20px rgba(0,0,0,0.5)`,
+            }}
           >
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-              {segments.length > 0 ? segments.map((seg, i) => {
+              {segments.length > 0 ? segments.map((seg: any, i: number) => {
                 const startAngle = i * segmentAngle;
                 const endAngle = startAngle + segmentAngle;
                 const x1 = 50 + 50 * Math.cos(Math.PI * startAngle / 180);
@@ -117,42 +138,78 @@ export default function SpinGame() {
                     <path
                       d={`M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`}
                       fill={seg.color}
-                      stroke="rgba(0,0,0,0.2)"
-                      strokeWidth="0.5"
+                      stroke="rgba(0,0,0,0.3)"
+                      strokeWidth="0.4"
                     />
                     <text
-                      x="75" y="50" fill="white" fontSize="3.5" fontWeight="900"
+                      x="75" y="50" fill="white" fontSize="3.2" fontWeight="900"
                       textAnchor="middle" dominantBaseline="middle"
                       transform={`rotate(${startAngle + segmentAngle / 2}, 50, 50)`}
-                      className="uppercase tracking-tighter"
+                      className="uppercase"
+                      style={{ textShadow: "0 0 4px rgba(0,0,0,0.8)" }}
                     >
                       {seg.label}
                     </text>
                   </g>
                 );
-              }) : <circle cx="50" cy="50" r="45" fill="#1a1a24" />}
-              <circle cx="50" cy="50" r="8" fill="#0a0a0f" stroke="#D4AF37" strokeWidth="2" />
-              <circle cx="50" cy="50" r="3" fill="#D4AF37" />
+              }) : (
+                <>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const start = i * 30;
+                    const end = start + 30;
+                    const x1 = 50 + 50 * Math.cos(Math.PI * start / 180);
+                    const y1 = 50 + 50 * Math.sin(Math.PI * start / 180);
+                    const x2 = 50 + 50 * Math.cos(Math.PI * end / 180);
+                    const y2 = 50 + 50 * Math.sin(Math.PI * end / 180);
+                    const colors = ["#1e3a5f","#2d5a8e","#1e3a5f","#2d5a8e","#1a1a2e","#2d3a6e","#1e3a5f","#2d5a8e","#1e3a5f","#2d5a8e","#1a1a2e","#2d3a6e"];
+                    return (
+                      <path key={i} d={`M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`} fill={colors[i]} stroke="rgba(0,0,0,0.3)" strokeWidth="0.4" />
+                    );
+                  })}
+                </>
+              )}
+              <circle cx="50" cy="50" r="9" fill="#06060f" stroke={ACCENT} strokeWidth="2" />
+              <circle cx="50" cy="50" r="4" fill={ACCENT} />
             </svg>
           </motion.div>
         </div>
 
-        <div className="w-full max-w-sm space-y-6">
-          <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} disabled={spinning} />
-
-          <Button
-            onClick={handleSpin}
-            disabled={spinning || !user || user.coins < bet}
-            className="w-full h-16 text-2xl gold-gradient text-black font-black uppercase italic tracking-widest rounded-2xl shadow-lg active:scale-95 transition-all"
+        {/* Last result */}
+        {lastResult && (
+          <motion.div
+            key={lastResult.won}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`px-8 py-3 rounded-2xl font-black text-lg uppercase tracking-wider border ${lastResult.won > 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "bg-white/5 text-white/40 border-white/10"}`}
           >
-            {spinning ? t("spinning") : t("spin_btn")}
-          </Button>
+            {lastResult.won > 0 ? `${lastResult.label} · +${fmtCoins(lastResult.won)} ${COIN}` : t("unlucky")}
+          </motion.div>
+        )}
 
-          <p className="text-[10px] text-center text-muted-foreground uppercase tracking-[0.3em] font-bold">
-            {t("max_multiplier_label")}: {Math.max(...(config?.wheelSegments?.map(s => s.multiplier) || [0]))}x
-          </p>
+        {/* Max multiplier */}
+        <div className="flex items-center gap-4 text-xs text-white/40 font-bold uppercase tracking-widest">
+          <span>{t("max_multiplier_label")}: <span style={{ color: ACCENT }}>{Math.max(...(config?.wheelSegments?.map((s: any) => s.multiplier) || [0]))}×</span></span>
         </div>
+
+        {/* Bet selector */}
+        <div className="w-full">
+          <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} disabled={spinning} />
+        </div>
+
+        {/* Spin button */}
+        <button
+          onClick={handleSpin}
+          disabled={spinning || !user || user.coins < bet}
+          className="w-full h-18 py-5 rounded-2xl font-black text-xl uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all text-black"
+          style={{
+            background: !spinning ? `linear-gradient(135deg, ${ACCENT}, #2563eb)` : "rgba(255,255,255,0.07)",
+            boxShadow: !spinning ? `0 0 40px ${ACCENT}60, 0 4px 20px rgba(0,0,0,0.5)` : undefined,
+            color: !spinning ? "#fff" : "rgba(255,255,255,0.3)",
+          }}
+        >
+          {spinning ? `⟳ ${t("spinning")}` : t("spin_btn")}
+        </button>
       </div>
-    </Layout>
+    </GameLayout>
   );
 }

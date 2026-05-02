@@ -24,7 +24,6 @@ import {
   Gamepad2,
   Coins,
   ArrowRightLeft,
-  Crown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -57,6 +56,8 @@ export default function Profile() {
     });
   };
 
+  const avatarEmoji = (user as any).avatarEmoji as string | undefined;
+
   return (
     <Layout>
       <div className="p-4 space-y-5 pb-24">
@@ -68,7 +69,13 @@ export default function Profile() {
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
-          <Avatar username={user.username} color={user.avatarColor} size="xl" className="mx-auto mb-3" />
+          <Avatar
+            username={user.username}
+            color={user.avatarColor}
+            emoji={avatarEmoji}
+            size="xl"
+            className="mx-auto mb-3"
+          />
 
           <div className="flex items-center justify-center gap-2 mt-2">
             <h2 className="text-xl font-black text-white">{user.username}</h2>
@@ -103,9 +110,8 @@ export default function Profile() {
           <ActionTile href="/dm" icon={MessageCircle} label={t("messages_label")} badge={user.unreadDms} />
           <ActionTile href="/friends" icon={Users} label={t("friends")} />
           <ActionTile href="/transfer" icon={ArrowRightLeft} label={t("transfer")} />
-          <ActionTile href="/vip" icon={Crown} label={t("vip_order")} highlight />
           <ActionTile href="/settings" icon={SettingsIcon} label={t("settings")} />
-          {user.isAdmin && <ActionTile href="/admin/dashboard" icon={ShieldCheck} label={t("admin_label")} highlight />}
+          {user.isAdmin && <ActionTile href="/admin/dashboard" icon={ShieldCheck} label={t("admin_label")} highlight className="col-span-2" />}
         </div>
 
         <div className="pt-2">
@@ -134,10 +140,10 @@ function StatCard({ icon: Icon, label, value, suffix }: { icon: any; label: stri
   );
 }
 
-function ActionTile({ href, icon: Icon, label, badge, highlight }: { href: string; icon: any; label: string; badge?: number; highlight?: boolean }) {
+function ActionTile({ href, icon: Icon, label, badge, highlight, className }: { href: string; icon: any; label: string; badge?: number; highlight?: boolean; className?: string }) {
   return (
     <Link href={href}>
-      <div className={`bg-card border ${highlight ? "border-primary/40 gold-glow" : "border-primary/10"} rounded-2xl p-4 flex flex-col items-center gap-2 active:scale-[0.97] transition-all relative`}>
+      <div className={`bg-card border ${highlight ? "border-primary/40 gold-glow" : "border-primary/10"} rounded-2xl p-4 flex flex-col items-center gap-2 active:scale-[0.97] transition-all relative ${className ?? ""}`}>
         <div className={`w-10 h-10 rounded-xl ${highlight ? "bg-primary text-black" : "bg-primary/10 text-primary"} flex items-center justify-center`}>
           <Icon className="w-5 h-5" />
         </div>

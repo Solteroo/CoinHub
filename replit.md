@@ -68,13 +68,31 @@ This workspace contains the **CoinHub** project — a premium virtual casino pla
 - `.glass-card` — glassmorphism surface
 
 ### Pages
-Home, Wallet (transfer + history), Profile (edit bio/color/email), Leaderboard (podium top 3),
-Chat, Settings, Notifications, Friends, DM, DM-Thread, Public-Profile, Transfer,
-About, FAQ, News, VIP, Edit-Profile, Splash (login/register), All 9 game pages
+Home, Wallet (transfer + history), Profile (edit bio/color/emoji avatar), Leaderboard (podium top 3),
+Chat, Settings, Notifications, Friends, DM, DM-Thread (Telegram-style), Public-Profile, Transfer,
+About, FAQ, News, Edit-Profile, Splash (login/register), All 9 game pages
+VIP page redirects to owner DM (no VIP tile on profile)
+
+### PRO Casino Game Layouts (v3)
+- **GameLayout.tsx** shared component: full screen, no navbar overlap, back button, balance header, game-specific glow colors
+- All 9 games use GameLayout with immersive full-screen design and color themes:
+  - Slot=Purple, Spin=Blue, LuckyBox=Amber, Crash=Red, Dice=Green, Mines=Orange, Roulette=Rose, Plinko=Cyan, HiLo=Yellow
+- Sound: `playLose` alias exported from `sounds.ts` (alias for `playLoss`)
+
+### PWA Install Prompt
+- Shows 3s after load, skips if already in standalone mode or dismissed
+- **iOS**: step-by-step Share→Add to Home Screen instructions (2 steps)
+- **Android/Chrome**: native beforeinstallprompt banner with Install/No buttons
+- STORAGE_KEY: `coinhub_pwa_dismissed_v2`
+
+### i18n (4 languages)
+- **ru** (default), **en**, **tm** (Turkmen), **uz** (Uzbek)
+- All keys present in all 4 sections including: `roll_btn`, `picks`, `multiplier`, `hilo_result`
 
 ### Admin Panel (`/admin`)
-- Dashboard stats, user management, manual coin add/subtract
-- Chat moderation: delete messages, ban chat by duration
+- Dashboard stats (Russian labels), user management, manual coin add/subtract
+- **DM Inbox tab**: view all incoming DM threads with unread counts
+- Chat moderation: delete messages, ban chat by duration (Russian labels)
 - News posts (create/delete)
 - Owner user designation (yrejepov1@gmail.com is the owner)
 
