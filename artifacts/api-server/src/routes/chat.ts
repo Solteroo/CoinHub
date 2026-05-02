@@ -95,7 +95,7 @@ router.post("/chat/messages", requireUser, async (req, res) => {
 });
 
 router.delete("/admin/chat/messages/:messageId", requireAdmin, async (req, res) => {
-  const messageId = req.params["messageId"];
+  const messageId = Array.isArray(req.params["messageId"]) ? req.params["messageId"][0] : req.params["messageId"];
   if (!messageId) {
     res.status(400).json({ error: "messageId gerek" });
     return;
@@ -103,7 +103,7 @@ router.delete("/admin/chat/messages/:messageId", requireAdmin, async (req, res) 
   await db
     .update(chatMessagesTable)
     .set({ deleted: 1 })
-    .where(and(eq(chatMessagesTable.id, messageId), eq(chatMessagesTable.deleted, 0)));
+    .where(and(eq(chatMessagesTable.id, messageId as string), eq(chatMessagesTable.deleted, 0)));
   res.json({ ok: true });
 });
 

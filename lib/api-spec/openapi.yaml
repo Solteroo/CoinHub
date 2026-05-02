@@ -682,6 +682,146 @@ paths:
               schema:
                 $ref: "#/components/schemas/CrashResult"
 
+  /games/dice:
+    post:
+      operationId: playDice
+      tags: [games]
+      summary: Zar oýny (high/low)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+                choice:
+                  type: string
+                  enum: [high, low]
+              required: [bet, choice]
+      responses:
+        "200":
+          description: Dice result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceResult"
+
+  /games/mines:
+    post:
+      operationId: playMines
+      tags: [games]
+      summary: Minalar oýny
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+                picks:
+                  type: array
+                  items:
+                    type: integer
+                    minimum: 0
+                    maximum: 24
+                  minItems: 1
+                  maxItems: 8
+              required: [bet, picks]
+      responses:
+        "200":
+          description: Mines result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MinesResult"
+
+  /games/roulette:
+    post:
+      operationId: playRoulette
+      tags: [games]
+      summary: Ruletka
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+                betType:
+                  type: string
+                  enum: [red, black, zero]
+              required: [bet, betType]
+      responses:
+        "200":
+          description: Roulette result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouletteResult"
+
+  /games/plinko:
+    post:
+      operationId: playPlinko
+      tags: [games]
+      summary: Plinko
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+                risk:
+                  type: string
+                  enum: [low, medium, high]
+              required: [bet, risk]
+      responses:
+        "200":
+          description: Plinko result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlinkoResult"
+
+  /games/hilo:
+    post:
+      operationId: playHiLo
+      tags: [games]
+      summary: Hi-Lo kart oýny
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bet:
+                  type: integer
+                  minimum: 1
+                choice:
+                  type: string
+                  enum: [high, low]
+              required: [bet, choice]
+      responses:
+        "200":
+          description: HiLo result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HiLoResult"
+
   /chat/messages:
     get:
       operationId: getChatMessages
@@ -1139,6 +1279,131 @@ components:
           type: boolean
       required: [bet, autoCashout, crashAt, multiplier, won, netChange, newBalance, label, rarity, cashedOut]
 
+    DiceResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        dice1:
+          type: integer
+        dice2:
+          type: integer
+        total:
+          type: integer
+        choice:
+          type: string
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+      required: [bet, dice1, dice2, total, choice, won, netChange, newBalance, label, rarity]
+
+    MinesResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        minePositions:
+          type: array
+          items:
+            type: integer
+        picks:
+          type: array
+          items:
+            type: integer
+        safeHits:
+          type: integer
+        multiplier:
+          type: number
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+      required: [bet, minePositions, picks, safeHits, multiplier, won, netChange, newBalance, label, rarity]
+
+    RouletteResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        number:
+          type: integer
+        color:
+          type: string
+        betType:
+          type: string
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+      required: [bet, number, color, betType, won, netChange, newBalance, label, rarity]
+
+    PlinkoResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        bucket:
+          type: integer
+        risk:
+          type: string
+        multiplier:
+          type: number
+        path:
+          type: array
+          items:
+            type: integer
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+      required: [bet, bucket, risk, multiplier, path, won, netChange, newBalance, label, rarity]
+
+    HiLoResult:
+      type: object
+      properties:
+        bet:
+          type: integer
+        card:
+          type: integer
+        choice:
+          type: string
+        won:
+          type: integer
+        netChange:
+          type: integer
+        newBalance:
+          type: integer
+        label:
+          type: string
+        rarity:
+          type: string
+      required: [bet, card, choice, won, netChange, newBalance, label, rarity]
+
     ChatMessage:
       type: object
       properties:
@@ -1331,7 +1596,11 @@ components:
           type: string
         coins:
           type: integer
-      required: [rank, publicId, username, coins]
+        avatarColor:
+          type: string
+        isAdmin:
+          type: boolean
+      required: [rank, publicId, username, coins, avatarColor, isAdmin]
 
     AdminStatus:
       type: object
@@ -1349,11 +1618,21 @@ components:
           type: string
         username:
           type: string
+        email:
+          type: string
+          nullable: true
+        passwordHash:
+          type: string
+          nullable: true
         coins:
           type: integer
+        avatarColor:
+          type: string
+        isAdmin:
+          type: boolean
         createdAt:
           type: string
-      required: [id, publicId, username, coins, createdAt]
+      required: [id, publicId, username, coins, avatarColor, isAdmin, createdAt]
 
     AdminUserDetail:
       type: object

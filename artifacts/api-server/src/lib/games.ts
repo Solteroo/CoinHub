@@ -1,34 +1,23 @@
 // CoinHub casino-style game logic with house edge.
-// All games are wager-based. RTP (return-to-player) is tuned ~85-92% so
-// users naturally lose coins over time and need to contact admin to top up.
+// All games are wager-based. RTP tuned ~85-92%.
 
-export const STARTING_COINS = 200;
-export const MIN_BET = 10;
-export const MAX_BET = 100_000;
+export const STARTING_COINS = 100;
+export const MIN_BET = 5;
+export const MAX_BET = 10_000;
 
-// ─── SLOT MACHINE ────────────────────────────────────────────────────────────
-// Symbols ordered by rarity (highest payout first).
+// ─── SLOT MACHINE ─────────────────────────────────────────────────────────────
 export const SLOT_SYMBOLS = ["7", "★", "♦", "♥", "♣", "BAR"] as const;
 export type SlotSymbol = (typeof SLOT_SYMBOLS)[number];
 
 interface SlotOutcome {
   weight: number;
   multiplier: number;
-  type:
-    | "lose"
-    | "two_match"
-    | "triple_bar"
-    | "triple_club"
-    | "triple_heart"
-    | "triple_diamond"
-    | "triple_star"
-    | "triple_seven";
-  symbols?: SlotSymbol; // base symbol for triples / two-match
+  type: "lose" | "two_match" | "triple_bar" | "triple_club" | "triple_heart" | "triple_diamond" | "triple_star" | "triple_seven";
+  symbols?: SlotSymbol;
   rarity: "common" | "rare" | "epic" | "legendary";
   label: string;
 }
 
-// Tuned to ~85% RTP overall.
 const SLOT_OUTCOMES: SlotOutcome[] = [
   { weight: 78, multiplier: 0, type: "lose", rarity: "common", label: "Şowsuz" },
   { weight: 12, multiplier: 1.3, type: "two_match", rarity: "common", label: "Iki sany" },
@@ -40,18 +29,10 @@ const SLOT_OUTCOMES: SlotOutcome[] = [
   { weight: 0.1, multiplier: 150, type: "triple_seven", symbols: "7", rarity: "legendary", label: "JEKPOT 777" },
 ];
 
-export function spinSlot(): {
-  symbols: [SlotSymbol, SlotSymbol, SlotSymbol];
-  multiplier: number;
-  rarity: SlotOutcome["rarity"];
-  label: string;
-  outcome: SlotOutcome["type"];
-} {
+export function spinSlot(): { symbols: [SlotSymbol, SlotSymbol, SlotSymbol]; multiplier: number; rarity: SlotOutcome["rarity"]; label: string; outcome: SlotOutcome["type"] } {
   const outcome = pickWeighted(SLOT_OUTCOMES);
   let symbols: [SlotSymbol, SlotSymbol, SlotSymbol];
-
   if (outcome.type === "lose") {
-    // Pick 3 symbols ensuring not all 3 same and not 2 same
     const picks: SlotSymbol[] = [];
     while (picks.length < 3) {
       const s = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]!;
@@ -61,9 +42,7 @@ export function spinSlot(): {
   } else if (outcome.type === "two_match") {
     const base = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]!;
     let other: SlotSymbol;
-    do {
-      other = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]!;
-    } while (other === base);
+    do { other = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]!; } while (other === base);
     const oddPos = Math.floor(Math.random() * 3);
     const arr: SlotSymbol[] = [base, base, base];
     arr[oddPos] = other;
@@ -72,26 +51,14 @@ export function spinSlot(): {
     const sym = outcome.symbols!;
     symbols = [sym, sym, sym];
   }
-
-  return {
-    symbols,
-    multiplier: outcome.multiplier,
-    rarity: outcome.rarity,
-    label: outcome.label,
-    outcome: outcome.type,
-  };
+  return { symbols, multiplier: outcome.multiplier, rarity: outcome.rarity, label: outcome.label, outcome: outcome.type };
 }
 
-// ─── SPIN WHEEL ──────────────────────────────────────────────────────────────
+// ─── SPIN WHEEL ───────────────────────────────────────────────────────────────
 export interface WheelSegment {
-  multiplier: number;
-  label: string;
-  color: string;
-  rarity: "common" | "rare" | "epic" | "legendary";
-  weight: number;
+  multiplier: number; label: string; color: string; rarity: "common" | "rare" | "epic" | "legendary"; weight: number;
 }
 
-// 12 visual segments, weighted RNG → ~92% RTP (counting tied house cut on losses).
 export const WHEEL_SEGMENTS: WheelSegment[] = [
   { multiplier: 0, label: "0×", color: "#1a1a24", rarity: "common", weight: 14 },
   { multiplier: 0.5, label: "0.5×", color: "#2a2a3a", rarity: "common", weight: 11 },
@@ -112,14 +79,9 @@ export function spinWheel(): { segmentIndex: number; segment: WheelSegment } {
   return { segmentIndex: idx, segment: WHEEL_SEGMENTS[idx]! };
 }
 
-// ─── LUCKY BOX (9 boxes) ─────────────────────────────────────────────────────
-interface BoxOutcomeWeight {
-  multiplier: number;
-  rarity: "common" | "rare" | "epic" | "legendary";
-  weight: number;
-}
+// ─── LUCKY BOX ────────────────────────────────────────────────────────────────
+interface BoxOutcomeWeight { multiplier: number; rarity: "common" | "rare" | "epic" | "legendary"; weight: number; }
 
-// ~85% RTP per pick.
 const BOX_OUTCOMES: BoxOutcomeWeight[] = [
   { multiplier: 0, weight: 50, rarity: "common" },
   { multiplier: 0.5, weight: 25, rarity: "common" },
@@ -130,27 +92,13 @@ const BOX_OUTCOMES: BoxOutcomeWeight[] = [
   { multiplier: 50, weight: 0.5, rarity: "legendary" },
 ];
 
-export interface LuckyBoxReveal {
-  multiplier: number;
-  rarity: "common" | "rare" | "epic" | "legendary";
-}
+export interface LuckyBoxReveal { multiplier: number; rarity: "common" | "rare" | "epic" | "legendary"; }
 
 export function generateLuckyBoxes(): LuckyBoxReveal[] {
-  return Array.from({ length: 9 }, () => {
-    const o = pickWeighted(BOX_OUTCOMES);
-    return { multiplier: o.multiplier, rarity: o.rarity };
-  });
+  return Array.from({ length: 9 }, () => { const o = pickWeighted(BOX_OUTCOMES); return { multiplier: o.multiplier, rarity: o.rarity }; });
 }
 
-// ─── CRASH (rocket) ──────────────────────────────────────────────────────────
-// Provably-fair-style crash: server rolls a crashAt ≥ 1.00. If user's
-// autoCashout target is ≤ crashAt, payout = bet × autoCashout. Otherwise the
-// rocket explodes before reaching the target → user loses bet.
-//
-// Distribution (≈96% RTP for any target T in [1.01, 50]):
-//   - 4% of rounds → instant crash at 1.00× (house cut bucket)
-//   - 96% of rounds → crashAt = clamp(1 / (1 - u), 1.01, 50) where u ∈ [0,1)
-// P(crashAt ≥ T) = 0.96 / T  →  E[payout|cashout T] = 0.96 × bet
+// ─── CRASH ────────────────────────────────────────────────────────────────────
 export const CRASH_MIN_TARGET = 1.1;
 export const CRASH_MAX_TARGET = 50;
 
@@ -162,30 +110,104 @@ export function rollCrash(): number {
   return Math.min(50, Math.max(1.01, Math.floor(raw * 100) / 100));
 }
 
+// ─── DICE ─────────────────────────────────────────────────────────────────────
+// Roll 2d6. High = total 8-12, Low = total 2-7. Payout 1.85x (~87% RTP)
+export function rollDice(): { dice1: number; dice2: number; total: number } {
+  const dice1 = Math.ceil(Math.random() * 6);
+  const dice2 = Math.ceil(Math.random() * 6);
+  return { dice1, dice2, total: dice1 + dice2 };
+}
+
+export function diceMultiplier(choice: "high" | "low", total: number): number {
+  if (choice === "high" && total >= 8) return 1.85;
+  if (choice === "low" && total <= 6) return 1.85;
+  return 0;
+}
+
+// ─── MINES ────────────────────────────────────────────────────────────────────
+// 25-cell grid, 5 hidden mines. User picks cells one at a time.
+// Safe multipliers increase with each safe pick.
+const SAFE_MULTIPLIERS = [0, 1.2, 1.5, 2.0, 2.8, 4.0, 6.0, 10.0, 20.0];
+
+export function rollMines(picks: number[]): { minePositions: number[]; safeHits: number; multiplier: number } {
+  const MINE_COUNT = 5;
+  const allPositions = Array.from({ length: 25 }, (_, i) => i).sort(() => Math.random() - 0.5);
+  const minePositions = allPositions.slice(0, MINE_COUNT);
+  let safeHits = 0;
+  for (const pick of picks) {
+    if (minePositions.includes(pick)) break;
+    safeHits++;
+  }
+  const multiplier = SAFE_MULTIPLIERS[Math.min(safeHits, SAFE_MULTIPLIERS.length - 1)] ?? 0;
+  return { minePositions, safeHits, multiplier };
+}
+
+// ─── ROULETTE ─────────────────────────────────────────────────────────────────
+const RED_NUMBERS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+
+export function rollRoulette(): { number: number; color: "red" | "black" | "green" } {
+  const num = Math.floor(Math.random() * 37);
+  if (num === 0) return { number: 0, color: "green" };
+  return { number: num, color: RED_NUMBERS.has(num) ? "red" : "black" };
+}
+
+export function rouletteMultiplier(betType: "red" | "black" | "zero", color: "red" | "black" | "green"): number {
+  if (betType === "zero" && color === "green") return 14;
+  if (betType === "red" && color === "red") return 1.9;
+  if (betType === "black" && color === "black") return 1.9;
+  return 0;
+}
+
+// ─── PLINKO ───────────────────────────────────────────────────────────────────
+const PLINKO_PAYOUTS: Record<"low" | "medium" | "high", number[]> = {
+  low:    [1.5, 1.2, 1.0, 0.8, 0.5, 0.8, 1.0, 1.2, 1.5],
+  medium: [3.0, 1.8, 1.2, 0.6, 0.2, 0.6, 1.2, 1.8, 3.0],
+  high:   [16,  5.0, 2.0, 0.8, 0.0, 0.8, 2.0, 5.0, 16 ],
+};
+
+export function rollPlinko(risk: "low" | "medium" | "high"): { bucket: number; path: number[]; multiplier: number } {
+  const path: number[] = [];
+  let pos = 0;
+  for (let row = 0; row < 8; row++) {
+    const dir = Math.random() < 0.5 ? 0 : 1;
+    path.push(dir);
+    pos += dir;
+  }
+  const bucket = Math.min(8, Math.max(0, pos));
+  const multiplier = PLINKO_PAYOUTS[risk][bucket] ?? 0;
+  return { bucket, path, multiplier };
+}
+
+// ─── HI-LO ────────────────────────────────────────────────────────────────────
+// Card 1-13. High = 8-13, Low = 1-6, 7 = push (neither). Payout 1.85x
+export function rollHiLo(): { card: number } {
+  return { card: Math.ceil(Math.random() * 13) };
+}
+
+export function hiLoMultiplier(choice: "high" | "low", card: number): number {
+  if (choice === "high" && card >= 8) return 1.85;
+  if (choice === "low" && card <= 6) return 1.85;
+  return 0;
+}
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 export function pickWeighted<T extends { weight: number }>(items: T[]): T {
   const total = items.reduce((s, i) => s + i.weight, 0);
   let r = Math.random() * total;
-  for (const it of items) {
-    r -= it.weight;
-    if (r <= 0) return it;
-  }
+  for (const it of items) { r -= it.weight; if (r <= 0) return it; }
   return items[items.length - 1]!;
 }
 
 export function pickWeightedIndex<T extends { weight: number }>(items: T[]): number {
   const total = items.reduce((s, i) => s + i.weight, 0);
   let r = Math.random() * total;
-  for (let i = 0; i < items.length; i++) {
-    r -= items[i]!.weight;
-    if (r <= 0) return i;
-  }
+  for (let i = 0; i < items.length; i++) { r -= items[i]!.weight; if (r <= 0) return i; }
   return items.length - 1;
 }
 
 export function rarityFromMultiplier(m: number): "common" | "rare" | "epic" | "legendary" {
-  if (m >= 50) return "legendary";
-  if (m >= 10) return "epic";
-  if (m >= 2) return "rare";
+  if (m >= 10) return "legendary";
+  if (m >= 3) return "epic";
+  if (m >= 1.5) return "rare";
   return "common";
 }

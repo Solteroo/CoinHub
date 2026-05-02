@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { CoinCounter } from "@/components/ui/coin-counter";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
-import { ArrowDownLeft, ArrowUpRight, ArrowRightLeft, MessageCircle, Crown, Phone, AlertCircle } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowRightLeft, MessageCircle, Crown, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export default function Wallet() {
@@ -84,25 +84,6 @@ export default function Wallet() {
             </div>
           </div>
         </Link>
-
-        {/* Direct contact */}
-        <div className="bg-card/50 border border-primary/10 rounded-2xl p-4 space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Göni habarlaşmak</p>
-          <a href="tel:+99361403543" className="flex items-center justify-between p-2 hover:bg-primary/5 rounded-lg transition-colors">
-            <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-white">Telefon</span>
-            </div>
-            <span className="text-xs font-bold text-primary">+993 61 403 543</span>
-          </a>
-          <a href="tel:+918826816138" className="flex items-center justify-between p-2 hover:bg-primary/5 rounded-lg transition-colors">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-white">IMO</span>
-            </div>
-            <span className="text-xs font-bold text-primary">+91 882 681 6138</span>
-          </a>
-        </div>
 
         {/* Transactions */}
         <div>

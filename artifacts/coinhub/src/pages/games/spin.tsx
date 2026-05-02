@@ -103,7 +103,12 @@ export default function SpinGame() {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-12">BAGT ÇARHY</h1>
+        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-6">BAGT ÇARHY</h1>
+
+        <div className="w-full max-w-sm mb-6 bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
+          <p>Goýum möçberini saýlaň. <span className="text-primary font-bold">AÝLAT</span> düwmesine basyň. Çarh aýlanyp, belli bir dilimde durýar. Her dilim öz multipliýatoryny berýär. Nol dilimine düşse — goýum ýitirilýär.</p>
+        </div>
 
         <div className="relative w-80 h-80 mb-12">
           {/* Gold Outer Ring */}

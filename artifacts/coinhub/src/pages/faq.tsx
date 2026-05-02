@@ -3,7 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 const ITEMS: Array<{ q: string; a: string }> = [
   { q: "Nähili oýnamaly?", a: "Slot, Çarh, Bagt gutusy we Bagt uçuşy oýunlary bar. Her oýunyň öz girişinde 'Nähili oýnamaly?' düwmesi bilen düşündiriş açylýar. Stawkany saýlaň, oýna başlaň, utgaňyzy alyň." },
-  { q: "TMT nädip almaly?", a: "Hasap döredeniňizde 200 TMT mugt berilýär. Her 3 günden bonus alyp bilersiňiz. Goşmaça TMT almak üçin Gapjyk → 'Admin bilen habarlaş' düwmesine basyň, ID-ňizi aýdyň." },
+  { q: "TMT nädip almaly?", a: "Hasap döredeniňizde 100 TMT mugt berilýär. Her 3 günden bonus alyp bilersiňiz. Goşmaça TMT almak üçin Gapjyk → 'Admin bilen habarlaş' düwmesine basyň, ID-ňizi aýdyň." },
   { q: "Pul yzyna alyp bolarmy?", a: "TMT diňe oýun üçin niýetlenen wirtual teňňedir. Hakyky pula çalşyrylmaýar. Oýun-güýmenje üçin niýetlenen." },
   { q: "Çatda nähili özüni alyp barmaly?", a: "Hormat goýuň. Spam, kemsitme, jedeller bolmasyn. Düzgüni bozanlar admin tarapyndan gadagan edilýär. Maslahat: Türkmençe ýazyň, gysga we düşnükli boluň." },
   { q: "Bonus haçan gelýär?", a: "Her 3 günden bonus düwmesi açylýar. Baş sahypada 'Bonus taýýar' kartoçkasy görner. Bir basmak bilen 50 TMT alyp bilersiňiz." },

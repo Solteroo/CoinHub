@@ -593,6 +593,126 @@ export const PlayCrashResponse = zod.object({
 });
 
 /**
+ * @summary Zar oýny (high/low)
+ */
+
+export const PlayDiceBody = zod.object({
+  bet: zod.number().min(1),
+  choice: zod.enum(["high", "low"]),
+});
+
+export const PlayDiceResponse = zod.object({
+  bet: zod.number(),
+  dice1: zod.number(),
+  dice2: zod.number(),
+  total: zod.number(),
+  choice: zod.string(),
+  won: zod.number(),
+  netChange: zod.number(),
+  newBalance: zod.number(),
+  label: zod.string(),
+  rarity: zod.string(),
+});
+
+/**
+ * @summary Minalar oýny
+ */
+
+export const playMinesBodyPicksItemMin = 0;
+export const playMinesBodyPicksItemMax = 24;
+
+export const playMinesBodyPicksMax = 8;
+
+export const PlayMinesBody = zod.object({
+  bet: zod.number().min(1),
+  picks: zod
+    .array(
+      zod
+        .number()
+        .min(playMinesBodyPicksItemMin)
+        .max(playMinesBodyPicksItemMax),
+    )
+    .min(1)
+    .max(playMinesBodyPicksMax),
+});
+
+export const PlayMinesResponse = zod.object({
+  bet: zod.number(),
+  minePositions: zod.array(zod.number()),
+  picks: zod.array(zod.number()),
+  safeHits: zod.number(),
+  multiplier: zod.number(),
+  won: zod.number(),
+  netChange: zod.number(),
+  newBalance: zod.number(),
+  label: zod.string(),
+  rarity: zod.string(),
+});
+
+/**
+ * @summary Ruletka
+ */
+
+export const PlayRouletteBody = zod.object({
+  bet: zod.number().min(1),
+  betType: zod.enum(["red", "black", "zero"]),
+});
+
+export const PlayRouletteResponse = zod.object({
+  bet: zod.number(),
+  number: zod.number(),
+  color: zod.string(),
+  betType: zod.string(),
+  won: zod.number(),
+  netChange: zod.number(),
+  newBalance: zod.number(),
+  label: zod.string(),
+  rarity: zod.string(),
+});
+
+/**
+ * @summary Plinko
+ */
+
+export const PlayPlinkoBody = zod.object({
+  bet: zod.number().min(1),
+  risk: zod.enum(["low", "medium", "high"]),
+});
+
+export const PlayPlinkoResponse = zod.object({
+  bet: zod.number(),
+  bucket: zod.number(),
+  risk: zod.string(),
+  multiplier: zod.number(),
+  path: zod.array(zod.number()),
+  won: zod.number(),
+  netChange: zod.number(),
+  newBalance: zod.number(),
+  label: zod.string(),
+  rarity: zod.string(),
+});
+
+/**
+ * @summary Hi-Lo kart oýny
+ */
+
+export const PlayHiLoBody = zod.object({
+  bet: zod.number().min(1),
+  choice: zod.enum(["high", "low"]),
+});
+
+export const PlayHiLoResponse = zod.object({
+  bet: zod.number(),
+  card: zod.number(),
+  choice: zod.string(),
+  won: zod.number(),
+  netChange: zod.number(),
+  newBalance: zod.number(),
+  label: zod.string(),
+  rarity: zod.string(),
+});
+
+/**
  * @summary Soňky çat habarlary
  */
 export const getChatMessagesQueryLimitDefault = 50;
@@ -656,6 +776,8 @@ export const GetLeaderboardResponseItem = zod.object({
   publicId: zod.string(),
   username: zod.string(),
   coins: zod.number(),
+  avatarColor: zod.string(),
+  isAdmin: zod.boolean(),
 });
 export const GetLeaderboardResponse = zod.array(GetLeaderboardResponseItem);
 
@@ -695,7 +817,11 @@ export const AdminListUsersResponseItem = zod.object({
   id: zod.string(),
   publicId: zod.string(),
   username: zod.string(),
+  email: zod.string().nullish(),
+  passwordHash: zod.string().nullish(),
   coins: zod.number(),
+  avatarColor: zod.string(),
+  isAdmin: zod.boolean(),
   createdAt: zod.string(),
 });
 export const AdminListUsersResponse = zod.array(AdminListUsersResponseItem);
@@ -712,7 +838,11 @@ export const AdminGetUserResponse = zod.object({
     id: zod.string(),
     publicId: zod.string(),
     username: zod.string(),
+    email: zod.string().nullish(),
+    passwordHash: zod.string().nullish(),
     coins: zod.number(),
+    avatarColor: zod.string(),
+    isAdmin: zod.boolean(),
     createdAt: zod.string(),
   }),
   transactions: zod.array(
@@ -746,7 +876,11 @@ export const AdminAdjustCoinsResponse = zod.object({
     id: zod.string(),
     publicId: zod.string(),
     username: zod.string(),
+    email: zod.string().nullish(),
+    passwordHash: zod.string().nullish(),
     coins: zod.number(),
+    avatarColor: zod.string(),
+    isAdmin: zod.boolean(),
     createdAt: zod.string(),
   }),
   transactions: zod.array(

@@ -126,7 +126,12 @@ export default function CrashGame() {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-8 text-center">BAGT UÇUŞY</h1>
+        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-4 text-center">BAGT UÇUŞY</h1>
+
+        <div className="w-full max-w-sm mb-4 bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
+          <p>Goýum goýuň we <span className="text-primary font-bold">BAŞLA</span>-a basyň. Raket uçup multipliýator ösýär. Awtomatik nagtlaşdyrma limitini saýlaň — ol ýere ýeteninde pul öz-özünden alynýar. Partylamanka çyksaňyz — gazanarsyňyz!</p>
+        </div>
 
         {/* Game Panel */}
         <div 

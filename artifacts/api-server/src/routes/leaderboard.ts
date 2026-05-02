@@ -10,6 +10,8 @@ router.get("/leaderboard", async (_req, res) => {
       publicId: usersTable.publicId,
       username: usersTable.username,
       coins: usersTable.coins,
+      avatarColor: usersTable.avatarColor,
+      isAdmin: usersTable.isAdmin,
     })
     .from(usersTable)
     .orderBy(desc(usersTable.coins))
@@ -20,6 +22,8 @@ router.get("/leaderboard", async (_req, res) => {
       publicId: r.publicId,
       username: r.username,
       coins: r.coins,
+      avatarColor: r.avatarColor ?? "#D4AF37",
+      isAdmin: r.isAdmin === 1,
     })),
   );
 });

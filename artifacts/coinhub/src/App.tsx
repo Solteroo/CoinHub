@@ -11,6 +11,11 @@ import SpinGame from "@/pages/games/spin";
 import LuckyBoxGame from "@/pages/games/luckybox";
 import SlotGame from "@/pages/games/slot";
 import CrashGame from "@/pages/games/crash";
+import DiceGame from "@/pages/games/dice";
+import MinesGame from "@/pages/games/mines";
+import RouletteGame from "@/pages/games/roulette";
+import PlinkoGame from "@/pages/games/plinko";
+import HiLoGame from "@/pages/games/hilo";
 import Chat from "@/pages/chat";
 import Wallet from "@/pages/wallet";
 import Profile from "@/pages/profile";
@@ -53,6 +58,11 @@ function Router() {
       <Route path="/games/luckybox" component={LuckyBoxGame} />
       <Route path="/games/slot" component={SlotGame} />
       <Route path="/games/crash" component={CrashGame} />
+      <Route path="/games/dice" component={DiceGame} />
+      <Route path="/games/mines" component={MinesGame} />
+      <Route path="/games/roulette" component={RouletteGame} />
+      <Route path="/games/plinko" component={PlinkoGame} />
+      <Route path="/games/hilo" component={HiLoGame} />
       <Route path="/chat" component={Chat} />
       <Route path="/wallet" component={Wallet} />
       <Route path="/profile" component={Profile} />

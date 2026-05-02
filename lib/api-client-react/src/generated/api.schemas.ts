@@ -123,6 +123,68 @@ export interface CrashResult {
   cashedOut: boolean;
 }
 
+export interface DiceResult {
+  bet: number;
+  dice1: number;
+  dice2: number;
+  total: number;
+  choice: string;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+}
+
+export interface MinesResult {
+  bet: number;
+  minePositions: number[];
+  picks: number[];
+  safeHits: number;
+  multiplier: number;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+}
+
+export interface RouletteResult {
+  bet: number;
+  number: number;
+  color: string;
+  betType: string;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+}
+
+export interface PlinkoResult {
+  bet: number;
+  bucket: number;
+  risk: string;
+  multiplier: number;
+  path: number[];
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+}
+
+export interface HiLoResult {
+  bet: number;
+  card: number;
+  choice: string;
+  won: number;
+  netChange: number;
+  newBalance: number;
+  label: string;
+  rarity: string;
+}
+
 export interface ChatMessage {
   id: string;
   userId: string;
@@ -219,6 +281,8 @@ export interface LeaderboardEntry {
   publicId: string;
   username: string;
   coins: number;
+  avatarColor: string;
+  isAdmin: boolean;
 }
 
 export interface AdminStatus {
@@ -229,7 +293,11 @@ export interface AdminUser {
   id: string;
   publicId: string;
   username: string;
+  email?: string | null;
+  passwordHash?: string | null;
   coins: number;
+  avatarColor: string;
+  isAdmin: boolean;
   createdAt: string;
 }
 
@@ -345,6 +413,74 @@ export type PlayCrashBody = {
    * @maximum 50
    */
   autoCashout: number;
+};
+
+export type PlayDiceBodyChoice =
+  (typeof PlayDiceBodyChoice)[keyof typeof PlayDiceBodyChoice];
+
+export const PlayDiceBodyChoice = {
+  high: "high",
+  low: "low",
+} as const;
+
+export type PlayDiceBody = {
+  /** @minimum 1 */
+  bet: number;
+  choice: PlayDiceBodyChoice;
+};
+
+export type PlayMinesBody = {
+  /** @minimum 1 */
+  bet: number;
+  /**
+   * @minItems 1
+   * @maxItems 8
+   */
+  picks: number[];
+};
+
+export type PlayRouletteBodyBetType =
+  (typeof PlayRouletteBodyBetType)[keyof typeof PlayRouletteBodyBetType];
+
+export const PlayRouletteBodyBetType = {
+  red: "red",
+  black: "black",
+  zero: "zero",
+} as const;
+
+export type PlayRouletteBody = {
+  /** @minimum 1 */
+  bet: number;
+  betType: PlayRouletteBodyBetType;
+};
+
+export type PlayPlinkoBodyRisk =
+  (typeof PlayPlinkoBodyRisk)[keyof typeof PlayPlinkoBodyRisk];
+
+export const PlayPlinkoBodyRisk = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+} as const;
+
+export type PlayPlinkoBody = {
+  /** @minimum 1 */
+  bet: number;
+  risk: PlayPlinkoBodyRisk;
+};
+
+export type PlayHiLoBodyChoice =
+  (typeof PlayHiLoBodyChoice)[keyof typeof PlayHiLoBodyChoice];
+
+export const PlayHiLoBodyChoice = {
+  high: "high",
+  low: "low",
+} as const;
+
+export type PlayHiLoBody = {
+  /** @minimum 1 */
+  bet: number;
+  choice: PlayHiLoBodyChoice;
 };
 
 export type GetChatMessagesParams = {

@@ -28,7 +28,7 @@ export function TopHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
   const dq = useDebounce(q, 300);
-  const { data: results = [] } = useSearchUsers({ q: dq }, { query: { enabled: dq.length >= 2 } });
+  const { data: results = [] } = useSearchUsers({ q: dq }, { query: { enabled: dq.length >= 2, queryKey: ["searchUsers", dq] } });
   const logout = useLogoutUser();
   const qc = useQueryClient();
 

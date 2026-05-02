@@ -32,26 +32,36 @@ import type {
   BonusResult,
   ChatMessage,
   CrashResult,
+  DiceResult,
   DmMessage,
   DmThread,
   FriendList,
   GamesConfig,
   GetChatMessagesParams,
   HealthStatus,
+  HiLoResult,
   LeaderboardEntry,
   LoginUserBody,
   LuckyBoxResult,
+  MinesResult,
   NewsPost,
   Notification,
   OkResponse,
   PlayCrashBody,
+  PlayDiceBody,
+  PlayHiLoBody,
   PlayLuckyBoxBody,
+  PlayMinesBody,
+  PlayPlinkoBody,
+  PlayRouletteBody,
   PlaySlotBody,
   PlaySpinBody,
+  PlinkoResult,
   PostChatMessageBody,
   PublicProfile,
   PublicUser,
   RegisterUserBody,
+  RouletteResult,
   SearchUsersParams,
   SendDmMessageBody,
   SendFriendRequestBody,
@@ -2683,6 +2693,436 @@ export const usePlayCrash = <
   TContext
 > => {
   return useMutation(getPlayCrashMutationOptions(options));
+};
+
+/**
+ * @summary Zar oýny (high/low)
+ */
+export const getPlayDiceUrl = () => {
+  return `/api/games/dice`;
+};
+
+export const playDice = async (
+  playDiceBody: PlayDiceBody,
+  options?: RequestInit,
+): Promise<DiceResult> => {
+  return customFetch<DiceResult>(getPlayDiceUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playDiceBody),
+  });
+};
+
+export const getPlayDiceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playDice>>,
+    TError,
+    { data: BodyType<PlayDiceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof playDice>>,
+  TError,
+  { data: BodyType<PlayDiceBody> },
+  TContext
+> => {
+  const mutationKey = ["playDice"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof playDice>>,
+    { data: BodyType<PlayDiceBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playDice(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlayDiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof playDice>>
+>;
+export type PlayDiceMutationBody = BodyType<PlayDiceBody>;
+export type PlayDiceMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Zar oýny (high/low)
+ */
+export const usePlayDice = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playDice>>,
+    TError,
+    { data: BodyType<PlayDiceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof playDice>>,
+  TError,
+  { data: BodyType<PlayDiceBody> },
+  TContext
+> => {
+  return useMutation(getPlayDiceMutationOptions(options));
+};
+
+/**
+ * @summary Minalar oýny
+ */
+export const getPlayMinesUrl = () => {
+  return `/api/games/mines`;
+};
+
+export const playMines = async (
+  playMinesBody: PlayMinesBody,
+  options?: RequestInit,
+): Promise<MinesResult> => {
+  return customFetch<MinesResult>(getPlayMinesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playMinesBody),
+  });
+};
+
+export const getPlayMinesMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playMines>>,
+    TError,
+    { data: BodyType<PlayMinesBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof playMines>>,
+  TError,
+  { data: BodyType<PlayMinesBody> },
+  TContext
+> => {
+  const mutationKey = ["playMines"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof playMines>>,
+    { data: BodyType<PlayMinesBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playMines(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlayMinesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof playMines>>
+>;
+export type PlayMinesMutationBody = BodyType<PlayMinesBody>;
+export type PlayMinesMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Minalar oýny
+ */
+export const usePlayMines = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playMines>>,
+    TError,
+    { data: BodyType<PlayMinesBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof playMines>>,
+  TError,
+  { data: BodyType<PlayMinesBody> },
+  TContext
+> => {
+  return useMutation(getPlayMinesMutationOptions(options));
+};
+
+/**
+ * @summary Ruletka
+ */
+export const getPlayRouletteUrl = () => {
+  return `/api/games/roulette`;
+};
+
+export const playRoulette = async (
+  playRouletteBody: PlayRouletteBody,
+  options?: RequestInit,
+): Promise<RouletteResult> => {
+  return customFetch<RouletteResult>(getPlayRouletteUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playRouletteBody),
+  });
+};
+
+export const getPlayRouletteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playRoulette>>,
+    TError,
+    { data: BodyType<PlayRouletteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof playRoulette>>,
+  TError,
+  { data: BodyType<PlayRouletteBody> },
+  TContext
+> => {
+  const mutationKey = ["playRoulette"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof playRoulette>>,
+    { data: BodyType<PlayRouletteBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playRoulette(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlayRouletteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof playRoulette>>
+>;
+export type PlayRouletteMutationBody = BodyType<PlayRouletteBody>;
+export type PlayRouletteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Ruletka
+ */
+export const usePlayRoulette = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playRoulette>>,
+    TError,
+    { data: BodyType<PlayRouletteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof playRoulette>>,
+  TError,
+  { data: BodyType<PlayRouletteBody> },
+  TContext
+> => {
+  return useMutation(getPlayRouletteMutationOptions(options));
+};
+
+/**
+ * @summary Plinko
+ */
+export const getPlayPlinkoUrl = () => {
+  return `/api/games/plinko`;
+};
+
+export const playPlinko = async (
+  playPlinkoBody: PlayPlinkoBody,
+  options?: RequestInit,
+): Promise<PlinkoResult> => {
+  return customFetch<PlinkoResult>(getPlayPlinkoUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playPlinkoBody),
+  });
+};
+
+export const getPlayPlinkoMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playPlinko>>,
+    TError,
+    { data: BodyType<PlayPlinkoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof playPlinko>>,
+  TError,
+  { data: BodyType<PlayPlinkoBody> },
+  TContext
+> => {
+  const mutationKey = ["playPlinko"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof playPlinko>>,
+    { data: BodyType<PlayPlinkoBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playPlinko(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlayPlinkoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof playPlinko>>
+>;
+export type PlayPlinkoMutationBody = BodyType<PlayPlinkoBody>;
+export type PlayPlinkoMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Plinko
+ */
+export const usePlayPlinko = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playPlinko>>,
+    TError,
+    { data: BodyType<PlayPlinkoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof playPlinko>>,
+  TError,
+  { data: BodyType<PlayPlinkoBody> },
+  TContext
+> => {
+  return useMutation(getPlayPlinkoMutationOptions(options));
+};
+
+/**
+ * @summary Hi-Lo kart oýny
+ */
+export const getPlayHiLoUrl = () => {
+  return `/api/games/hilo`;
+};
+
+export const playHiLo = async (
+  playHiLoBody: PlayHiLoBody,
+  options?: RequestInit,
+): Promise<HiLoResult> => {
+  return customFetch<HiLoResult>(getPlayHiLoUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(playHiLoBody),
+  });
+};
+
+export const getPlayHiLoMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playHiLo>>,
+    TError,
+    { data: BodyType<PlayHiLoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof playHiLo>>,
+  TError,
+  { data: BodyType<PlayHiLoBody> },
+  TContext
+> => {
+  const mutationKey = ["playHiLo"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof playHiLo>>,
+    { data: BodyType<PlayHiLoBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return playHiLo(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PlayHiLoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof playHiLo>>
+>;
+export type PlayHiLoMutationBody = BodyType<PlayHiLoBody>;
+export type PlayHiLoMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Hi-Lo kart oýny
+ */
+export const usePlayHiLo = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof playHiLo>>,
+    TError,
+    { data: BodyType<PlayHiLoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof playHiLo>>,
+  TError,
+  { data: BodyType<PlayHiLoBody> },
+  TContext
+> => {
+  return useMutation(getPlayHiLoMutationOptions(options));
 };
 
 /**

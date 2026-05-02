@@ -80,7 +80,12 @@ export default function LuckyBoxGame() {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-8 text-center">BAGT GUTUSY</h1>
+        <h1 className="text-3xl font-black italic gold-text-gradient uppercase tracking-tighter mb-4 text-center">BAGT GUTUSY</h1>
+
+        <div className="w-full max-w-sm mb-4 bg-card/50 border border-primary/10 rounded-2xl p-4 text-xs text-muted-foreground">
+          <p className="font-bold text-white mb-1 uppercase tracking-widest text-[10px]">Nähili oýnamaly?</p>
+          <p>Goýum saýlaň. 9 gutularyň birini saýlaň. Her gutuda gizlin multipliýator bar. Nadir gutular has uly baýrak berýär. Saýlanan gutudaky multipliýator goýumuňyza goşulýar.</p>
+        </div>
 
         <div className="w-full max-w-sm mb-8">
            {pickedIndex === null ? (

@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { useGetAdminOwner, getGetAdminOwnerQueryKey } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Crown, Check, MessageCircle, Phone } from "lucide-react";
+import { Crown, Check, MessageCircle } from "lucide-react";
 
 const BENEFITS = [
   "Goşmaça günlük TMT bonus",
@@ -54,9 +54,7 @@ export default function VIP() {
           ) : (
             <p className="text-xs text-muted-foreground text-center py-2">Häzir owner bellenilmedi</p>
           )}
-          <a href="tel:+99361403543" className="flex items-center justify-center gap-2 h-12 rounded-xl border border-primary/20 text-primary font-bold uppercase text-xs tracking-widest active:scale-[0.98]">
-            <Phone className="w-4 h-4" /> +993 61 403 543
-          </a>
+          <p className="text-[10px] text-muted-foreground text-center">Admin bilen göni habar arkaly gepleşiň</p>
         </div>
       </div>
     </Layout>

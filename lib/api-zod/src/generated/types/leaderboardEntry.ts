@@ -11,4 +11,6 @@ export interface LeaderboardEntry {
   publicId: string;
   username: string;
   coins: number;
+  avatarColor: string;
+  isAdmin: boolean;
 }

@@ -2,24 +2,15 @@ import { Router, type IRouter, type Request } from "express";
 import { db, usersTable, transactionsTable, type UserRow } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import {
-  PlaySlotBody,
-  PlaySpinBody,
-  PlayLuckyBoxBody,
-  PlayCrashBody,
+  PlaySlotBody, PlaySpinBody, PlayLuckyBoxBody, PlayCrashBody,
+  PlayDiceBody, PlayMinesBody, PlayRouletteBody, PlayPlinkoBody, PlayHiLoBody,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/auth";
 import {
-  spinSlot,
-  spinWheel,
-  generateLuckyBoxes,
-  rarityFromMultiplier,
-  rollCrash,
-  WHEEL_SEGMENTS,
-  SLOT_SYMBOLS,
-  MIN_BET,
-  MAX_BET,
-  CRASH_MIN_TARGET,
-  CRASH_MAX_TARGET,
+  spinSlot, spinWheel, generateLuckyBoxes, rarityFromMultiplier, rollCrash,
+  rollDice, diceMultiplier, rollMines, rollRoulette, rouletteMultiplier,
+  rollPlinko, rollHiLo, hiLoMultiplier,
+  WHEEL_SEGMENTS, SLOT_SYMBOLS, MIN_BET, MAX_BET, CRASH_MIN_TARGET, CRASH_MAX_TARGET,
 } from "../lib/games";
 
 const router: IRouter = Router();
@@ -235,6 +226,78 @@ router.post("/games/luckybox", requireUser, async (req, res) => {
         : "Boş guty",
     rarity: rarityFromMultiplier(picked.multiplier),
   });
+});
+
+// ─── DICE ─────────────────────────────────────────────────────────────────────
+router.post("/games/dice", requireUser, async (req, res) => {
+  const user = (req as Request & { user: UserRow }).user;
+  const parsed = PlayDiceBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Goýum nädogry" }); return; }
+  const { bet, choice } = parsed.data;
+  const v = validateBet(user, bet);
+  if (!v.ok) { res.status(v.status).json({ error: v.error }); return; }
+  const { dice1, dice2, total } = rollDice();
+  const multiplier = diceMultiplier(choice, total);
+  const round = await applyRound(user.id, bet, multiplier, "Zar oýny", "game_dice");
+  res.json({ bet, dice1, dice2, total, choice, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: multiplier > 0 ? `${total} · +${round.netChange}` : `${total} · Şowsuz`, rarity: rarityFromMultiplier(multiplier) });
+});
+
+// ─── MINES ────────────────────────────────────────────────────────────────────
+router.post("/games/mines", requireUser, async (req, res) => {
+  const user = (req as Request & { user: UserRow }).user;
+  const parsed = PlayMinesBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Goýum nädogry" }); return; }
+  const { bet, picks } = parsed.data;
+  const v = validateBet(user, bet);
+  if (!v.ok) { res.status(v.status).json({ error: v.error }); return; }
+  const { minePositions, safeHits, multiplier } = rollMines(picks);
+  const round = await applyRound(user.id, bet, multiplier, "Minalar oýny", "game_mines");
+  const hitMine = picks.some((p: number) => minePositions.includes(p));
+  res.json({ bet, minePositions, picks, safeHits, multiplier, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: hitMine ? "Mina! Şowsuz" : `${safeHits} howpsuz · +${round.netChange}`, rarity: rarityFromMultiplier(multiplier) });
+});
+
+// ─── ROULETTE ─────────────────────────────────────────────────────────────────
+router.post("/games/roulette", requireUser, async (req, res) => {
+  const user = (req as Request & { user: UserRow }).user;
+  const parsed = PlayRouletteBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Goýum nädogry" }); return; }
+  const { bet, betType } = parsed.data;
+  const v = validateBet(user, bet);
+  if (!v.ok) { res.status(v.status).json({ error: v.error }); return; }
+  const { number, color } = rollRoulette();
+  const multiplier = rouletteMultiplier(betType as "red" | "black" | "zero", color);
+  const round = await applyRound(user.id, bet, multiplier, "Ruletka", "game_roulette");
+  const colorLabel = { red: "Gyzyl", black: "Gara", green: "Ýaşyl" }[color];
+  res.json({ bet, number, color, betType, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: multiplier > 0 ? `${number} ${colorLabel} · +${round.netChange}` : `${number} ${colorLabel} · Şowsuz`, rarity: rarityFromMultiplier(multiplier) });
+});
+
+// ─── PLINKO ───────────────────────────────────────────────────────────────────
+router.post("/games/plinko", requireUser, async (req, res) => {
+  const user = (req as Request & { user: UserRow }).user;
+  const parsed = PlayPlinkoBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Goýum nädogry" }); return; }
+  const { bet, risk } = parsed.data;
+  const v = validateBet(user, bet);
+  if (!v.ok) { res.status(v.status).json({ error: v.error }); return; }
+  const { bucket, path, multiplier } = rollPlinko(risk as "low" | "medium" | "high");
+  const round = await applyRound(user.id, bet, multiplier, "Plinko", "game_plinko");
+  res.json({ bet, bucket, risk, multiplier, path, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: multiplier > 0 ? `${multiplier}× · +${round.netChange}` : "Şowsuz", rarity: rarityFromMultiplier(multiplier) });
+});
+
+// ─── HI-LO ────────────────────────────────────────────────────────────────────
+router.post("/games/hilo", requireUser, async (req, res) => {
+  const user = (req as Request & { user: UserRow }).user;
+  const parsed = PlayHiLoBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Goýum nädogry" }); return; }
+  const { bet, choice } = parsed.data;
+  const v = validateBet(user, bet);
+  if (!v.ok) { res.status(v.status).json({ error: v.error }); return; }
+  const { card } = rollHiLo();
+  const multiplier = hiLoMultiplier(choice as "high" | "low", card);
+  const round = await applyRound(user.id, bet, multiplier, "Hi-Lo kart", "game_hilo");
+  const cardNames = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  const cardName = cardNames[card] ?? card.toString();
+  res.json({ bet, card, choice, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: multiplier > 0 ? `${cardName} · +${round.netChange}` : `${cardName} · Şowsuz`, rarity: rarityFromMultiplier(multiplier) });
 });
 
 export default router;

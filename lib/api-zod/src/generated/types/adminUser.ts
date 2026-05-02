@@ -10,6 +10,10 @@ export interface AdminUser {
   id: string;
   publicId: string;
   username: string;
+  email?: string | null;
+  passwordHash?: string | null;
   coins: number;
+  avatarColor: string;
+  isAdmin: boolean;
   createdAt: string;
 }

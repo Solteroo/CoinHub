@@ -35,7 +35,11 @@ export function serializeAdminUser(u: UserRow) {
     id: u.id,
     publicId: u.publicId,
     username: u.username,
+    email: u.email ?? null,
+    passwordHash: u.passwordHash ?? null,
     coins: u.coins,
+    avatarColor: u.avatarColor,
+    isAdmin: u.isAdmin === 1,
     createdAt: u.createdAt.toISOString(),
   };
 }

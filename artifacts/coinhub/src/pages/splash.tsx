@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowLeft, LogIn, UserPlus, Phone, MessageCircle } from "lucide-react";
+import { Loader2, ArrowLeft, LogIn, UserPlus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
@@ -116,18 +116,11 @@ export default function Splash() {
                 Hasap döretmek
               </Button>
 
-              <div className="pt-6 mt-4 border-t border-primary/10 space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">Habarlaşmak</p>
-                <div className="flex gap-2">
-                  <a href="tel:+99361403543" className="flex-1 h-12 rounded-xl bg-card border border-primary/15 flex items-center justify-center gap-2 text-xs font-bold text-white hover:bg-primary/10 transition-colors">
-                    <Phone className="w-3.5 h-3.5 text-primary" />
-                    Telefon
-                  </a>
-                  <a href="tel:+918826816138" className="flex-1 h-12 rounded-xl bg-card border border-primary/15 flex items-center justify-center gap-2 text-xs font-bold text-white hover:bg-primary/10 transition-colors">
-                    <MessageCircle className="w-3.5 h-3.5 text-primary" />
-                    IMO
-                  </a>
-                </div>
+              <div className="pt-6 mt-4 border-t border-primary/10 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Premium wirtual kazino platformasy
+                </p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">Agza bolup 100 TMT bonus alyň</p>
               </div>
             </motion.div>
           ) : (

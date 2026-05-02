@@ -4,7 +4,7 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
-This workspace contains the **CoinHub** project — a virtual coin economy game platform in Türkmen language with a mobile-app PWA aesthetic and a dark + gold premium theme.
+This workspace contains the **CoinHub** project — a premium virtual casino platform in Türkmen language with a dark + gold Stake.com-level aesthetic, full social features, and a PWA mobile experience.
 
 ## Stack
 
@@ -16,52 +16,76 @@ This workspace contains the **CoinHub** project — a virtual coin economy game 
 - **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **Frontend**: React 19 + Vite + Wouter + TanStack Query + Tailwind + Framer Motion
+- **Build**: esbuild (ESM bundle)
+- **Frontend**: React 19 + Vite + Wouter + TanStack Query + Tailwind v4 + Framer Motion
 
 ## Artifacts
 
 - `artifacts/coinhub` — CoinHub PWA frontend (web, previewPath `/`)
-- `artifacts/api-server` — Express API backend
+- `artifacts/api-server` — Express API backend (port **3001**, proxied at `/api`)
 - `artifacts/mockup-sandbox` — design canvas
 
 ## CoinHub Features
 
-- Auth: register/login (username + password, scrypt hashed, cookie sessions `coinhub_sid`)
-- New users start with **200 coins** and a unique 8-digit numeric `publicId` (e.g. `81036355`)
-- 4 wager-based casino games (all with house edge, RTP ~85–96%):
-  - **Slot Maşyn** (3-reel slot, jackpot 150×)
-  - **Bagt Çarhy** (12-segment wheel, top prize 100×)
-  - **Bagt Gutusy** (9 mystery boxes, max 50× pick)
-  - **Bagt Uçuşy** (rocket crash with auto-cashout, target 1.1×–50×, ~96% RTP)
-- Min bet 10, max bet 100 000
-- **No daily bonus** — to top up coins, players must contact the admin via Phone/IMO
-- **Global Çat** — all logged-in users can chat in one room (200-char limit, 1.5s cooldown). Polls every 2.5s. Admin can delete messages.
-- Leaderboard (top 100), Wallet (transaction history), Profile (with copyable numeric ID + VIP contact links)
-- Bottom nav: Baş sahypa / Oýunlar / **Çat (center floating button)** / Gapjyk / Profil
-- Admin panel at `/admin` (separate password-only session, cookie `coinhub_admin`)
-  - Dashboard stats, user lookup (by username or numeric ID), manual coin add/subtract, transaction log
+### Auth & Economy
+- Register/login (username + password, scrypt hashed, cookie sessions `coinhub_sid`)
+- New users start with **100 TMT** (STARTING_COINS=100) and unique 8-digit `publicId`
+- **Bonus**: 50 TMT every 3 days (BONUS_AMOUNT=50, BONUS_INTERVAL=3 days) via `/me/claim-bonus`
+- Min bet 5 TMT, max bet 10,000 TMT
+- No real payments, no crypto — TMT is virtual entertainment currency
+
+### 9 Casino Games
+- **Slot Maşyn** — 3-reel classic slot, jackpot 150×
+- **Bagt Çarhy** — 12-segment wheel, top prize 100×
+- **Bagt Gutusy** — 9 mystery boxes, max 50×
+- **Bagt Uçuşy** — rocket crash, auto-cashout, ~96% RTP
+- **Zar** — dice game (high/low), pick range
+- **Minalar** — minesweeper-style, pick safe cells
+- **Ruletka** — red/black/zero European roulette
+- **Plinko** — peg board drop multipliers
+- **Hi-Lo** — card higher/lower prediction
+
+### Social Features
+- **Friends**: add by publicId, accept/decline, friend list
+- **Direct Messages**: peer-to-peer chat threads (DM only, not global)
+- **Global Chat**: 200-char limit, 2.5s poll, admin moderation (ban + delete)
+- **Public Profiles**: avatar with colored initial, bio, rank, coins
+- **Avatar colors**: user-selectable from 8 preset colors
+
+### Pages
+Home, Wallet (transfer + history), Profile (edit bio/color/email), Leaderboard (podium top 3),
+Chat, Settings, Notifications, Friends, DM, DM-Thread, Public-Profile, Transfer,
+About, FAQ, News, VIP, Edit-Profile, Splash (login/register), All 9 game pages
+
+### Admin Panel (`/admin`)
+- Dashboard stats, user management, manual coin add/subtract
+- Chat moderation: delete messages, ban chat by duration
+- News posts (create/delete)
+- Owner user designation (yrejepov1@gmail.com is the owner)
 
 ## Admin Access
 
-- Admin password is read from the `ADMIN_PASSWORD` env var. **Default fallback: `admin123`** (set the env var in production!).
-- Admin login endpoint: `POST /api/admin/login` with `{ password }`.
+- Admin password: `ADMIN_PASSWORD` env var (default fallback: `admin123`)
+- Admin login: `POST /api/admin/login` with `{ password }`
+- Owner email: `yrejepov1@gmail.com`
 
-## Brand / Contact
+## Brand
 
-- Brand: **CoinHub**
-- Phone: **+99361403543**
-- IMO: **+918826816138**
-- Language: Türkmen (UI copy is fully localized)
-- No real payments, no crypto
+- **No phone or IMO contact info** anywhere in the UI (removed per user requirement)
+- Contact via in-app DM to admin/owner only
+- Language: Türkmen (all UI copy localized)
+
+## API Port Note
+
+The API server uses port **3001** (changed from 8080 to fix Replit workflow port detection).
+The proxy routes `/api` → port 3001. The `.replit` file has a legacy `[[ports]] localPort = 8080` entry that is no longer used by the API server.
 
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-- `pnpm --filter @workspace/coinhub run dev` — run CoinHub frontend locally
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas
+- `pnpm --filter @workspace/db run push` — push DB schema changes
+- `pnpm --filter @workspace/api-server run dev` — run API server (needs PORT injected by workflow)
+- `pnpm --filter @workspace/coinhub run dev` — run CoinHub frontend
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
