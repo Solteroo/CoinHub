@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { BetSelector } from "@/components/BetSelector";
+import { ResultOverlay } from "@/components/games/ResultOverlay";
 import { cn, fmtCoins } from "@/lib/utils";
 import { COIN } from "@/lib/coin";
 import confetti from "canvas-confetti";
@@ -21,6 +22,7 @@ export default function HiLoGame() {
   const [bet, setBet] = useState(10);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [showResult, setShowResult] = useState(false);
   const [suit] = useState(() => SUITS[Math.floor(Math.random() * 4)] ?? "♠");
   const [flipped, setFlipped] = useState(false);
   const qc = useQueryClient();
@@ -30,7 +32,7 @@ export default function HiLoGame() {
 
   const handlePlay = async (choice: "high" | "low") => {
     if (loading || !user || bet > user.coins) return;
-    setLoading(true); setResult(null); setFlipped(false); playClick();
+    setLoading(true); setResult(null); setFlipped(false); setShowResult(false); playClick();
     try {
       const res = await fetch("/api/games/hilo", {
         method: "POST",
@@ -44,8 +46,11 @@ export default function HiLoGame() {
       setFlipped(true);
       await new Promise(r => setTimeout(r, 400));
       setResult(data);
-      if (data.netChange > 0) { playWin(); confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 }, colors: [ACCENT, "#fde047"] }); }
-      else playLose();
+      setTimeout(() => {
+        setShowResult(true);
+        if (data.netChange > 0) { playWin(); confetti({ particleCount: 80, spread: 55, origin: { y: 0.5 }, colors: [ACCENT, "#fde047"] }); }
+        else playLose();
+      }, 300);
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
@@ -53,53 +58,42 @@ export default function HiLoGame() {
     finally { setLoading(false); }
   };
 
-  const reset = () => { setResult(null); setFlipped(false); };
+  const reset = () => { setResult(null); setFlipped(false); setShowResult(false); };
 
   return (
     <GameLayout title={t("game_hilo_title")} emoji="🃏" accentColor={ACCENT}>
       <div
-        className="flex-1 flex flex-col px-4 pt-4 gap-3 items-center"
-        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+        className="flex-1 flex flex-col px-4 gap-4 items-center"
+        style={{ paddingTop: "16px", paddingBottom: "max(52px, env(safe-area-inset-bottom, 52px))" }}
       >
-        {/* Card — fills remaining space */}
-        <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center gap-4">
+        {/* Card display */}
+        <div className="shrink-0 flex flex-col items-center gap-4" style={{ height: "clamp(200px, 32vh, 270px)", justifyContent: "center" }}>
           <motion.div
             animate={{ rotateY: flipped ? 0 : 90 }}
             transition={{ duration: 0.35 }}
             className="rounded-3xl border-2 flex flex-col items-center justify-center shadow-2xl"
             style={{
-              width: "min(160px, 45vw)",
-              height: "min(220px, 58vw)",
+              width: "min(150px, 42vw)",
+              height: "min(210px, 55vw)",
               background: result !== null ? "#fff" : "rgba(255,255,255,0.06)",
               borderColor: result !== null ? (result.netChange > 0 ? "#22c55e" : "#ef4444") : "rgba(255,255,255,0.15)",
               boxShadow: result !== null
-                ? (result.netChange > 0 ? "0 0 50px rgba(34,197,94,0.45)" : "0 0 50px rgba(239,68,68,0.35)")
+                ? (result.netChange > 0 ? "0 0 50px rgba(34,197,94,0.5)" : "0 0 50px rgba(239,68,68,0.35)")
                 : `0 0 40px ${ACCENT}35`,
             }}
           >
             {result !== null ? (
               <div className={cn("text-center", isRed ? "text-red-600" : "text-gray-900")}>
-                <div className="font-black leading-none" style={{ fontSize: "clamp(48px, 14vw, 72px)" }}>{CARD_NAMES[result.card]}</div>
-                <div className="leading-none mt-2" style={{ fontSize: "clamp(36px, 10vw, 52px)" }}>{suit}</div>
+                <div className="font-black leading-none" style={{ fontSize: "clamp(52px, 14vw, 72px)" }}>{CARD_NAMES[result.card]}</div>
+                <div className="leading-none mt-2" style={{ fontSize: "clamp(40px, 11vw, 56px)" }}>{suit}</div>
               </div>
             ) : (
               <div className="text-6xl opacity-20 font-black" style={{ color: ACCENT }}>?</div>
             )}
           </motion.div>
 
-          <AnimatePresence>
-            {result && (
-              <motion.div initial={{ y: 10, opacity: 0, scale: 0.9 }} animate={{ y: 0, opacity: 1, scale: 1 }}
-                className={cn("px-8 py-2.5 rounded-2xl font-black text-lg uppercase tracking-wider border",
-                  result.netChange > 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "bg-red-500/20 text-red-400 border-red-500/40"
-                )}>
-                {CARD_NAMES[result.card]} {suit} · {result.netChange > 0 ? "+" : ""}{fmtCoins(result.netChange)} {COIN}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Card reference strip */}
-          <div className="flex gap-1 overflow-x-auto no-scrollbar w-full">
+          {/* Reference strip */}
+          <div className="flex gap-1 overflow-x-auto no-scrollbar w-full px-2">
             {CARD_NAMES.slice(1).map((name, i) => {
               const val = i + 1; const isHigh = val >= 8; const isLow = val <= 6;
               return (
@@ -122,38 +116,36 @@ export default function HiLoGame() {
           <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
         </div>
 
-        {/* HI / LO buttons or Play again */}
+        {/* HI/LO buttons or Play again */}
         {!result ? (
           <div className="shrink-0 grid grid-cols-2 gap-3 w-full">
-            <button
-              onClick={() => handlePlay("high")}
-              disabled={loading || !user || bet > (user?.coins ?? 0)}
+            <button onClick={() => handlePlay("high")} disabled={loading || !user || bet > (user?.coins ?? 0)}
               className="h-16 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] disabled:opacity-35 border-2 transition-all"
-              style={{ background: `${ACCENT}18`, borderColor: `${ACCENT}60`, color: ACCENT, boxShadow: `0 0 28px ${ACCENT}35` }}
-            >
+              style={{ background: `${ACCENT}18`, borderColor: `${ACCENT}60`, color: ACCENT, boxShadow: `0 0 28px ${ACCENT}35` }}>
               <ArrowUp className="w-5 h-5" />
               HI (8–K) · 1.85×
             </button>
-            <button
-              onClick={() => handlePlay("low")}
-              disabled={loading || !user || bet > (user?.coins ?? 0)}
+            <button onClick={() => handlePlay("low")} disabled={loading || !user || bet > (user?.coins ?? 0)}
               className="h-16 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] disabled:opacity-35 border-2 transition-all"
-              style={{ background: "rgba(96,165,250,0.15)", borderColor: "rgba(96,165,250,0.5)", color: "#60a5fa", boxShadow: "0 0 28px rgba(96,165,250,0.25)" }}
-            >
+              style={{ background: "rgba(96,165,250,0.15)", borderColor: "rgba(96,165,250,0.5)", color: "#60a5fa", boxShadow: "0 0 28px rgba(96,165,250,0.25)" }}>
               <ArrowDown className="w-5 h-5" />
               LO (A–6) · 1.85×
             </button>
           </div>
         ) : (
-          <button
-            onClick={reset}
-            className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] transition-all"
-            style={{ background: `linear-gradient(135deg, ${ACCENT}, #ca8a04)`, boxShadow: `0 0 36px ${ACCENT}55`, color: "#000" }}
-          >
+          <button onClick={reset} className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] transition-all"
+            style={{ background: `linear-gradient(135deg, ${ACCENT}, #ca8a04)`, boxShadow: `0 0 36px ${ACCENT}55`, color: "#000" }}>
             {t("play_again")}
           </button>
         )}
       </div>
+
+      <ResultOverlay
+        show={showResult}
+        won={(result?.netChange ?? 0) > 0}
+        amount={Math.abs(result?.netChange ?? 0)}
+        onDismiss={() => setShowResult(false)}
+      />
     </GameLayout>
   );
 }

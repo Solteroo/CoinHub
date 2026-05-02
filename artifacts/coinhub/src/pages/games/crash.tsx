@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Rocket } from "lucide-react";
 import { BetSelector } from "@/components/BetSelector";
 import { Input } from "@/components/ui/input";
+import { ResultOverlay } from "@/components/games/ResultOverlay";
 import { cn, fmtCoins } from "@/lib/utils";
 import { COIN } from "@/lib/coin";
 import confetti from "canvas-confetti";
@@ -25,6 +26,8 @@ export default function CrashGame() {
   const [history, setHistory] = useState<any[]>([]);
   const [status, setStatus] = useState<"idle" | "running" | "crashed" | "cashed">("idle");
   const [rocketPos, setRocketPos] = useState({ x: 10, y: 80 });
+  const [showResult, setShowResult] = useState(false);
+  const [result, setResult] = useState<any>(null);
   const playCrash = usePlayCrash();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -32,54 +35,72 @@ export default function CrashGame() {
 
   const finalizeGame = (res: any) => {
     setHistory(prev => [res, ...prev].slice(0, 6));
+    setResult(res);
     if (res.cashedOut) {
-      setStatus("cashed"); setMultiplier(res.autoCashout); playWin();
-      if (res.multiplier >= 5) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: [ACCENT, "#fca5a5"] });
-      toast({ title: `🚀 ${t("hot_win")}`, description: `+${res.netChange} ${COIN}` });
+      setStatus("cashed");
+      setMultiplier(res.autoCashout);
+      playWin();
+      if (res.multiplier >= 5) confetti({ particleCount: 150, spread: 70, origin: { y: 0.5 }, colors: [ACCENT, "#fca5a5"] });
     } else {
-      setStatus("crashed"); setMultiplier(res.crashAt); playLose();
-      toast({ title: `💥 ${t("crashed_toast")}`, description: `-${res.bet} ${COIN}`, variant: "destructive" });
+      setStatus("crashed");
+      setMultiplier(res.crashAt);
+      playLose();
     }
-    queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetLeaderboardQueryKey() });
+    setTimeout(() => {
+      setShowResult(true);
+      queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetLeaderboardQueryKey() });
+    }, 500);
     setPlaying(false);
   };
 
   const handleStart = () => {
     if (playing || !user || bet > user.coins || bet < 10) return;
-    setPlaying(true); setStatus("running"); setMultiplier(1.0); setRocketPos({ x: 10, y: 80 }); playClick();
+    setPlaying(true);
+    setStatus("running");
+    setMultiplier(1.0);
+    setRocketPos({ x: 10, y: 80 });
+    setShowResult(false);
+    playClick();
+
     playCrash.mutate({ data: { bet, autoCashout } }, {
       onSuccess: (res) => {
         const target = Math.min(res.crashAt, res.autoCashout);
-        const DURATION_MS = 800 + Math.log(target) * 1500;
+        const DURATION_MS = 900 + Math.log(target) * 1600;
         const startTime = Date.now();
         const animate = () => {
           const elapsed = Date.now() - startTime;
-          const t = Math.min(1, elapsed / DURATION_MS);
-          setMultiplier(1 + (target - 1) * Math.pow(t, 0.7));
-          setRocketPos({ x: 10 + t * 75, y: 80 - t * 70 });
-          if (t < 1) requestAnimationFrame(animate); else finalizeGame(res);
+          const tRaw = Math.min(1, elapsed / DURATION_MS);
+          setMultiplier(1 + (target - 1) * Math.pow(tRaw, 0.65));
+          setRocketPos({ x: 10 + tRaw * 75, y: 80 - tRaw * 70 });
+          if (tRaw < 1) requestAnimationFrame(animate);
+          else finalizeGame(res);
         };
         requestAnimationFrame(animate);
       },
-      onError: (err: any) => { setPlaying(false); setStatus("idle"); toast({ title: t("error"), description: err.message, variant: "destructive" }); },
+      onError: (err: any) => {
+        setPlaying(false);
+        setStatus("idle");
+        toast({ title: t("error"), description: err.message, variant: "destructive" });
+      },
     });
   };
 
   return (
     <GameLayout title={t("game_crash_title")} emoji="🚀" accentColor={ACCENT}>
       <div
-        className="flex-1 flex flex-col px-4 pt-4 gap-3"
-        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+        className="flex-1 flex flex-col px-4 gap-3"
+        style={{ paddingTop: "16px", paddingBottom: "max(52px, env(safe-area-inset-bottom, 52px))" }}
       >
-        {/* Crash chart — fills remaining space */}
+        {/* Crash chart */}
         <div
-          className="flex-1 min-h-0 rounded-3xl relative overflow-hidden border"
+          className="w-full rounded-3xl relative overflow-hidden shrink-0"
           style={{
+            height: "clamp(180px, 28vh, 240px)",
             background: "linear-gradient(180deg, #0a0015 0%, #12001f 100%)",
-            borderColor: status === "crashed" ? "rgba(239,68,68,0.5)" : status === "cashed" ? "rgba(52,211,153,0.5)" : "rgba(239,68,68,0.2)",
+            border: `1px solid ${status === "crashed" ? "rgba(239,68,68,0.5)" : status === "cashed" ? "rgba(52,211,153,0.5)" : "rgba(239,68,68,0.2)"}`,
             boxShadow: status === "crashed" ? "0 0 30px rgba(239,68,68,0.15)" : status === "cashed" ? "0 0 30px rgba(52,211,153,0.15)" : undefined,
           }}
         >
@@ -88,33 +109,38 @@ export default function CrashGame() {
           <div className="absolute inset-0 flex items-center justify-center">
             <motion.div
               key={status}
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className={cn("font-black tabular-nums", status === "running" ? "text-white text-8xl" : status === "cashed" ? "text-emerald-400 text-7xl" : status === "crashed" ? "text-red-400 text-7xl" : "text-white/20 text-7xl")}
-              style={{ textShadow: status === "running" ? `0 0 40px rgba(239,68,68,0.6)` : status === "cashed" ? "0 0 40px rgba(52,211,153,0.6)" : status === "crashed" ? "0 0 40px rgba(239,68,68,0.5)" : undefined }}
+              className={cn("font-black tabular-nums",
+                status === "running" ? "text-white text-8xl" :
+                status === "cashed" ? "text-emerald-400 text-7xl" :
+                status === "crashed" ? "text-red-400 text-7xl" : "text-white/15 text-7xl"
+              )}
+              style={{
+                textShadow: status === "running" ? "0 0 40px rgba(239,68,68,0.7)" :
+                  status === "cashed" ? "0 0 40px rgba(52,211,153,0.6)" :
+                  status === "crashed" ? "0 0 40px rgba(239,68,68,0.5)" : undefined
+              }}
             >
               {multiplier.toFixed(2)}×
             </motion.div>
           </div>
 
-          {(status === "cashed" || status === "crashed") && (
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-              className={cn("absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-xl font-black text-sm uppercase tracking-widest border",
-                status === "cashed" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "bg-red-500/20 text-red-400 border-red-500/40"
-              )}>
-              {status === "cashed" ? `✓ ${t("you_won")}` : `💥 ${t("crashed_label")}`}
-            </motion.div>
-          )}
-
           <motion.div className="absolute" style={{ left: `${rocketPos.x}%`, top: `${rocketPos.y}%` }}>
             <Rocket
-              className={cn("w-10 h-10", status === "running" ? "text-white" : status === "cashed" ? "text-emerald-400" : "text-white/20")}
+              className={cn("w-10 h-10",
+                status === "running" ? "text-white" :
+                status === "cashed" ? "text-emerald-400" : "text-white/20"
+              )}
               style={{
-                filter: status === "running" ? "drop-shadow(0 0 10px rgba(255,255,255,0.9))" : undefined,
-                transform: status === "crashed" ? "rotate(135deg)" : status === "running" ? "rotate(-45deg)" : undefined,
+                filter: status === "running" ? "drop-shadow(0 0 10px rgba(255,255,255,0.95))" : undefined,
+                transform: status === "crashed" ? "rotate(135deg)" : "rotate(-45deg)",
               }}
             />
-            {status === "running" && <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-12 rounded-full blur-sm opacity-60" style={{ background: "linear-gradient(to top, transparent, #f97316, #ef4444)" }} />}
+            {status === "running" && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-10 rounded-full blur-sm opacity-70"
+                style={{ background: "linear-gradient(to top, transparent, #f97316, #ef4444)" }} />
+            )}
           </motion.div>
         </div>
 
@@ -124,7 +150,7 @@ export default function CrashGame() {
             {history.map((h, i) => (
               <div key={i} className="shrink-0 px-3 py-1.5 rounded-xl border text-xs font-black tabular-nums"
                 style={{ background: h.cashedOut ? "rgba(52,211,153,0.12)" : "rgba(239,68,68,0.12)", borderColor: h.cashedOut ? "rgba(52,211,153,0.3)" : "rgba(239,68,68,0.3)", color: h.cashedOut ? "#34d399" : "#f87171" }}>
-                {h.cashedOut ? h.autoCashout.toFixed(2) : h.crashAt.toFixed(2)}×
+                {h.cashedOut ? h.autoCashout?.toFixed(2) : h.crashAt?.toFixed(2)}×
               </div>
             ))}
           </div>
@@ -157,7 +183,7 @@ export default function CrashGame() {
           <BetSelector value={bet} onChange={setBet} min={10} max={user?.coins ?? 0} disabled={playing} />
         </div>
 
-        {/* Start button */}
+        {/* START button */}
         <button
           onClick={handleStart}
           disabled={playing || !user || (user?.coins ?? 0) < bet}
@@ -171,6 +197,14 @@ export default function CrashGame() {
           {playing ? `🚀 ${t("in_flight")}` : t("start_btn")}
         </button>
       </div>
+
+      <ResultOverlay
+        show={showResult}
+        won={result?.cashedOut ?? false}
+        amount={Math.abs(result?.netChange ?? 0)}
+        multiplier={result?.cashedOut ? result.autoCashout : result?.crashAt}
+        onDismiss={() => { setShowResult(false); setStatus("idle"); }}
+      />
     </GameLayout>
   );
 }

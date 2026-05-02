@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Bomb, Star, RefreshCw } from "lucide-react";
 import { BetSelector } from "@/components/BetSelector";
+import { ResultOverlay } from "@/components/games/ResultOverlay";
 import { cn, fmtCoins } from "@/lib/utils";
 import { COIN } from "@/lib/coin";
 import confetti from "canvas-confetti";
@@ -22,6 +23,7 @@ export default function MinesGame() {
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [showResult, setShowResult] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
   const { t } = useI18n();
@@ -32,12 +34,13 @@ export default function MinesGame() {
   const togglePick = (idx: number) => {
     if (submitted || loading) return;
     playClick();
-    setPicks((prev) => prev.includes(idx) ? prev.filter((p) => p !== idx) : prev.length < maxPicks ? [...prev, idx] : prev);
+    setPicks(prev => prev.includes(idx) ? prev.filter(p => p !== idx) : prev.length < maxPicks ? [...prev, idx] : prev);
   };
 
   const handleSubmit = async () => {
     if (picks.length === 0 || loading || !user || bet > user.coins) return;
     setLoading(true);
+    setShowResult(false);
     try {
       const res = await fetch("/api/games/mines", {
         method: "POST",
@@ -49,10 +52,15 @@ export default function MinesGame() {
       if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); return; }
       setResult(data);
       setSubmitted(true);
-      if (data.netChange > 0) {
-        playWin();
-        confetti({ particleCount: 120, spread: 65, origin: { y: 0.5 }, colors: ["#f97316", "#fb923c"] });
-      } else { playLose(); }
+      setTimeout(() => {
+        setShowResult(true);
+        if (data.netChange > 0) {
+          playWin();
+          confetti({ particleCount: 120, spread: 65, origin: { y: 0.5 }, colors: ["#f97316", "#fb923c"] });
+        } else {
+          playLose();
+        }
+      }, 600);
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
@@ -60,7 +68,7 @@ export default function MinesGame() {
     finally { setLoading(false); }
   };
 
-  const reset = () => { setPicks([]); setSubmitted(false); setResult(null); };
+  const reset = () => { setPicks([]); setSubmitted(false); setResult(null); setShowResult(false); };
 
   const getCellState = (idx: number): "default" | "picked" | "safe" | "mine" => {
     if (!submitted) return picks.includes(idx) ? "picked" : "default";
@@ -75,8 +83,8 @@ export default function MinesGame() {
   return (
     <GameLayout title={t("game_mines_title")} emoji="💣" accentColor={ACCENT}>
       <div
-        className="flex-1 flex flex-col px-4 pt-3 gap-3"
-        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+        className="flex-1 flex flex-col px-4 gap-3"
+        style={{ paddingTop: "16px", paddingBottom: "max(52px, env(safe-area-inset-bottom, 52px))" }}
       >
         {/* Stats bar */}
         <div className="shrink-0 grid grid-cols-3 gap-2">
@@ -90,53 +98,31 @@ export default function MinesGame() {
               lose: submitted && result?.netChange <= 0 && result,
             },
           ].map(({ label, value, win, lose }: any) => (
-            <div
-              key={label}
-              className="rounded-xl p-2.5 text-center border"
-              style={{
-                background: win ? "rgba(52,211,153,0.12)" : lose ? "rgba(239,68,68,0.12)" : `rgba(249,115,22,0.08)`,
-                borderColor: win ? "rgba(52,211,153,0.3)" : lose ? "rgba(239,68,68,0.3)" : "rgba(249,115,22,0.18)",
-              }}
-            >
+            <div key={label} className="rounded-xl p-2.5 text-center border"
+              style={{ background: win ? "rgba(52,211,153,0.12)" : lose ? "rgba(239,68,68,0.12)" : "rgba(249,115,22,0.08)", borderColor: win ? "rgba(52,211,153,0.3)" : lose ? "rgba(239,68,68,0.3)" : "rgba(249,115,22,0.18)" }}>
               <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">{label}</p>
               <p className={cn("text-base font-black", win ? "text-emerald-400" : lose ? "text-red-400" : "")} style={!win && !lose ? { color: ACCENT } : {}}>{value}</p>
             </div>
           ))}
         </div>
 
-        {/* Mine grid — fills remaining space */}
+        {/* Mine grid */}
         <div className="flex-1 min-h-0 flex items-center justify-center">
-          <div className="w-full grid grid-cols-5 gap-2" style={{ maxHeight: "100%", aspectRatio: "1/1", maxWidth: "min(100%, calc((100vh - 320px)))" }}>
+          <div className="w-full grid grid-cols-5 gap-2" style={{ maxHeight: "100%" }}>
             {Array.from({ length: 25 }, (_, i) => {
               const state = getCellState(i);
               return (
-                <motion.button
-                  key={i}
-                  onClick={() => togglePick(i)}
-                  whileTap={!submitted ? { scale: 0.85 } : {}}
+                <motion.button key={i} onClick={() => togglePick(i)} whileTap={!submitted ? { scale: 0.85 } : {}}
                   className="aspect-square rounded-xl flex items-center justify-center border-2 transition-all"
                   style={{
                     background: state === "default" ? "rgba(255,255,255,0.04)" : state === "picked" ? "rgba(249,115,22,0.18)" : state === "safe" ? "rgba(52,211,153,0.18)" : "rgba(239,68,68,0.18)",
                     borderColor: state === "default" ? "rgba(255,255,255,0.07)" : state === "picked" ? "rgba(249,115,22,0.7)" : state === "safe" ? "rgba(52,211,153,0.7)" : "rgba(239,68,68,0.7)",
                     boxShadow: state === "picked" ? `0 0 14px ${ACCENT}45` : state === "safe" ? "0 0 14px rgba(52,211,153,0.35)" : state === "mine" ? "0 0 14px rgba(239,68,68,0.35)" : undefined,
-                  }}
-                >
+                  }}>
                   <AnimatePresence>
-                    {state === "safe" && (
-                      <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                        <Star className="w-4 h-4 text-emerald-400" />
-                      </motion.div>
-                    )}
-                    {state === "mine" && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                        <Bomb className="w-4 h-4 text-red-400" />
-                      </motion.div>
-                    )}
-                    {state === "picked" && (
-                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-xs font-black" style={{ color: ACCENT }}>
-                        {picks.indexOf(i) + 1}
-                      </motion.span>
-                    )}
+                    {state === "safe" && <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}><Star className="w-4 h-4 text-emerald-400" /></motion.div>}
+                    {state === "mine" && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Bomb className="w-4 h-4 text-red-400" /></motion.div>}
+                    {state === "picked" && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-xs font-black" style={{ color: ACCENT }}>{picks.indexOf(i) + 1}</motion.span>}
                   </AnimatePresence>
                 </motion.button>
               );
@@ -151,29 +137,26 @@ export default function MinesGame() {
 
         {/* Action button */}
         {!submitted ? (
-          <button
-            onClick={handleSubmit}
-            disabled={picks.length === 0 || loading || !user || bet > (user?.coins ?? 0)}
+          <button onClick={handleSubmit} disabled={picks.length === 0 || loading || !user || bet > (user?.coins ?? 0)}
             className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-35 active:scale-[0.98] transition-all"
-            style={{
-              background: picks.length > 0 ? `linear-gradient(135deg, ${ACCENT}, #ea580c)` : "rgba(255,255,255,0.07)",
-              boxShadow: picks.length > 0 ? `0 0 36px ${ACCENT}55` : undefined,
-              color: picks.length > 0 ? "#000" : "rgba(255,255,255,0.3)",
-            }}
-          >
+            style={{ background: picks.length > 0 ? `linear-gradient(135deg, ${ACCENT}, #ea580c)` : "rgba(255,255,255,0.07)", boxShadow: picks.length > 0 ? `0 0 36px ${ACCENT}55` : undefined, color: picks.length > 0 ? "#000" : "rgba(255,255,255,0.3)" }}>
             {loading ? t("checking") : picks.length === 0 ? t("choose_cell") : `${picks.length} ${t("cells_selected")} · ${currentMult}×`}
           </button>
         ) : (
-          <button
-            onClick={reset}
-            className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-3 text-white/70 border border-white/10"
-            style={{ background: "rgba(255,255,255,0.05)" }}
-          >
+          <button onClick={reset} className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-3 text-white/70 border border-white/10" style={{ background: "rgba(255,255,255,0.05)" }}>
             <RefreshCw className="w-5 h-5" />
             {t("play_again")}
           </button>
         )}
       </div>
+
+      <ResultOverlay
+        show={showResult}
+        won={(result?.netChange ?? 0) > 0}
+        amount={Math.abs(result?.netChange ?? 0)}
+        multiplier={result?.multiplier}
+        onDismiss={() => setShowResult(false)}
+      />
     </GameLayout>
   );
 }

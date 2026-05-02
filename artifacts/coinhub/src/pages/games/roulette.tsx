@@ -5,6 +5,7 @@ import { useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStats
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { BetSelector } from "@/components/BetSelector";
+import { ResultOverlay } from "@/components/games/ResultOverlay";
 import { cn, fmtCoins } from "@/lib/utils";
 import { COIN } from "@/lib/coin";
 import confetti from "canvas-confetti";
@@ -28,6 +29,7 @@ export default function RouletteGame() {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [displayNumber, setDisplayNumber] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
   const { t } = useI18n();
@@ -36,6 +38,7 @@ export default function RouletteGame() {
     if (!betType || spinning || !user || bet > user.coins) return;
     setSpinning(true);
     setResult(null);
+    setShowResult(false);
     playClick();
     let ticks = 0;
     const interval = setInterval(() => { setDisplayNumber(Math.floor(Math.random() * 37)); if (++ticks >= 22) clearInterval(interval); }, 90);
@@ -51,8 +54,11 @@ export default function RouletteGame() {
       clearInterval(interval);
       setDisplayNumber(data.number);
       setResult(data);
-      if (data.netChange > 0) { playWin(); confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 }, colors: ["#f43f5e", "#fb7185"] }); }
-      else playLose();
+      setTimeout(() => {
+        setShowResult(true);
+        if (data.netChange > 0) { playWin(); confetti({ particleCount: 100, spread: 60, origin: { y: 0.5 }, colors: ["#f43f5e", "#fb7185"] }); }
+        else playLose();
+      }, 500);
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
@@ -65,16 +71,16 @@ export default function RouletteGame() {
   return (
     <GameLayout title={t("game_roulette_title")} emoji="🎯" accentColor={ACCENT}>
       <div
-        className="flex-1 flex flex-col px-4 pt-4 gap-3"
-        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+        className="flex-1 flex flex-col px-4 gap-3"
+        style={{ paddingTop: "16px", paddingBottom: "max(52px, env(safe-area-inset-bottom, 52px))" }}
       >
-        {/* Wheel — fills remaining space */}
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-4">
+        {/* Wheel */}
+        <div className="shrink-0 flex flex-col items-center justify-center gap-3" style={{ height: "clamp(180px, 28vh, 240px)" }}>
           <motion.div
             animate={spinning ? { rotate: 720 * 3 } : {}}
             transition={spinning ? { duration: 2.5, ease: [0.2, 0, 0.1, 1] } : { duration: 0 }}
             className="relative"
-            style={{ width: "min(200px, 55vw)", height: "min(200px, 55vw)" }}
+            style={{ width: "min(180px, 50vw)", height: "min(180px, 50vw)" }}
           >
             <div className="absolute inset-0 rounded-full border-4 border-white/10"
               style={{ boxShadow: `0 0 60px ${ACCENT}35, inset 0 0 50px rgba(0,0,0,0.6)` }} />
@@ -93,51 +99,23 @@ export default function RouletteGame() {
               </svg>
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div
-                key={displayNumber}
-                initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-black text-white shadow-xl"
-                style={{
-                  background: numColor === "red" ? "#dc2626" : numColor === "green" ? "#16a34a" : numColor === "black" ? "#374151" : "#1a1a2e",
-                  boxShadow: numColor === "red" ? "0 0 24px rgba(220,38,38,0.6)" : numColor === "green" ? "0 0 24px rgba(22,163,74,0.6)" : undefined,
-                }}
-              >
+              <motion.div key={displayNumber} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-black text-white"
+                style={{ background: numColor === "red" ? "#dc2626" : numColor === "green" ? "#16a34a" : numColor === "black" ? "#374151" : "#1a1a2e", boxShadow: numColor === "red" ? "0 0 24px rgba(220,38,38,0.6)" : numColor === "green" ? "0 0 24px rgba(22,163,74,0.6)" : undefined }}>
                 {displayNumber !== null ? displayNumber : "?"}
               </motion.div>
             </div>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-0 h-0"
               style={{ borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: "14px solid white", filter: "drop-shadow(0 0 4px rgba(255,255,255,0.9))" }} />
           </motion.div>
-
-          <AnimatePresence>
-            {result && (
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className={cn("px-8 py-2.5 rounded-2xl font-black text-lg uppercase tracking-wider border",
-                  result.netChange > 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "bg-red-500/20 text-red-400 border-red-500/40"
-                )}
-              >
-                {result.netChange > 0 ? `+${fmtCoins(result.netChange)}` : fmtCoins(result.netChange)} {COIN}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         {/* Bet type buttons */}
         <div className="shrink-0 grid grid-cols-3 gap-2">
           {BET_OPTIONS.map(({ id, label, color, glow, multiplier }) => (
-            <button
-              key={id}
-              onClick={() => { setBetType(id); playClick(); }}
+            <button key={id} onClick={() => { setBetType(id); playClick(); }}
               className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 font-black text-xs uppercase tracking-tight transition-all active:scale-[0.97] border-2"
-              style={{
-                background: betType === id ? `${color}25` : "rgba(255,255,255,0.03)",
-                borderColor: betType === id ? color : "rgba(255,255,255,0.08)",
-                color: betType === id ? color : "rgba(255,255,255,0.5)",
-                boxShadow: betType === id ? `0 0 20px ${glow}` : undefined,
-              }}
-            >
+              style={{ background: betType === id ? `${color}25` : "rgba(255,255,255,0.03)", borderColor: betType === id ? color : "rgba(255,255,255,0.08)", color: betType === id ? color : "rgba(255,255,255,0.5)", boxShadow: betType === id ? `0 0 20px ${glow}` : undefined }}>
               <div className="w-3.5 h-3.5 rounded-full" style={{ background: color }} />
               <span>{label}</span>
               <span className="text-[9px] opacity-60">{multiplier}</span>
@@ -145,10 +123,10 @@ export default function RouletteGame() {
           ))}
         </div>
 
-        {/* Number grid mini */}
+        {/* Number grid */}
         <div className="shrink-0 overflow-hidden rounded-xl border border-white/5" style={{ background: "rgba(255,255,255,0.03)" }}>
           <div className="grid" style={{ gridTemplateColumns: "repeat(13, 1fr)", gap: "1px" }}>
-            {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: 36 }, (_, i) => i + 1).map(n => (
               <div key={n} className={cn("aspect-square flex items-center justify-center text-[7px] font-bold", result?.number === n && "ring-1 ring-white")}
                 style={{ background: RED.has(n) ? "rgba(153,27,27,0.8)" : "rgba(31,41,55,0.8)" }}>{n}</div>
             ))}
@@ -163,19 +141,19 @@ export default function RouletteGame() {
         </div>
 
         {/* Spin button */}
-        <button
-          onClick={handleSpin}
-          disabled={spinning || !betType || !user || bet > (user?.coins ?? 0)}
+        <button onClick={handleSpin} disabled={spinning || !betType || !user || bet > (user?.coins ?? 0)}
           className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-35 active:scale-[0.98] transition-all"
-          style={{
-            background: !spinning && betType ? `linear-gradient(135deg, ${ACCENT}, #be123c)` : "rgba(255,255,255,0.07)",
-            boxShadow: !spinning && betType ? `0 0 36px ${ACCENT}55` : undefined,
-            color: !spinning && betType ? "#fff" : "rgba(255,255,255,0.3)",
-          }}
-        >
+          style={{ background: !spinning && betType ? `linear-gradient(135deg, ${ACCENT}, #be123c)` : "rgba(255,255,255,0.07)", boxShadow: !spinning && betType ? `0 0 36px ${ACCENT}55` : undefined, color: !spinning && betType ? "#fff" : "rgba(255,255,255,0.3)" }}>
           {spinning ? t("roulette_spinning") : t("roulette_spin_btn")}
         </button>
       </div>
+
+      <ResultOverlay
+        show={showResult}
+        won={(result?.netChange ?? 0) > 0}
+        amount={Math.abs(result?.netChange ?? 0)}
+        onDismiss={() => setShowResult(false)}
+      />
     </GameLayout>
   );
 }

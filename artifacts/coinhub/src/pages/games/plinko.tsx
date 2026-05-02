@@ -5,6 +5,7 @@ import { useGetMe, getGetMeQueryKey, getGetMyTransactionsQueryKey, getGetMyStats
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { BetSelector } from "@/components/BetSelector";
+import { ResultOverlay } from "@/components/games/ResultOverlay";
 import { cn, fmtCoins } from "@/lib/utils";
 import { COIN } from "@/lib/coin";
 import confetti from "canvas-confetti";
@@ -32,13 +33,14 @@ export default function PlinkoGame() {
   const [result, setResult] = useState<any>(null);
   const [ballPath, setBallPath] = useState<number[]>([]);
   const [ballRow, setBallRow] = useState(-1);
+  const [showResult, setShowResult] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
   const { t } = useI18n();
 
   const handleDrop = async () => {
     if (dropping || !user || bet > user.coins) return;
-    setDropping(true); setResult(null); setBallPath([]); setBallRow(-1); playClick();
+    setDropping(true); setResult(null); setBallPath([]); setBallRow(-1); setShowResult(false); playClick();
     try {
       const res = await fetch("/api/games/plinko", {
         method: "POST",
@@ -54,9 +56,13 @@ export default function PlinkoGame() {
         setBallRow(row++);
         if (row > ROWS) {
           clearInterval(interval);
-          setResult(data); setDropping(false);
-          if (data.netChange > 0) { playWin(); if (data.multiplier >= 5) confetti({ particleCount: 120, spread: 60, origin: { y: 0.6 }, colors: [ACCENT, "#67e8f9"] }); }
-          else playLose();
+          setResult(data);
+          setDropping(false);
+          setTimeout(() => {
+            setShowResult(true);
+            if (data.netChange > 0) { playWin(); if (data.multiplier >= 5) confetti({ particleCount: 120, spread: 60, origin: { y: 0.5 }, colors: [ACCENT, "#67e8f9"] }); }
+            else playLose();
+          }, 300);
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
           qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
           qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
@@ -77,29 +83,30 @@ export default function PlinkoGame() {
   return (
     <GameLayout title={t("game_plinko_title")} emoji="⬇️" accentColor={ACCENT}>
       <div
-        className="flex-1 flex flex-col px-4 pt-4 gap-3"
-        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+        className="flex-1 flex flex-col px-4 gap-3"
+        style={{ paddingTop: "16px", paddingBottom: "max(52px, env(safe-area-inset-bottom, 52px))" }}
       >
-        {/* Plinko board — fills remaining space */}
+        {/* Plinko board */}
         <div
-          className="flex-1 min-h-0 rounded-3xl border relative overflow-hidden"
-          style={{ background: "linear-gradient(180deg, #030812 0%, #060f1a 100%)", borderColor: `${ACCENT}30` }}
+          className="w-full rounded-3xl relative overflow-hidden shrink-0"
+          style={{
+            height: "clamp(190px, 30vh, 260px)",
+            background: "linear-gradient(180deg, #030812 0%, #060f1a 100%)",
+            border: `1px solid ${ACCENT}30`,
+          }}
         >
-          {/* Pegs */}
           {Array.from({ length: ROWS }, (_, row) => (
             <div key={row} className="absolute w-full flex justify-center" style={{ top: `${(row + 1) * (72 / (ROWS + 1))}%` }}>
               {Array.from({ length: row + 2 }, (_, col) => {
                 const spacing = 100 / (row + 3);
                 return (
                   <div key={col} className="absolute w-2.5 h-2.5 rounded-full"
-                    style={{ left: `${(col + 1) * spacing}%`, transform: "translateX(-50%)", background: ACCENT, boxShadow: `0 0 6px ${ACCENT}80`, opacity: 0.65 }}
-                  />
+                    style={{ left: `${(col + 1) * spacing}%`, transform: "translateX(-50%)", background: ACCENT, boxShadow: `0 0 6px ${ACCENT}80`, opacity: 0.65 }} />
                 );
               })}
             </div>
           ))}
 
-          {/* Ball */}
           <AnimatePresence>
             {dropping && (
               <motion.div
@@ -116,10 +123,9 @@ export default function PlinkoGame() {
             )}
           </AnimatePresence>
 
-          {/* Buckets */}
           <div className="grid absolute bottom-0 left-0 right-0 px-2 pb-2" style={{ gridTemplateColumns: `repeat(${payouts.length}, 1fr)`, gap: "3px" }}>
             {payouts.map((p, i) => (
-              <motion.div key={i} animate={result?.bucket === i ? { scale: [1, 1.18, 1] } : {}} transition={{ duration: 0.35 }}
+              <motion.div key={i} animate={result?.bucket === i ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.35 }}
                 className="h-9 rounded-lg flex items-center justify-center text-[10px] font-black border"
                 style={{ background: `${colors[i]}20`, borderColor: `${colors[i]}60`, color: colors[i], boxShadow: result?.bucket === i ? `0 0 18px ${colors[i]}70` : undefined }}>
                 {p}×
@@ -128,19 +134,7 @@ export default function PlinkoGame() {
           </div>
         </div>
 
-        {/* Result */}
-        <AnimatePresence>
-          {result && (
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className={cn("shrink-0 text-center py-3 rounded-2xl font-black text-base uppercase tracking-wider border",
-                result.netChange > 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "bg-red-500/20 text-red-400 border-red-500/40"
-              )}>
-              {result.multiplier}× · {result.netChange > 0 ? "+" : ""}{fmtCoins(result.netChange)} {COIN}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Risk */}
+        {/* Risk selector */}
         <div className="shrink-0 grid grid-cols-3 gap-2">
           {(["low", "medium", "high"] as const).map((r) => (
             <button key={r} onClick={() => { setRisk(r); playClick(); }}
@@ -156,20 +150,21 @@ export default function PlinkoGame() {
           <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
         </div>
 
-        {/* Drop button */}
-        <button
-          onClick={handleDrop}
-          disabled={dropping || !user || bet > (user?.coins ?? 0)}
+        {/* DROP button */}
+        <button onClick={handleDrop} disabled={dropping || !user || bet > (user?.coins ?? 0)}
           className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-35 active:scale-[0.98] transition-all"
-          style={{
-            background: !dropping ? `linear-gradient(135deg, ${ACCENT}, #0891b2)` : "rgba(255,255,255,0.07)",
-            boxShadow: !dropping ? `0 0 36px ${ACCENT}55` : undefined,
-            color: !dropping ? "#000" : "rgba(255,255,255,0.3)",
-          }}
-        >
+          style={{ background: !dropping ? `linear-gradient(135deg, ${ACCENT}, #0891b2)` : "rgba(255,255,255,0.07)", boxShadow: !dropping ? `0 0 36px ${ACCENT}55` : undefined, color: !dropping ? "#000" : "rgba(255,255,255,0.3)" }}>
           {dropping ? t("dropping") : t("drop_ball")}
         </button>
       </div>
+
+      <ResultOverlay
+        show={showResult}
+        won={(result?.netChange ?? 0) > 0}
+        amount={Math.abs(result?.netChange ?? 0)}
+        multiplier={result?.multiplier}
+        onDismiss={() => setShowResult(false)}
+      />
     </GameLayout>
   );
 }
