@@ -11,5 +11,6 @@ export interface PublicUser {
   publicId: string;
   username: string;
   avatarColor: string;
+  avatarEmoji?: string | null;
   isAdmin: boolean;
 }

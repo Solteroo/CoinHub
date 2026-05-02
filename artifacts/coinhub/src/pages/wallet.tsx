@@ -11,6 +11,7 @@ import {
 import { CoinCounter } from "@/components/ui/coin-counter";
 import { VipLevelBar } from "@/components/VipLevelBar";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
+import { COIN } from "@/lib/coin";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -80,7 +81,7 @@ export default function Wallet() {
               <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black mb-1">{t("total_balance")}</p>
               <div className="flex items-baseline justify-center gap-2">
                 <CoinCounter value={totalCoins} className="text-5xl font-black gold-text-gradient drop-shadow-[0_0_18px_rgba(212,175,55,0.5)]" />
-                <span className="text-xl font-black gold-text-gradient">TMT</span>
+                <span className="text-xl font-black gold-text-gradient">{COIN}</span>
               </div>
             </motion.div>
 
@@ -215,7 +216,7 @@ export default function Wallet() {
                       "font-black text-sm tabular-nums",
                       tx.amount > 0 ? "text-emerald-500" : "text-white/80",
                     )}>
-                      {tx.amount > 0 ? "+" : ""}{fmtCoins(tx.amount)} <span className="text-[9px] opacity-60">TMT</span>
+                      {tx.amount > 0 ? "+" : ""}{fmtCoins(tx.amount)} <span className="text-[9px] opacity-60">{COIN}</span>
                     </div>
                   </motion.div>
                 ))

@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, transactionsTable, notificationsTable } from "@workspace/db";
 import { and, desc, eq, gte, ilike, or, sql, sum } from "drizzle-orm";
+import { serializePublicUser } from "../lib/serializers";
 import {
   AdminLoginBody,
   AdminAdjustCoinsBody,
@@ -268,6 +269,19 @@ router.get("/admin/stats", requireAdmin, async (_req, res) => {
     totalTransactions: Number(txRow?.c ?? 0),
     coinsAddedToday: Number(todayAddedRow?.total ?? 0),
   });
+});
+
+router.get("/admin/owner", async (_req, res) => {
+  const [owner] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.isAdmin, 1))
+    .limit(1);
+  if (!owner) {
+    res.status(404).json({ error: "Owner not found" });
+    return;
+  }
+  res.json(serializePublicUser(owner));
 });
 
 export default router;

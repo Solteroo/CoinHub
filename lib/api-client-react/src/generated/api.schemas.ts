@@ -28,6 +28,8 @@ export interface User {
   email?: string | null;
   bio?: string | null;
   avatarColor: string;
+  avatarEmoji?: string | null;
+  birthday?: string | null;
   bonusReady: boolean;
   unreadNotifications: number;
   unreadDms: number;
@@ -206,6 +208,7 @@ export interface PublicUser {
   publicId: string;
   username: string;
   avatarColor: string;
+  avatarEmoji?: string | null;
   isAdmin: boolean;
 }
 

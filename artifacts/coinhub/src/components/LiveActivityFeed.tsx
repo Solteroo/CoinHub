@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn, fmtCoins } from "@/lib/utils";
+import { COIN } from "@/lib/coin";
 import { Zap } from "lucide-react";
 
 const NAMES = [
@@ -75,7 +76,7 @@ export function LiveActivityFeed({ title }: { title?: string }) {
                 "text-xs font-black tabular-nums shrink-0",
                 item.isWin ? "text-emerald-400" : "text-red-400/80",
               )}>
-                {item.isWin ? "+" : "−"}{fmtCoins(item.amount)} <span className="text-[9px] opacity-70">TMT</span>
+                {item.isWin ? "+" : "−"}{fmtCoins(item.amount)} <span className="text-[9px] opacity-70">{COIN}</span>
               </span>
             </motion.div>
           ))}

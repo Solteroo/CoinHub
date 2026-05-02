@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRightLeft, Loader2 } from "lucide-react";
 import { fmtCoins } from "@/lib/utils";
+import { COIN } from "@/lib/coin";
 import { useI18n } from "@/i18n";
 
 export default function Transfer() {
@@ -42,7 +43,7 @@ export default function Transfer() {
       { data: { recipientPublicId: pid, amount: numAmount, note: note.trim() || undefined } },
       {
         onSuccess: (data) => {
-          toast({ title: t("transfer_success"), description: `${data.amount} TMT → ${data.recipient.username}` });
+          toast({ title: t("transfer_success"), description: `${data.amount} © → ${data.recipient.username}` });
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
           qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
           setLocation("/wallet");
@@ -59,7 +60,7 @@ export default function Transfer() {
 
         <div className="bg-card border border-primary/20 rounded-3xl p-6 text-center gold-glow">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("balance_label")}</p>
-          <p className="text-3xl font-black gold-text-gradient mt-2 tabular-nums">{fmtCoins(me?.coins ?? 0)} <span className="text-sm">TMT</span></p>
+          <p className="text-3xl font-black gold-text-gradient mt-2 tabular-nums">{fmtCoins(me?.coins ?? 0)} <span className="text-sm">{COIN}</span></p>
         </div>
 
         <div className="space-y-2">
@@ -74,7 +75,7 @@ export default function Transfer() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("amount")} (TMT)</label>
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("amount")} (©)</label>
           <Input
             type="number"
             min={1}

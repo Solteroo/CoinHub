@@ -97,8 +97,8 @@ router.post("/auth/login", async (req, res) => {
   res.json({ user: serializeUser(user) });
 });
 
-router.post("/auth/logout", (req, res) => {
-  clearSession(req, res);
+router.post("/auth/logout", async (req, res) => {
+  await clearSession(req, res);
   res.json({ ok: true });
 });
 

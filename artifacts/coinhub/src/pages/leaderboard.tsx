@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
 import { fmtCoins, cn } from "@/lib/utils";
+import { COIN } from "@/lib/coin";
 import { Trophy, Crown } from "lucide-react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/i18n";
@@ -75,7 +76,7 @@ export default function Leaderboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-black text-primary tabular-nums text-sm">{fmtCoins(entry.coins)}</p>
-                    <p className="text-[8px] text-muted-foreground uppercase tracking-widest">TMT</p>
+                    <p className="text-[8px] text-muted-foreground uppercase tracking-widest">{COIN}</p>
                   </div>
                 </motion.div>
               </Link>

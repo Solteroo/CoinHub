@@ -68,7 +68,7 @@ export default function SlotGame() {
           } else if (result.multiplier >= 10) {
             confetti({ particleCount: 100, spread: 50, origin: { y: 0.6 } });
           }
-          toast({ title: result.label, description: `${result.won} TMT (${result.multiplier}x)` });
+          toast({ title: result.label, description: `${result.won} © (${result.multiplier}x)` });
         }
 
         setHistory(prev => [result, ...prev].slice(0, 5));

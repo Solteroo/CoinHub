@@ -362,6 +362,22 @@ export const translations = {
     withdraw_btn: "Вывести",
     jackpot_pool: "Джекпот Пул",
     live_feed_title: "Live Победы",
+
+    // ── Deposit ──
+    deposit_title: "Запрос на пополнение",
+    deposit_hint: "Напишите владельцу — он пополнит ваш счёт",
+    deposit_amount_ph: "Сумма (необязательно)",
+    deposit_msg_ph: "Ваше сообщение...",
+    deposit_send: "Отправить запрос",
+    deposit_sent: "Запрос отправлен!",
+
+    // ── Avatar & Birthday ──
+    choose_avatar: "Выбрать аватар",
+    avatar_men: "Мужские",
+    avatar_women: "Женские",
+    remove_avatar: "Убрать аватар",
+    birthday_label: "Дата рождения",
+    birthday_hint: "Для поздравлений от платформы",
   },
 
   en: {
@@ -688,6 +704,22 @@ export const translations = {
     withdraw_btn: "Withdraw",
     jackpot_pool: "Jackpot Pool",
     live_feed_title: "Live Wins",
+
+    // ── Deposit ──
+    deposit_title: "Deposit Request",
+    deposit_hint: "Write to the owner — they will top up your balance",
+    deposit_amount_ph: "Amount (optional)",
+    deposit_msg_ph: "Your message...",
+    deposit_send: "Send Request",
+    deposit_sent: "Request sent!",
+
+    // ── Avatar & Birthday ──
+    choose_avatar: "Choose Avatar",
+    avatar_men: "Male",
+    avatar_women: "Female",
+    remove_avatar: "Remove avatar",
+    birthday_label: "Birthday",
+    birthday_hint: "For birthday greetings from the platform",
   },
 
   tm: {
@@ -1014,6 +1046,22 @@ export const translations = {
     withdraw_btn: "Almak",
     jackpot_pool: "Jekpot Pul",
     live_feed_title: "Canlı Utuşlar",
+
+    // ── Deposit ──
+    deposit_title: "Goýum soragy",
+    deposit_hint: "Eýä ýazyň — ol hasabyňyzy doldurар",
+    deposit_amount_ph: "Mukdar (islege görä)",
+    deposit_msg_ph: "Hatyňyz...",
+    deposit_send: "Ibermek",
+    deposit_sent: "Sorаg iberildi!",
+
+    // ── Avatar & Birthday ──
+    choose_avatar: "Awatar saýlaň",
+    avatar_men: "Erkekler",
+    avatar_women: "Aýallar",
+    remove_avatar: "Awatary aýyr",
+    birthday_label: "Doglan güni",
+    birthday_hint: "Platformadan gutlag üçin",
   },
 
   uz: {
@@ -1340,6 +1388,22 @@ export const translations = {
     withdraw_btn: "Yechish",
     jackpot_pool: "Jekpot Jamg'armasi",
     live_feed_title: "Jonli Yutuqlar",
+
+    // ── Deposit ──
+    deposit_title: "To'ldirish so'rovi",
+    deposit_hint: "Egaga yozing — u hisobingizni to'ldiradi",
+    deposit_amount_ph: "Miqdor (ixtiyoriy)",
+    deposit_msg_ph: "Xabaringiz...",
+    deposit_send: "So'rov yuborish",
+    deposit_sent: "So'rov yuborildi!",
+
+    // ── Avatar & Birthday ──
+    choose_avatar: "Avatar tanlang",
+    avatar_men: "Erkaklar",
+    avatar_women: "Ayollar",
+    remove_avatar: "Avatarni o'chirish",
+    birthday_label: "Tug'ilgan kun",
+    birthday_hint: "Platforma tabriklaridan foydalanish uchun",
   },
 } as const;
 

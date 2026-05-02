@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { COIN } from "@/lib/coin";
 import { useRoute, Link, useLocation } from "wouter";
 import {
   useGetPublicProfile,
@@ -80,7 +81,7 @@ export default function PublicProfile() {
 
         <div className="grid grid-cols-3 gap-2">
           <Stat icon={Trophy} label={t("rank_label")} value={profile.rank ? `#${profile.rank}` : "—"} />
-          <Stat icon={ArrowRightLeft} label={t("balance_label")} value={fmtCoins(profile.coins)} suffix="TMT" />
+          <Stat icon={ArrowRightLeft} label={t("balance_label")} value={fmtCoins(profile.coins)} suffix={COIN} />
           <Stat icon={Gamepad2} label={t("games_played")} value={String(profile.gamesPlayed)} />
         </div>
 

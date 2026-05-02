@@ -18,6 +18,8 @@ export const usersTable = pgTable(
     email: text("email"),
     bio: text("bio"),
     avatarColor: text("avatar_color").notNull().default("#D4AF37"),
+    avatarEmoji: text("avatar_emoji"),
+    birthday: text("birthday"),
     chatBanUntil: timestamp("chat_ban_until", { withTimezone: true }),
     lastBonusAt: timestamp("last_bonus_at", { withTimezone: true }),
   },

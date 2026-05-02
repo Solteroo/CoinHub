@@ -1112,6 +1112,12 @@ components:
           nullable: true
         avatarColor:
           type: string
+        avatarEmoji:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          nullable: true
         bonusReady:
           type: boolean
         unreadNotifications:
@@ -1447,6 +1453,9 @@ components:
           type: string
         avatarColor:
           type: string
+        avatarEmoji:
+          type: string
+          nullable: true
         isAdmin:
           type: boolean
       required: [id, publicId, username, avatarColor, isAdmin]

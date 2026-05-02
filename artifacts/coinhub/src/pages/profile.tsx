@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { COIN } from "@/lib/coin";
 import {
   useGetMe,
   getGetMeQueryKey,
@@ -91,7 +92,7 @@ export default function Profile() {
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2">
           <StatCard icon={Trophy} label={t("rank_label")} value={stats?.rank ? `#${stats.rank}` : "—"} />
-          <StatCard icon={Coins} label={t("balance_label")} value={fmtCoins(user.coins)} suffix="TMT" />
+          <StatCard icon={Coins} label={t("balance_label")} value={fmtCoins(user.coins)} suffix={COIN} />
           <StatCard icon={Gamepad2} label={t("games_played")} value={stats?.gamesPlayed?.toString() ?? "0"} />
         </div>
 

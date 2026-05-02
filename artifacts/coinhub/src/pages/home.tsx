@@ -21,6 +21,7 @@ import {
   ChevronRight, MessageCircle, ArrowUpRight, ArrowDownLeft,
   Trophy, Gift, Newspaper, Loader2, ArrowRightLeft, Zap, Gamepad2, Rocket,
 } from "lucide-react";
+import { COIN } from "@/lib/coin";
 import { motion } from "framer-motion";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -33,7 +34,7 @@ function JackpotCounter() {
   }, []);
   return (
     <span className="shimmer-text text-2xl font-black tabular-nums tracking-tight">
-      {fmtCoins(value)} TMT
+      {fmtCoins(value)} {COIN}
     </span>
   );
 }
@@ -67,7 +68,7 @@ export default function Home() {
     claimBonus.mutate(undefined, {
       onSuccess: (res: any) => {
         playWin();
-        toast({ title: t("bonus_claimed"), description: `+${res.amount ?? 50} Bonus TMT` });
+        toast({ title: t("bonus_claimed"), description: `+${res.amount ?? 50} Bonus ${COIN}` });
         qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
         qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       },
@@ -160,7 +161,7 @@ export default function Home() {
               <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black mb-1">{t("your_balance")}</p>
               <div className="flex items-baseline justify-center gap-2">
                 <CoinCounter value={user.coins} className="text-5xl font-black gold-text-gradient drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
-                <span className="text-xl font-black gold-text-gradient">TMT</span>
+                <span className="text-xl font-black gold-text-gradient">{COIN}</span>
               </div>
             </motion.div>
 
@@ -329,7 +330,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className={cn("text-xs font-black tabular-nums", tx.amount > 0 ? "text-emerald-500" : "text-white/80")}>
-                      {tx.amount > 0 ? "+" : ""}{fmtCoins(tx.amount)} <span className="text-[9px] opacity-60">TMT</span>
+                      {tx.amount > 0 ? "+" : ""}{fmtCoins(tx.amount)} <span className="text-[9px] opacity-60">{COIN}</span>
                     </div>
                   </div>
                 ))}

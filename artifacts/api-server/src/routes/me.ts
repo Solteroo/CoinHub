@@ -96,13 +96,14 @@ router.patch("/me/profile", requireUser, async (req, res) => {
     username?: string;
     bio?: string;
     avatarColor?: string;
+    avatarEmoji?: string;
+    birthday?: string;
     email?: string;
   };
   const updates: Record<string, unknown> = {};
   if (typeof body.username === "string") {
     const uname = body.username.trim().replace(/[^a-zA-Z0-9_]/g, "").slice(0, 24);
     if (uname.length >= 3) {
-      // Check uniqueness
       const existing = await db
         .select({ id: usersTable.id })
         .from(usersTable)
@@ -121,6 +122,40 @@ router.patch("/me/profile", requireUser, async (req, res) => {
   }
   if (typeof body.avatarColor === "string" && /^#[0-9A-Fa-f]{6}$/.test(body.avatarColor)) {
     updates["avatarColor"] = body.avatarColor;
+  }
+  if (typeof body.avatarEmoji === "string") {
+    const emoji = body.avatarEmoji.trim().slice(0, 10);
+    updates["avatarEmoji"] = emoji.length > 0 ? emoji : null;
+  }
+  if (typeof body.birthday === "string") {
+    const bd = body.birthday.trim();
+    if (bd === "" || /^\d{4}-\d{2}-\d{2}$/.test(bd)) {
+      updates["birthday"] = bd.length > 0 ? bd : null;
+      if (bd.length > 0) {
+        // Notify owner if birthday is within 30 days
+        const [, monthStr, dayStr] = bd.split("-");
+        const month = parseInt(monthStr ?? "1", 10);
+        const day = parseInt(dayStr ?? "1", 10);
+        const now = new Date();
+        let bdDate = new Date(now.getFullYear(), month - 1, day);
+        if (bdDate <= now) bdDate = new Date(now.getFullYear() + 1, month - 1, day);
+        const daysUntil = Math.ceil((bdDate.getTime() - now.getTime()) / 86400000);
+        if (daysUntil <= 30) {
+          const [owner] = await db
+            .select({ id: usersTable.id })
+            .from(usersTable)
+            .where(eq(usersTable.isAdmin, 1))
+            .limit(1);
+          if (owner && owner.id !== user.id) {
+            await db.insert(notificationsTable).values({
+              userId: owner.id,
+              title: "🎂 Yakinda toglgan gün",
+              body: `${user.username}: ${daysUntil} gün soňra (${bd.slice(5)})`,
+            }).catch(() => {});
+          }
+        }
+      }
+    }
   }
   if (typeof body.email === "string") {
     const t = body.email.trim().slice(0, 120);

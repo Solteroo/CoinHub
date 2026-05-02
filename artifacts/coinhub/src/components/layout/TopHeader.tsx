@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Menu, Search, ChevronLeft, ChevronRight, X,
   Settings, Newspaper, Users, Bell, HelpCircle, Info,
-  LogOut, ShieldCheck, Plus,
+  LogOut, ShieldCheck, Plus, Send, Loader2,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/Avatar";
@@ -23,6 +23,8 @@ import { useI18n } from "@/i18n";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useDebounce } from "@/hooks/use-debounce";
 import { playClick } from "@/lib/sounds";
+import { useToast } from "@/hooks/use-toast";
+import { COIN } from "@/lib/coin";
 
 export function TopHeader() {
   const [location, setLocation] = useLocation();
@@ -30,12 +32,17 @@ export function TopHeader() {
   const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user } });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [depositMsg, setDepositMsg] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [sending, setSending] = useState(false);
   const [q, setQ] = useState("");
   const dq = useDebounce(q, 300);
   const { data: results = [] } = useSearchUsers({ q: dq }, { query: { enabled: dq.length >= 2, queryKey: ["searchUsers", dq] } });
   const logout = useLogoutUser();
   const qc = useQueryClient();
   const { t } = useI18n();
+  const { toast } = useToast();
 
   const showBack = location !== "/home" && location !== "/";
 
@@ -46,47 +53,64 @@ export function TopHeader() {
   };
 
   const goAndClose = (href: string) => { playClick(); setDrawerOpen(false); setLocation(href); };
-  const goDeposit = () => { if (owner) setLocation(`/dm/${owner.id}`); };
 
   const vipInfo = user ? getVipLevel(user.coins) : null;
 
+  const handleDeposit = async () => {
+    if (!owner) return;
+    setSending(true);
+    const text = [
+      depositAmount ? `${t("deposit_btn")}: ${depositAmount} ${COIN}` : t("deposit_btn"),
+      depositMsg,
+    ].filter(Boolean).join("\n");
+    try {
+      await fetch(`/api/dm/${owner.id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+        credentials: "include",
+      });
+      toast({ title: t("deposit_sent") });
+      setDepositOpen(false);
+      setDepositMsg("");
+      setDepositAmount("");
+      setLocation(`/dm/${owner.id}`);
+    } catch {
+      toast({ title: t("error"), variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-2xl border-b border-primary/10">
-      {/* ── Language strip ── */}
-      <div className="max-w-md mx-auto px-3 flex items-center justify-between border-b border-primary/5 h-9 bg-black/20">
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 select-none">
-          CoinHub
-        </span>
-        <LanguageSwitcher navbar />
-      </div>
-
-      {/* ── Main header row ── */}
-      <div className="max-w-md mx-auto h-13 px-3 flex items-center gap-2 py-2">
+      {/* ── Single main row ── */}
+      <div className="max-w-md mx-auto h-12 px-2 flex items-center gap-1">
         {/* Left: Back or Hamburger */}
         {showBack ? (
           <button
             onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/home")}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95 shrink-0"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
         ) : (
           <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
             <SheetTrigger asChild>
-              <button className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95">
+              <button className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95 shrink-0">
                 <Menu className="w-5 h-5" />
                 {(user?.unreadNotifications ?? 0) + (user?.unreadDms ?? 0) > 0 && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
                 )}
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[285px] bg-background border-primary/20 p-0">
-              <SheetHeader className="p-5 border-b border-primary/10 bg-card/30">
+            <SheetContent side="left" className="w-[280px] bg-background border-primary/20 p-0">
+              <SheetHeader className="p-4 border-b border-primary/10 bg-card/30">
                 <SheetTitle className="text-left">
                   {user ? (
                     <Link href="/profile">
                       <button onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 w-full">
-                        <Avatar username={user.username} color={user.avatarColor} size="md" />
+                        <Avatar username={user.username} color={user.avatarColor} emoji={user.avatarEmoji} size="md" />
                         <div className="text-left flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-sm font-bold text-white truncate">{user.username}</span>
@@ -105,7 +129,7 @@ export function TopHeader() {
                   )}
                 </SheetTitle>
               </SheetHeader>
-              <nav className="p-3 space-y-1">
+              <nav className="p-3 space-y-0.5">
                 <DrawerItem icon={Settings} label={t("settings")} onClick={() => goAndClose("/settings")} />
                 <DrawerItem icon={Bell} label={t("notifications")} onClick={() => goAndClose("/notifications")} badge={user?.unreadNotifications} />
                 <DrawerItem icon={Users} label={t("friends")} onClick={() => goAndClose("/friends")} />
@@ -123,41 +147,84 @@ export function TopHeader() {
         )}
 
         {/* Logo */}
-        <Link href="/home" className="flex items-center gap-1.5 shrink-0">
-          <Logo className="w-7 h-7" />
-          <span className="font-black text-sm tracking-tight gold-text-gradient">CoinHub</span>
-        </Link>
+        {!searchOpen && (
+          <Link href="/home" className="flex items-center gap-1 shrink-0 mr-1">
+            <Logo className="w-6 h-6" />
+            <span className="font-black text-xs tracking-tight gold-text-gradient hidden xs:block">CoinHub</span>
+          </Link>
+        )}
+
+        {/* Language switcher — inline, compact */}
+        {!searchOpen && (
+          <LanguageSwitcher navbar className="shrink-0" />
+        )}
 
         <div className="flex-1" />
 
         {/* Search */}
         <button
           onClick={() => setSearchOpen((v) => !v)}
-          className={cn("w-9 h-9 rounded-lg flex items-center justify-center active:scale-95",
+          className={cn("w-8 h-8 rounded-lg flex items-center justify-center active:scale-95 shrink-0",
             searchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}
         >
-          {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+          {searchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
         </button>
 
         {/* Deposit button */}
-        {user && (
-          <button
-            onClick={goDeposit}
-            className="h-8 px-2.5 rounded-lg bg-primary/15 border border-primary/30 flex items-center gap-1 text-primary hover:bg-primary/25 active:scale-95 transition-all"
-            title={t("deposit_btn")}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-black uppercase tracking-widest">{t("deposit_btn")}</span>
-          </button>
+        {user && !searchOpen && (
+          <Sheet open={depositOpen} onOpenChange={setDepositOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="h-7 px-2 rounded-lg bg-primary/15 border border-primary/30 flex items-center gap-1 text-primary hover:bg-primary/25 active:scale-95 transition-all shrink-0"
+              >
+                <Plus className="w-3 h-3" />
+                <span className="text-[9px] font-black uppercase tracking-widest">{t("deposit_btn")}</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="bg-background border-primary/20 rounded-t-3xl pb-8">
+              <SheetHeader className="pb-4">
+                <SheetTitle className="gold-text-gradient text-left">{t("deposit_title")}</SheetTitle>
+                <p className="text-xs text-muted-foreground text-left">{t("deposit_hint")}</p>
+              </SheetHeader>
+              <div className="space-y-3">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-black pointer-events-none">{COIN}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    placeholder={t("deposit_amount_ph")}
+                    className="w-full bg-card border border-primary/20 rounded-xl h-11 pl-8 pr-4 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <textarea
+                  value={depositMsg}
+                  onChange={(e) => setDepositMsg(e.target.value.slice(0, 200))}
+                  placeholder={t("deposit_msg_ph")}
+                  rows={3}
+                  className="w-full bg-card border border-primary/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                />
+                <button
+                  onClick={handleDeposit}
+                  disabled={sending || !owner}
+                  className="w-full h-12 rounded-xl gold-gradient text-black font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                >
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {t("deposit_send")}
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
         )}
 
-        {/* Profile avatar with VIP ring */}
-        {user && (
+        {/* Profile avatar */}
+        {user && !searchOpen && (
           <Link href="/profile">
-            <div className="relative active:scale-95">
+            <div className="relative active:scale-95 shrink-0">
               <div
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-black ring-2 ring-offset-1 ring-offset-background cursor-pointer",
+                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-black ring-2 ring-offset-1 ring-offset-background cursor-pointer overflow-hidden",
                   vipInfo?.tier === "vip"    ? "ring-yellow-400" :
                   vipInfo?.tier === "gold"   ? "ring-yellow-600" :
                   vipInfo?.tier === "silver" ? "ring-slate-400"  :
@@ -165,7 +232,11 @@ export function TopHeader() {
                 )}
                 style={{ background: user.avatarColor ?? "#D4AF37" }}
               >
-                {user.username[0]?.toUpperCase() ?? "?"}
+                {user.avatarEmoji ? (
+                  <span className="text-base leading-none">{user.avatarEmoji}</span>
+                ) : (
+                  <span className="text-white">{user.username[0]?.toUpperCase() ?? "?"}</span>
+                )}
               </div>
               {(user.unreadNotifications ?? 0) + (user.unreadDms ?? 0) > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-destructive ring-2 ring-background text-[7px] font-black text-white flex items-center justify-center">
@@ -180,14 +251,14 @@ export function TopHeader() {
         )}
       </div>
 
-      {/* ── Balance bar (logged in, search closed) ── */}
+      {/* ── Balance bar ── */}
       {user && !searchOpen && (
         <Link href="/wallet">
-          <div className="max-w-md mx-auto px-3 py-1.5 border-t border-primary/5 flex items-center justify-between bg-black/20 cursor-pointer hover:bg-black/30 transition-colors">
+          <div className="max-w-md mx-auto px-3 py-1 border-t border-primary/5 flex items-center justify-between bg-black/20 cursor-pointer hover:bg-black/30 transition-colors">
             <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{t("your_balance")}</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <span className="font-black text-primary text-sm tabular-nums">{fmtCoins(user.coins)}</span>
-              <span className="text-[9px] font-bold text-primary/70 uppercase tracking-widest">TMT</span>
+              <span className="text-[9px] font-black text-primary/80">{COIN}</span>
               <ChevronRight className="w-3 h-3 text-primary/50" />
             </div>
           </div>
@@ -205,7 +276,7 @@ export function TopHeader() {
             className="w-full bg-card border border-primary/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
           />
           {dq.length >= 2 && (
-            <div className="mt-2 max-h-72 overflow-y-auto space-y-1">
+            <div className="mt-2 max-h-60 overflow-y-auto space-y-1">
               {results.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-3">{t("search_no_results")}</p>
               )}
@@ -215,7 +286,7 @@ export function TopHeader() {
                     onClick={() => { setSearchOpen(false); setQ(""); }}
                     className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-card text-left active:scale-[0.99]"
                   >
-                    <Avatar username={u.username} color={u.avatarColor} size="sm" />
+                    <Avatar username={u.username} color={u.avatarColor} emoji={(u as any).avatarEmoji} size="sm" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <p className="text-sm font-bold text-white truncate">{u.username}</p>
@@ -247,7 +318,7 @@ function DrawerItem({ icon: Icon, label, onClick, badge, highlight, destructive 
         "text-white/90 hover:bg-card hover:text-primary",
       )}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-4 h-4 shrink-0" />
       <span className="flex-1 text-left">{label}</span>
       {badge ? (
         <span className="bg-destructive text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-5 text-center">

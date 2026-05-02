@@ -18,6 +18,8 @@ export function serializeUser(
     email: u.email ?? null,
     bio: u.bio ?? null,
     avatarColor: u.avatarColor,
+    avatarEmoji: u.avatarEmoji ?? null,
+    birthday: u.birthday ?? null,
     bonusReady: extras?.bonusReady ?? false,
     unreadNotifications: extras?.unreadNotifications ?? 0,
     unreadDms: extras?.unreadDms ?? 0,
@@ -30,6 +32,7 @@ export function serializePublicUser(u: UserRow) {
     publicId: u.publicId,
     username: u.username,
     avatarColor: u.avatarColor,
+    avatarEmoji: u.avatarEmoji ?? null,
     isAdmin: u.isAdmin === 1,
   };
 }
@@ -47,6 +50,8 @@ export function serializeAdminUser(u: UserRow) {
     realCoins,
     coins: bonusCoins + realCoins,
     avatarColor: u.avatarColor,
+    avatarEmoji: u.avatarEmoji ?? null,
+    birthday: u.birthday ?? null,
     isAdmin: u.isAdmin === 1,
     createdAt: u.createdAt.toISOString(),
   };
