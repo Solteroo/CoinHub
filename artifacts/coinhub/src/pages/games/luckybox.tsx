@@ -70,11 +70,23 @@ export default function LuckyBoxGame() {
     setResult(null);
   };
 
-  return (
-    <GameLayout title={t("game_luckybox_title")} emoji="📦" accentColor={ACCENT}>
-      <div className="flex flex-col items-center gap-5 px-4 pt-5">
+  const playAgainBtn = pickedIndex !== null && !playing && result ? (
+    <motion.button
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      onClick={reset}
+      className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-3 border border-white/10 text-white/60"
+      style={{ background: "rgba(255,255,255,0.05)" }}
+    >
+      <RefreshCw className="w-5 h-5" />
+      {t("play_again")}
+    </motion.button>
+  ) : undefined;
 
-        {/* Bet selector or result display */}
+  return (
+    <GameLayout title={t("game_luckybox_title")} emoji="📦" accentColor={ACCENT} bottomAction={playAgainBtn}>
+      <div className="flex flex-col items-center gap-5 px-4 pt-5 pb-4">
+
         <div className="w-full">
           {pickedIndex === null ? (
             <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} />
@@ -89,7 +101,6 @@ export default function LuckyBoxGame() {
           )}
         </div>
 
-        {/* Instruction */}
         {pickedIndex === null && (
           <motion.p
             animate={{ opacity: [0.5, 1, 0.5] }}
@@ -101,7 +112,6 @@ export default function LuckyBoxGame() {
           </motion.p>
         )}
 
-        {/* Result banner */}
         <AnimatePresence>
           {result && (
             <motion.div
@@ -126,7 +136,6 @@ export default function LuckyBoxGame() {
           )}
         </AnimatePresence>
 
-        {/* Box grid */}
         <div className="grid grid-cols-3 gap-3 w-full">
           {Array.from({ length: 9 }).map((_, i) => {
             const isPicked = pickedIndex === i;
@@ -199,23 +208,6 @@ export default function LuckyBoxGame() {
             );
           })}
         </div>
-
-        {/* Play again */}
-        <AnimatePresence>
-          {pickedIndex !== null && !playing && result && (
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              onClick={reset}
-              className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-3 border border-white/10 text-white/60"
-              style={{ background: "rgba(255,255,255,0.05)" }}
-            >
-              <RefreshCw className="w-5 h-5" />
-              {t("play_again")}
-            </motion.button>
-          )}
-        </AnimatePresence>
       </div>
     </GameLayout>
   );

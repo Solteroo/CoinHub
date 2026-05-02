@@ -49,45 +49,44 @@ export default function SlotGame() {
     setLastResult(null);
     playClick();
 
-    reelControls.forEach((ctrl, i) => {
-      ctrl.start({
-        y: [0, -80, -160, -80, 0],
-        transition: { duration: 0.15, repeat: Infinity, ease: "linear", delay: i * 0.05 },
-      });
-    });
+    const symbols = ["7", "★", "♦", "♥", "♣", "BAR"];
+    const spinAnimations = reelControls.map((ctrl, i) =>
+      new Promise<void>((resolve) => {
+        let count = 0;
+        const id = setInterval(() => {
+          setReels((prev) => {
+            const next = [...prev];
+            next[i] = symbols[Math.floor(Math.random() * symbols.length)] ?? "★";
+            return next;
+          });
+          count++;
+          if (count > 15 + i * 5) {
+            clearInterval(id);
+            resolve();
+          }
+        }, 60 + i * 20);
+      })
+    );
 
     playSlot.mutate({ data: { bet } }, {
       onSuccess: async (result) => {
-        await new Promise(r => setTimeout(r, 800));
-
-        for (let i = 0; i < REEL_COUNT; i++) {
-          await new Promise(r => setTimeout(r, 250));
-          await reelControls[i].start({
-            y: [null, -40, 0],
-            transition: { duration: 0.4, ease: [0.34, 1.56, 0.64, 1] },
-          });
-          setReels(prev => {
-            const next = [...prev];
-            next[i] = result.symbols[i];
-            return next;
-          });
-        }
-
+        await Promise.all(spinAnimations);
+        setReels(result.symbols);
         setLastResult(result);
+        setHistory((prev) => [result, ...prev].slice(0, 8));
 
         if (result.won > 0) {
           playWin();
-          if (result.outcome === "jackpot") {
-            confetti({ particleCount: 250, spread: 80, origin: { y: 0.5 }, colors: ["#7c3aed", "#D4AF37", "#ffffff"] });
-          } else if (result.multiplier >= 10) {
-            confetti({ particleCount: 120, spread: 60, origin: { y: 0.6 } });
+          if (result.multiplier >= 30) {
+            confetti({ particleCount: 300, spread: 100, origin: { y: 0.4 }, colors: [ACCENT, "#D4AF37", "#fff"] });
+          } else {
+            confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 }, colors: [ACCENT, "#a78bfa"] });
           }
-          toast({ title: `🎰 ${result.label}`, description: `+${result.won} ${COIN} · ${result.multiplier}×` });
+          toast({ title: result.label, description: `+${result.won} ${COIN}` });
         } else {
           playLose();
         }
 
-        setHistory(prev => [result, ...prev].slice(0, 5));
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
@@ -95,63 +94,54 @@ export default function SlotGame() {
         setSpinning(false);
       },
       onError: (err: any) => {
-        reelControls.forEach(c => c.stop());
         setSpinning(false);
         toast({ title: t("error"), description: err.message, variant: "destructive" });
       },
     });
   };
 
+  const spinBtn = (
+    <button
+      onClick={handleSpin}
+      disabled={spinning || !user || user.coins < bet}
+      className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
+      style={{
+        background: !spinning ? `linear-gradient(135deg, ${ACCENT}, #5b21b6)` : "rgba(255,255,255,0.07)",
+        boxShadow: !spinning ? `0 0 40px ${ACCENT}50, 0 4px 20px rgba(0,0,0,0.5)` : undefined,
+        color: !spinning ? "#fff" : "rgba(255,255,255,0.3)",
+      }}
+    >
+      {spinning ? `🎰 ${t("spinning")}` : `🎰 ${t("spin_btn")}`}
+    </button>
+  );
+
   return (
-    <GameLayout title={t("game_slot_title")} emoji="🎰" accentColor={ACCENT}>
-      <div className="flex flex-col items-center gap-5 px-4 pt-5">
+    <GameLayout title={t("game_slot_title")} emoji="🎰" accentColor={ACCENT} bottomAction={spinBtn}>
+      <div className="flex flex-col gap-5 px-4 pt-5 pb-4">
 
-        {/* Slot machine cabinet */}
         <div
-          className="w-full max-w-xs rounded-3xl overflow-hidden border-2 relative"
-          style={{
-            background: "linear-gradient(180deg, #1a0a2e 0%, #0d0618 100%)",
-            borderColor: `${ACCENT}60`,
-            boxShadow: `0 0 50px ${ACCENT}25, inset 0 0 30px rgba(0,0,0,0.5)`,
-          }}
+          className="w-full rounded-3xl border overflow-hidden"
+          style={{ background: "rgba(124,58,237,0.08)", borderColor: "rgba(124,58,237,0.3)" }}
         >
-          {/* Top shine */}
-          <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-10" />
-
-          {/* Reels area */}
-          <div className="flex gap-2 p-5 pb-4">
-            {[0, 1, 2].map((i) => (
-              <div
+          <div className="flex justify-center gap-3 p-6">
+            {Array.from({ length: REEL_COUNT }, (_, i) => (
+              <motion.div
                 key={i}
-                className="flex-1 aspect-square rounded-xl border relative overflow-hidden flex items-center justify-center"
+                animate={reelControls[i]}
+                className="w-24 h-24 rounded-2xl border-2 flex items-center justify-center text-5xl font-black shadow-2xl"
                 style={{
-                  background: "rgba(0,0,0,0.6)",
+                  background: "rgba(0,0,0,0.4)",
                   borderColor: spinning ? `${ACCENT}80` : "rgba(255,255,255,0.1)",
-                  boxShadow: spinning ? `0 0 20px ${ACCENT}40` : undefined,
+                  boxShadow: spinning ? `0 0 25px ${ACCENT}40` : undefined,
                 }}
               >
-                {/* Scanline overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30 pointer-events-none z-10" />
-                <motion.div
-                  animate={reelControls[i]}
-                  className="flex items-center justify-center w-full h-full"
-                >
-                  <span
-                    className="text-5xl font-black leading-none select-none"
-                    style={{
-                      color: SYMBOL_COLORS[reels[i]] ?? "#D4AF37",
-                      textShadow: `0 0 15px ${SYMBOL_COLORS[reels[i]] ?? "#D4AF37"}80`,
-                      filter: spinning ? "blur(1px)" : "none",
-                    }}
-                  >
-                    {reels[i]}
-                  </span>
-                </motion.div>
-              </div>
+                <span style={{ color: SYMBOL_COLORS[reels[i] ?? "★"] ?? "#D4AF37" }}>
+                  {reels[i]}
+                </span>
+              </motion.div>
             ))}
           </div>
 
-          {/* Win line indicator */}
           <div className="px-5 pb-5">
             <AnimatePresence>
               {lastResult && (
@@ -174,7 +164,6 @@ export default function SlotGame() {
           </div>
         </div>
 
-        {/* History strip */}
         {history.length > 0 && (
           <div className="w-full flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             {history.map((h, i) => (
@@ -199,7 +188,6 @@ export default function SlotGame() {
           </div>
         )}
 
-        {/* Paytable */}
         <div
           className="w-full rounded-2xl p-4 border"
           style={{ background: "rgba(124,58,237,0.06)", borderColor: "rgba(124,58,237,0.2)" }}
@@ -222,24 +210,9 @@ export default function SlotGame() {
           </div>
         </div>
 
-        {/* Bet selector */}
         <div className="w-full">
           <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} disabled={spinning} />
         </div>
-
-        {/* Spin button */}
-        <button
-          onClick={handleSpin}
-          disabled={spinning || !user || user.coins < bet}
-          className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
-          style={{
-            background: !spinning ? `linear-gradient(135deg, ${ACCENT}, #5b21b6)` : "rgba(255,255,255,0.07)",
-            boxShadow: !spinning ? `0 0 40px ${ACCENT}50, 0 4px 20px rgba(0,0,0,0.5)` : undefined,
-            color: !spinning ? "#fff" : "rgba(255,255,255,0.3)",
-          }}
-        >
-          {spinning ? `🎰 ${t("spinning")}` : `🎰 ${t("spin_btn")}`}
-        </button>
       </div>
     </GameLayout>
   );

@@ -87,13 +87,26 @@ export default function SpinGame() {
   const segmentCount = segments.length || 12;
   const segmentAngle = 360 / segmentCount;
 
-  return (
-    <GameLayout title={t("game_spin_title")} emoji="🎡" accentColor={ACCENT}>
-      <div className="flex flex-col items-center gap-6 px-4 pt-6">
+  const spinBtn = (
+    <button
+      onClick={handleSpin}
+      disabled={spinning || !user || user.coins < bet}
+      className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
+      style={{
+        background: !spinning ? `linear-gradient(135deg, ${ACCENT}, #2563eb)` : "rgba(255,255,255,0.07)",
+        boxShadow: !spinning ? `0 0 40px ${ACCENT}60, 0 4px 20px rgba(0,0,0,0.5)` : undefined,
+        color: !spinning ? "#fff" : "rgba(255,255,255,0.3)",
+      }}
+    >
+      {spinning ? `⟳ ${t("spinning")}` : t("spin_btn")}
+    </button>
+  );
 
-        {/* Wheel container */}
+  return (
+    <GameLayout title={t("game_spin_title")} emoji="🎡" accentColor={ACCENT} bottomAction={spinBtn}>
+      <div className="flex flex-col items-center gap-6 px-4 pt-6 pb-4">
+
         <div className="relative flex items-center justify-center">
-          {/* Outer glow ring */}
           <div
             className="absolute w-[310px] h-[310px] rounded-full"
             style={{
@@ -102,7 +115,6 @@ export default function SpinGame() {
             }}
           />
 
-          {/* Pointer */}
           <div className="absolute top-[-4px] left-1/2 -translate-x-1/2 z-30">
             <div
               className="w-0 h-0"
@@ -115,7 +127,6 @@ export default function SpinGame() {
             />
           </div>
 
-          {/* Wheel */}
           <motion.div
             animate={controls}
             className="w-72 h-72 rounded-full relative overflow-hidden border-4"
@@ -174,7 +185,6 @@ export default function SpinGame() {
           </motion.div>
         </div>
 
-        {/* Last result */}
         {lastResult && (
           <motion.div
             key={lastResult.won}
@@ -186,29 +196,13 @@ export default function SpinGame() {
           </motion.div>
         )}
 
-        {/* Max multiplier */}
         <div className="flex items-center gap-4 text-xs text-white/40 font-bold uppercase tracking-widest">
           <span>{t("max_multiplier_label")}: <span style={{ color: ACCENT }}>{Math.max(...(config?.wheelSegments?.map((s: any) => s.multiplier) || [0]))}×</span></span>
         </div>
 
-        {/* Bet selector */}
         <div className="w-full">
           <BetSelector value={bet} onChange={setBet} min={config?.minBet ?? 1} max={user?.coins ?? 0} disabled={spinning} />
         </div>
-
-        {/* Spin button */}
-        <button
-          onClick={handleSpin}
-          disabled={spinning || !user || user.coins < bet}
-          className="w-full h-18 py-5 rounded-2xl font-black text-xl uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all text-black"
-          style={{
-            background: !spinning ? `linear-gradient(135deg, ${ACCENT}, #2563eb)` : "rgba(255,255,255,0.07)",
-            boxShadow: !spinning ? `0 0 40px ${ACCENT}60, 0 4px 20px rgba(0,0,0,0.5)` : undefined,
-            color: !spinning ? "#fff" : "rgba(255,255,255,0.3)",
-          }}
-        >
-          {spinning ? `⟳ ${t("spinning")}` : t("spin_btn")}
-        </button>
       </div>
     </GameLayout>
   );

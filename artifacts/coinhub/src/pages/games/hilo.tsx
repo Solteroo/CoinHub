@@ -67,11 +67,55 @@ export default function HiLoGame() {
 
   const reset = () => { setResult(null); setFlipped(false); };
 
-  return (
-    <GameLayout title={t("game_hilo_title")} emoji="🃏" accentColor={ACCENT}>
-      <div className="flex flex-col gap-5 px-4 pt-5 items-center">
+  const actionBtns = !result ? (
+    <div className="grid grid-cols-2 gap-3">
+      <button
+        onClick={() => handlePlay("high")}
+        disabled={loading || !user || bet > (user?.coins ?? 0)}
+        className="h-16 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] disabled:opacity-40 transition-all border-2"
+        style={{
+          background: `${ACCENT}18`,
+          borderColor: `${ACCENT}60`,
+          color: ACCENT,
+          boxShadow: `0 0 25px ${ACCENT}30`,
+        }}
+      >
+        <ArrowUp className="w-5 h-5" />
+        HI (8–K) · 1.85×
+      </button>
+      <button
+        onClick={() => handlePlay("low")}
+        disabled={loading || !user || bet > (user?.coins ?? 0)}
+        className="h-16 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] disabled:opacity-40 transition-all border-2"
+        style={{
+          background: "rgba(96,165,250,0.15)",
+          borderColor: "rgba(96,165,250,0.5)",
+          color: "#60a5fa",
+          boxShadow: "0 0 25px rgba(96,165,250,0.2)",
+        }}
+      >
+        <ArrowDown className="w-5 h-5" />
+        LO (A–6) · 1.85×
+      </button>
+    </div>
+  ) : (
+    <button
+      onClick={reset}
+      className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] transition-all"
+      style={{
+        background: `linear-gradient(135deg, ${ACCENT}, #ca8a04)`,
+        boxShadow: `0 0 30px ${ACCENT}50`,
+        color: "#000",
+      }}
+    >
+      {t("play_again")}
+    </button>
+  );
 
-        {/* Card */}
+  return (
+    <GameLayout title={t("game_hilo_title")} emoji="🃏" accentColor={ACCENT} bottomAction={actionBtns}>
+      <div className="flex flex-col gap-5 px-4 pt-5 pb-4 items-center">
+
         <div className="w-full flex flex-col items-center gap-4">
           <motion.div
             animate={{ rotateY: flipped ? 0 : 90 }}
@@ -115,7 +159,6 @@ export default function HiLoGame() {
           </AnimatePresence>
         </div>
 
-        {/* Card value reference strip */}
         <div className="w-full flex gap-1 overflow-x-auto pb-1 no-scrollbar">
           {CARD_NAMES.slice(1).map((name, i) => {
             const val = i + 1;
@@ -142,57 +185,9 @@ export default function HiLoGame() {
           <span style={{ color: ACCENT }}>▲ HI: 8–K</span>
         </div>
 
-        {/* Bet selector */}
         <div className="w-full">
           <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
         </div>
-
-        {/* Play buttons */}
-        {!result ? (
-          <div className="grid grid-cols-2 gap-3 w-full">
-            <button
-              onClick={() => handlePlay("high")}
-              disabled={loading || !user || bet > (user?.coins ?? 0)}
-              className="h-20 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-2 active:scale-[0.97] disabled:opacity-40 transition-all border-2"
-              style={{
-                background: `${ACCENT}18`,
-                borderColor: `${ACCENT}60`,
-                color: ACCENT,
-                boxShadow: `0 0 25px ${ACCENT}30`,
-              }}
-            >
-              <ArrowUp className="w-6 h-6" />
-              HI (8–K)
-              <span className="text-[9px] font-bold opacity-70">1.85×</span>
-            </button>
-            <button
-              onClick={() => handlePlay("low")}
-              disabled={loading || !user || bet > (user?.coins ?? 0)}
-              className="h-20 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-2 active:scale-[0.97] disabled:opacity-40 transition-all border-2"
-              style={{
-                background: "rgba(96,165,250,0.15)",
-                borderColor: "rgba(96,165,250,0.5)",
-                color: "#60a5fa",
-                boxShadow: "0 0 25px rgba(96,165,250,0.2)",
-              }}
-            >
-              <ArrowDown className="w-6 h-6" />
-              LO (A–6)
-              <span className="text-[9px] font-bold opacity-70">1.85×</span>
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={reset}
-            className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] transition-all text-black"
-            style={{
-              background: `linear-gradient(135deg, ${ACCENT}, #ca8a04)`,
-              boxShadow: `0 0 30px ${ACCENT}50`,
-            }}
-          >
-            {t("play_again")}
-          </button>
-        )}
       </div>
     </GameLayout>
   );

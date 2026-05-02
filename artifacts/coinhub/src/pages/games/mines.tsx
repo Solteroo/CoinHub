@@ -83,11 +83,34 @@ export default function MinesGame() {
     return "default";
   };
 
-  return (
-    <GameLayout title={t("game_mines_title")} emoji="💣" accentColor={ACCENT}>
-      <div className="flex flex-col gap-4 px-4 pt-4">
+  const actionBtn = !submitted ? (
+    <button
+      onClick={handleSubmit}
+      disabled={picks.length === 0 || loading || !user || bet > (user?.coins ?? 0)}
+      className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
+      style={{
+        background: picks.length > 0 ? `linear-gradient(135deg, ${ACCENT}, #ea580c)` : "rgba(255,255,255,0.07)",
+        boxShadow: picks.length > 0 ? `0 0 30px ${ACCENT}50` : undefined,
+        color: picks.length > 0 ? "#000" : "rgba(255,255,255,0.3)",
+      }}
+    >
+      {loading ? t("checking") : picks.length === 0 ? t("choose_cell") : `${picks.length} ${t("cells_selected")} · ${currentMult}×`}
+    </button>
+  ) : (
+    <button
+      onClick={reset}
+      className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-3 text-white/70 border border-white/10"
+      style={{ background: "rgba(255,255,255,0.05)" }}
+    >
+      <RefreshCw className="w-5 h-5" />
+      {t("play_again")}
+    </button>
+  );
 
-        {/* Stats bar */}
+  return (
+    <GameLayout title={t("game_mines_title")} emoji="💣" accentColor={ACCENT} bottomAction={actionBtn}>
+      <div className="flex flex-col gap-4 px-4 pt-4 pb-4">
+
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-xl p-3 text-center" style={{ background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.2)" }}>
             <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">{t("picks") || "Picks"}</p>
@@ -105,7 +128,6 @@ export default function MinesGame() {
           </div>
         </div>
 
-        {/* Mine grid */}
         <div className="grid grid-cols-5 gap-2">
           {Array.from({ length: 25 }, (_, i) => {
             const state = getCellState(i);
@@ -156,33 +178,7 @@ export default function MinesGame() {
           })}
         </div>
 
-        {/* Bet selector */}
         <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} disabled={submitted} />
-
-        {/* Action button */}
-        {!submitted ? (
-          <button
-            onClick={handleSubmit}
-            disabled={picks.length === 0 || loading || !user || bet > (user?.coins ?? 0)}
-            className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
-            style={{
-              background: picks.length > 0 ? `linear-gradient(135deg, ${ACCENT}, #ea580c)` : "rgba(255,255,255,0.07)",
-              boxShadow: picks.length > 0 ? `0 0 30px ${ACCENT}50` : undefined,
-              color: picks.length > 0 ? "#000" : "rgba(255,255,255,0.3)",
-            }}
-          >
-            {loading ? t("checking") : picks.length === 0 ? t("choose_cell") : `${picks.length} ${t("cells_selected")} · ${currentMult}×`}
-          </button>
-        ) : (
-          <button
-            onClick={reset}
-            className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-3 text-white/70 border border-white/10"
-            style={{ background: "rgba(255,255,255,0.05)" }}
-          >
-            <RefreshCw className="w-5 h-5" />
-            {t("play_again")}
-          </button>
-        )}
       </div>
     </GameLayout>
   );

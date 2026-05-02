@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/i18n";
+import { AnimatePresence } from "framer-motion";
+import { AppSplash } from "@/components/AppSplash";
 import NotFound from "@/pages/not-found";
 
 import Splash from "@/pages/splash";
@@ -91,10 +94,26 @@ function Router() {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState<boolean>(() => {
+    try {
+      return !sessionStorage.getItem("coinhub_splash_done");
+    } catch {
+      return true;
+    }
+  });
+
+  const handleSplashDone = () => {
+    try { sessionStorage.setItem("coinhub_splash_done", "1"); } catch { /* ignore */ }
+    setShowSplash(false);
+  };
+
   return (
     <LanguageProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
+          <AnimatePresence>
+            {showSplash && <AppSplash key="app-splash" onDone={handleSplashDone} />}
+          </AnimatePresence>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Router />
           </WouterRouter>

@@ -79,22 +79,34 @@ export default function RouletteGame() {
 
   const numColor = displayNumber === null ? null : getColor(displayNumber);
 
-  return (
-    <GameLayout title={t("game_roulette_title")} emoji="🎯" accentColor={ACCENT}>
-      <div className="flex flex-col gap-5 px-4 pt-5">
+  const spinBtn = (
+    <button
+      onClick={handleSpin}
+      disabled={spinning || !betType || !user || bet > (user?.coins ?? 0)}
+      className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
+      style={{
+        background: !spinning && betType ? `linear-gradient(135deg, ${ACCENT}, #be123c)` : "rgba(255,255,255,0.07)",
+        boxShadow: !spinning && betType ? `0 0 30px ${ACCENT}50` : undefined,
+        color: !spinning && betType ? "#fff" : "rgba(255,255,255,0.3)",
+      }}
+    >
+      {spinning ? t("roulette_spinning") : t("roulette_spin_btn")}
+    </button>
+  );
 
-        {/* Roulette wheel visual */}
+  return (
+    <GameLayout title={t("game_roulette_title")} emoji="🎯" accentColor={ACCENT} bottomAction={spinBtn}>
+      <div className="flex flex-col gap-5 px-4 pt-5 pb-4">
+
         <div className="flex flex-col items-center gap-4">
           <motion.div
             animate={spinning ? { rotate: 720 * 3 } : {}}
             transition={spinning ? { duration: 2.5, ease: [0.2, 0, 0.1, 1] } : { duration: 0 }}
             className="relative w-44 h-44"
           >
-            {/* Outer ring */}
             <div className="absolute inset-0 rounded-full border-4 border-white/10"
               style={{ boxShadow: `0 0 40px ${ACCENT}30, inset 0 0 40px rgba(0,0,0,0.5)` }} />
 
-            {/* Colored segments preview */}
             <div className="absolute inset-2 rounded-full overflow-hidden">
               <svg viewBox="0 0 100 100" className="w-full h-full">
                 {Array.from({ length: 37 }, (_, i) => {
@@ -121,7 +133,6 @@ export default function RouletteGame() {
               </svg>
             </div>
 
-            {/* Center number */}
             <div className="absolute inset-0 flex items-center justify-center">
               <motion.div
                 key={displayNumber}
@@ -142,7 +153,6 @@ export default function RouletteGame() {
               </motion.div>
             </div>
 
-            {/* Pointer */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-0 h-0"
               style={{ borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: "14px solid white", filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }} />
           </motion.div>
@@ -165,7 +175,6 @@ export default function RouletteGame() {
           </AnimatePresence>
         </div>
 
-        {/* Bet type selection */}
         <div className="grid grid-cols-3 gap-2">
           {BET_OPTIONS.map(({ id, label, color, glow, multiplier }) => (
             <button
@@ -186,7 +195,6 @@ export default function RouletteGame() {
           ))}
         </div>
 
-        {/* Number grid (mini) */}
         <div className="w-full overflow-hidden rounded-xl border border-white/5" style={{ background: "rgba(255,255,255,0.03)" }}>
           <div className="grid" style={{ gridTemplateColumns: "repeat(13, 1fr)", gap: "1px" }}>
             {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => (
@@ -206,22 +214,7 @@ export default function RouletteGame() {
           </div>
         </div>
 
-        {/* Bet selector */}
         <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
-
-        {/* Spin button */}
-        <button
-          onClick={handleSpin}
-          disabled={spinning || !betType || !user || bet > (user?.coins ?? 0)}
-          className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
-          style={{
-            background: !spinning && betType ? `linear-gradient(135deg, ${ACCENT}, #be123c)` : "rgba(255,255,255,0.07)",
-            boxShadow: !spinning && betType ? `0 0 30px ${ACCENT}50` : undefined,
-            color: !spinning && betType ? "#fff" : "rgba(255,255,255,0.3)",
-          }}
-        >
-          {spinning ? t("roulette_spinning") : t("roulette_spin_btn")}
-        </button>
       </div>
     </GameLayout>
   );

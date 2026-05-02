@@ -11,6 +11,7 @@ interface GameLayoutProps {
   bgGlow?: string;
   backHref?: string;
   children: React.ReactNode;
+  bottomAction?: React.ReactNode;
   className?: string;
 }
 
@@ -21,23 +22,22 @@ export function GameLayout({
   bgGlow,
   backHref = "/games",
   children,
+  bottomAction,
   className,
 }: GameLayoutProps) {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
 
   return (
-    <div className="min-h-[100dvh] w-full flex justify-center" style={{ background: "#06060f" }}>
-      {/* Ambient glow */}
+    <div className="fixed inset-0 flex flex-col" style={{ background: "#06060f" }}>
       <div
-        className="fixed inset-0 pointer-events-none z-0"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{
           background: `radial-gradient(ellipse 70% 50% at 50% 20%, ${bgGlow ?? accentColor}18 0%, transparent 70%)`,
         }}
       />
 
-      <div className={cn("w-full max-w-md flex flex-col relative z-10 min-h-[100dvh]", className)}>
-        {/* Header */}
-        <div className="shrink-0 flex items-center justify-between px-4 pt-safe-top py-3 bg-black/40 backdrop-blur-xl border-b border-white/5">
+      <div className={cn("w-full h-full flex flex-col relative z-10 max-w-md mx-auto", className)}>
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-black/40 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: "max(12px, env(safe-area-inset-top, 12px))" }}>
           <Link href={backHref}>
             <button className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-all shrink-0">
               <ArrowLeft className="w-5 h-5" />
@@ -67,10 +67,22 @@ export function GameLayout({
           </div>
         </div>
 
-        {/* Game content */}
-        <div className="flex-1 flex flex-col overflow-y-auto pb-safe-bottom pb-4">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {children}
         </div>
+
+        {bottomAction && (
+          <div
+            className="shrink-0 px-4 pt-3 border-t border-white/5"
+            style={{
+              background: "rgba(6,6,15,0.95)",
+              backdropFilter: "blur(24px)",
+              paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))",
+            }}
+          >
+            {bottomAction}
+          </div>
+        )}
       </div>
     </div>
   );

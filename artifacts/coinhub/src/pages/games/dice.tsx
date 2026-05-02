@@ -67,11 +67,27 @@ export default function DiceGame() {
     }
   };
 
-  return (
-    <GameLayout title={t("game_dice_title")} emoji="🎲" accentColor={ACCENT}>
-      <div className="flex flex-col items-center gap-5 px-4 pt-6">
+  const rollBtn = (
+    <button
+      onClick={handleRoll}
+      disabled={rolling || !choice || !user || bet > (user?.coins ?? 0)}
+      className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
+      style={{
+        background: rolling || !choice
+          ? "rgba(255,255,255,0.1)"
+          : `linear-gradient(135deg, ${ACCENT}, #059669)`,
+        boxShadow: !rolling && choice ? `0 0 30px ${ACCENT}50` : undefined,
+        color: rolling || !choice ? "rgba(255,255,255,0.4)" : "#000",
+      }}
+    >
+      {rolling ? "⚀ ⚁ ⚂..." : choice ? `${choice === "high" ? "▲ " + t("dice_high") : "▼ " + t("dice_low")} — ${t("roll_btn") || "ROLL"}` : t("choose_side")}
+    </button>
+  );
 
-        {/* Dice Display */}
+  return (
+    <GameLayout title={t("game_dice_title")} emoji="🎲" accentColor={ACCENT} bottomAction={rollBtn}>
+      <div className="flex flex-col items-center gap-5 px-4 pt-6 pb-4">
+
         <div
           className="w-full rounded-3xl p-8 flex flex-col items-center gap-5 border"
           style={{ background: "rgba(16,185,129,0.05)", borderColor: "rgba(16,185,129,0.2)" }}
@@ -120,7 +136,6 @@ export default function DiceGame() {
           </AnimatePresence>
         </div>
 
-        {/* Choice buttons */}
         <div className="grid grid-cols-2 gap-3 w-full">
           <button
             onClick={() => { setChoice("high"); playClick(); }}
@@ -158,26 +173,9 @@ export default function DiceGame() {
           </button>
         </div>
 
-        {/* Bet selector */}
         <div className="w-full">
           <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
         </div>
-
-        {/* Roll button */}
-        <button
-          onClick={handleRoll}
-          disabled={rolling || !choice || !user || bet > (user?.coins ?? 0)}
-          className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all text-black"
-          style={{
-            background: rolling || !choice
-              ? "rgba(255,255,255,0.1)"
-              : `linear-gradient(135deg, ${ACCENT}, #059669)`,
-            boxShadow: !rolling && choice ? `0 0 30px ${ACCENT}50` : undefined,
-            color: rolling || !choice ? "rgba(255,255,255,0.4)" : "#000",
-          }}
-        >
-          {rolling ? "⚀ ⚁ ⚂..." : choice ? `${choice === "high" ? "▲ " + t("dice_high") : "▼ " + t("dice_low")} — ${t("roll_btn") || "ROLL"}` : t("choose_side")}
-        </button>
       </div>
     </GameLayout>
   );

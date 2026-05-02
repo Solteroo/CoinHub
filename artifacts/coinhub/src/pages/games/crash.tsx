@@ -101,11 +101,25 @@ export default function CrashGame() {
     setPlaying(false);
   };
 
-  return (
-    <GameLayout title={t("game_crash_title")} emoji="🚀" accentColor={ACCENT}>
-      <div className="flex flex-col gap-4 px-4 pt-4">
+  const startBtn = (
+    <button
+      onClick={handleStart}
+      disabled={playing || !user || user.coins < bet}
+      className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
+      style={{
+        background: !playing ? `linear-gradient(135deg, ${ACCENT}, #b91c1c)` : "rgba(255,255,255,0.07)",
+        boxShadow: !playing ? `0 0 40px ${ACCENT}40` : undefined,
+        color: !playing ? "#fff" : "rgba(255,255,255,0.3)",
+      }}
+    >
+      {playing ? `🚀 ${t("in_flight")}` : t("start_btn")}
+    </button>
+  );
 
-        {/* Crash visual */}
+  return (
+    <GameLayout title={t("game_crash_title")} emoji="🚀" accentColor={ACCENT} bottomAction={startBtn}>
+      <div className="flex flex-col gap-4 px-4 pt-4 pb-4">
+
         <div
           className="w-full rounded-3xl relative overflow-hidden border"
           style={{
@@ -115,7 +129,6 @@ export default function CrashGame() {
             boxShadow: status === "crashed" ? "0 0 30px rgba(239,68,68,0.2)" : status === "cashed" ? "0 0 30px rgba(52,211,153,0.2)" : undefined,
           }}
         >
-          {/* Grid lines */}
           <div
             className="absolute inset-0 opacity-10"
             style={{
@@ -124,7 +137,6 @@ export default function CrashGame() {
             }}
           />
 
-          {/* Multiplier display */}
           <div className="absolute inset-0 flex items-center justify-center">
             <motion.div
               key={status}
@@ -148,7 +160,6 @@ export default function CrashGame() {
             </motion.div>
           </div>
 
-          {/* Status label */}
           {(status === "cashed" || status === "crashed") && (
             <motion.div
               initial={{ y: 20, opacity: 0 }}
@@ -162,7 +173,6 @@ export default function CrashGame() {
             </motion.div>
           )}
 
-          {/* Rocket */}
           <motion.div
             className="absolute"
             style={{
@@ -192,7 +202,6 @@ export default function CrashGame() {
           </motion.div>
         </div>
 
-        {/* History */}
         {history.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             {history.map((h, i) => (
@@ -211,7 +220,6 @@ export default function CrashGame() {
           </div>
         )}
 
-        {/* Auto cashout */}
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">{t("auto_cashout")}</p>
           <div className="flex gap-2 flex-wrap">
@@ -243,19 +251,6 @@ export default function CrashGame() {
         </div>
 
         <BetSelector value={bet} onChange={setBet} min={10} max={user?.coins ?? 0} disabled={playing} />
-
-        <button
-          onClick={handleStart}
-          disabled={playing || !user || user.coins < bet}
-          className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
-          style={{
-            background: !playing ? `linear-gradient(135deg, ${ACCENT}, #b91c1c)` : "rgba(255,255,255,0.07)",
-            boxShadow: !playing ? `0 0 40px ${ACCENT}40` : undefined,
-            color: !playing ? "#fff" : "rgba(255,255,255,0.3)",
-          }}
-        >
-          {playing ? `🚀 ${t("in_flight")}` : t("start_btn")}
-        </button>
       </div>
     </GameLayout>
   );
