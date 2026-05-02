@@ -15,8 +15,8 @@ export const translations = {
     nav_wallet: "Кошелёк",
     nav_profile: "Профиль",
 
-    tagline: "Премиум TMT игры",
-    platform_desc: "Премиум виртуальное казино",
+    tagline: "Premium Coin Game",
+    platform_desc: "Premium Coin Game платформа",
     bonus_100: "Зарегистрируйтесь и получите 100 TMT бонус",
     has_account: "Уже есть аккаунт",
     create_account: "Создать аккаунт",
@@ -153,8 +153,8 @@ export const translations = {
     nav_wallet: "Wallet",
     nav_profile: "Profile",
 
-    tagline: "Premium TMT games",
-    platform_desc: "Premium virtual casino",
+    tagline: "Premium Coin Game",
+    platform_desc: "Premium Coin Game platform",
     bonus_100: "Sign up and get 100 TMT bonus",
     has_account: "I have an account",
     create_account: "Create account",
@@ -291,8 +291,8 @@ export const translations = {
     nav_wallet: "Gapjyk",
     nav_profile: "Profil",
 
-    tagline: "Premium TMT oýunlary",
-    platform_desc: "Premium wirtual kazino platformasy",
+    tagline: "Premium Coin Game",
+    platform_desc: "Premium Coin Game platformasy",
     bonus_100: "Agza bolup 100 TMT bonus alyň",
     has_account: "Hasabym bar",
     create_account: "Hasap döretmek",
@@ -429,8 +429,8 @@ export const translations = {
     nav_wallet: "Hamyon",
     nav_profile: "Profil",
 
-    tagline: "Premium TMT o'yinlari",
-    platform_desc: "Premium virtual kazino",
+    tagline: "Premium Coin Game",
+    platform_desc: "Premium Coin Game platformasi",
     bonus_100: "Ro'yxatdan o'ting va 100 TMT bonus oling",
     has_account: "Hisobim bor",
     create_account: "Hisob yaratish",
