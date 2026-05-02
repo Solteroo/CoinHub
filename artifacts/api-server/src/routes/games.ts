@@ -18,9 +18,11 @@ const router: IRouter = Router();
 interface PlayedRound {
   bet: number;
   multiplier: number;
-  won: number;          // gross win (paid back, includes bet on a 1× multiplier)
-  netChange: number;    // net change in balance (won - bet)
+  won: number;
+  netChange: number;
   newBalance: number;
+  newBonusCoins: number;
+  newRealCoins: number;
   reason: string;
   source: string;
 }
@@ -35,12 +37,38 @@ async function applyRound(
   const won = Math.floor(bet * multiplier);
   const netChange = won - bet;
 
-  // Single atomic balance update.
-  const [updated] = await db
-    .update(usersTable)
-    .set({ coins: sql`${usersTable.coins} + ${netChange}` })
-    .where(eq(usersTable.id, userId))
-    .returning({ coins: usersTable.coins });
+  // Atomic transaction: deduct from bonus first, then real; wins go to bonus
+  const [updated] = await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ coins: usersTable.coins, realCoins: usersTable.realCoins })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    const curBonus = current?.coins ?? 0;
+    const curReal = current?.realCoins ?? 0;
+
+    let newBonus = curBonus;
+    let newReal = curReal;
+
+    if (netChange >= 0) {
+      // Won — add to bonus coins
+      newBonus += netChange;
+    } else {
+      // Lost — deduct from bonus first, then real
+      const loss = -netChange;
+      const fromBonus = Math.min(loss, curBonus);
+      const fromReal = loss - fromBonus;
+      newBonus -= fromBonus;
+      newReal -= fromReal;
+    }
+
+    return tx
+      .update(usersTable)
+      .set({ coins: newBonus, realCoins: newReal })
+      .where(eq(usersTable.id, userId))
+      .returning({ coins: usersTable.coins, realCoins: usersTable.realCoins });
+  });
 
   await db.insert(transactionsTable).values({
     userId,
@@ -49,12 +77,17 @@ async function applyRound(
     source,
   });
 
+  const newBonusCoins = updated?.coins ?? 0;
+  const newRealCoins = updated?.realCoins ?? 0;
+
   return {
     bet,
     multiplier,
     won,
     netChange,
-    newBalance: updated?.coins ?? 0,
+    newBalance: newBonusCoins + newRealCoins,
+    newBonusCoins,
+    newRealCoins,
     reason,
     source,
   };
@@ -67,7 +100,8 @@ function validateBet(user: UserRow, bet: number): { ok: true } | { ok: false; st
   if (bet > MAX_BET) {
     return { ok: false, status: 400, error: `Iň ýokary goýum ${MAX_BET} teňňe` };
   }
-  if (user.coins < bet) {
+  const total = user.coins + user.realCoins;
+  if (total < bet) {
     return { ok: false, status: 400, error: "Teňňäňiz ýeterli däl" };
   }
   return { ok: true };
@@ -228,7 +262,6 @@ router.post("/games/luckybox", requireUser, async (req, res) => {
   });
 });
 
-// ─── DICE ─────────────────────────────────────────────────────────────────────
 router.post("/games/dice", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
   const parsed = PlayDiceBody.safeParse(req.body);
@@ -242,7 +275,6 @@ router.post("/games/dice", requireUser, async (req, res) => {
   res.json({ bet, dice1, dice2, total, choice, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: multiplier > 0 ? `${total} · +${round.netChange}` : `${total} · Şowsuz`, rarity: rarityFromMultiplier(multiplier) });
 });
 
-// ─── MINES ────────────────────────────────────────────────────────────────────
 router.post("/games/mines", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
   const parsed = PlayMinesBody.safeParse(req.body);
@@ -256,7 +288,6 @@ router.post("/games/mines", requireUser, async (req, res) => {
   res.json({ bet, minePositions, picks, safeHits, multiplier, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: hitMine ? "Mina! Şowsuz" : `${safeHits} howpsuz · +${round.netChange}`, rarity: rarityFromMultiplier(multiplier) });
 });
 
-// ─── ROULETTE ─────────────────────────────────────────────────────────────────
 router.post("/games/roulette", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
   const parsed = PlayRouletteBody.safeParse(req.body);
@@ -271,7 +302,6 @@ router.post("/games/roulette", requireUser, async (req, res) => {
   res.json({ bet, number, color, betType, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: multiplier > 0 ? `${number} ${colorLabel} · +${round.netChange}` : `${number} ${colorLabel} · Şowsuz`, rarity: rarityFromMultiplier(multiplier) });
 });
 
-// ─── PLINKO ───────────────────────────────────────────────────────────────────
 router.post("/games/plinko", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
   const parsed = PlayPlinkoBody.safeParse(req.body);
@@ -284,7 +314,6 @@ router.post("/games/plinko", requireUser, async (req, res) => {
   res.json({ bet, bucket, risk, multiplier, path, won: round.won, netChange: round.netChange, newBalance: round.newBalance, label: multiplier > 0 ? `${multiplier}× · +${round.netChange}` : "Şowsuz", rarity: rarityFromMultiplier(multiplier) });
 });
 
-// ─── HI-LO ────────────────────────────────────────────────────────────────────
 router.post("/games/hilo", requireUser, async (req, res) => {
   const user = (req as Request & { user: UserRow }).user;
   const parsed = PlayHiLoBody.safeParse(req.body);

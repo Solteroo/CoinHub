@@ -14,7 +14,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { CoinCounter } from "@/components/ui/coin-counter";
-import { ChevronRight, MessageCircle, ArrowUpRight, ArrowDownLeft, Trophy, Rocket, Disc, Package, LayoutGrid, Gift, Newspaper, Crown, Loader2 } from "lucide-react";
+import { ChevronRight, MessageCircle, ArrowUpRight, ArrowDownLeft, Trophy, Rocket, Disc, Package, LayoutGrid, Gift, Newspaper, Loader2, Coins, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
 
@@ -38,11 +38,13 @@ export default function Home() {
 
   const recent = transactions.slice(0, 5);
   const latestNews = news.slice(0, 1);
+  const bonusCoins = user.bonusCoins ?? 0;
+  const realCoins = user.realCoins ?? 0;
 
   const handleClaimBonus = () => {
     claimBonus.mutate(undefined, {
       onSuccess: (res: any) => {
-        toast({ title: "Bonus alyndy", description: `+${res.amount ?? 50} TMT` });
+        toast({ title: "Bonus alyndy", description: `+${res.amount ?? 50} Bonus TMT` });
         qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
         qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       },
@@ -54,13 +56,12 @@ export default function Home() {
 
   const goAdmin = () => {
     if (owner) setLocation(`/dm/${owner.id}`);
-    else setLocation("/vip");
   };
 
   return (
     <Layout>
       <div className="p-4 space-y-5 pb-24">
-        {/* Balance Card */}
+        {/* Balance Card — shows both coin types */}
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -79,6 +80,24 @@ export default function Home() {
               <span className="font-mono">#{user.publicId}</span>
             </div>
           </div>
+
+          {/* Dual-currency split row */}
+          <div className="mt-4 grid grid-cols-2 gap-2 relative z-10">
+            <div className="bg-background/50 rounded-xl px-3 py-2 border border-yellow-500/25 flex items-center gap-2">
+              <Coins className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+              <div className="text-left min-w-0">
+                <p className="text-[9px] font-bold text-yellow-400/80 uppercase tracking-widest">Real</p>
+                <p className="text-sm font-black text-yellow-400 tabular-nums truncate">{fmtCoins(realCoins)}</p>
+              </div>
+            </div>
+            <div className="bg-background/50 rounded-xl px-3 py-2 border border-primary/25 flex items-center gap-2">
+              <Star className="w-3.5 h-3.5 text-primary shrink-0" />
+              <div className="text-left min-w-0">
+                <p className="text-[9px] font-bold text-primary/80 uppercase tracking-widest">Bonus</p>
+                <p className="text-sm font-black text-primary tabular-nums truncate">{fmtCoins(bonusCoins)}</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Bonus Banner */}
@@ -95,13 +114,13 @@ export default function Home() {
             </div>
             <div className="flex-1 text-left">
               <p className="font-black text-white uppercase text-sm tracking-tight">Bonus taýýar</p>
-              <p className="text-[11px] text-white/80">Basyň we 50 TMT alyň</p>
+              <p className="text-[11px] text-white/80">Basyň we +50 Bonus TMT alyň</p>
             </div>
             <ChevronRight className="w-5 h-5 text-primary" />
           </motion.button>
         )}
 
-        {/* Support Banner: Tennaniz azaldymy */}
+        {/* Support Banner */}
         <motion.button
           initial={{ scale: 0.97, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -113,8 +132,8 @@ export default function Home() {
             <MessageCircle className="w-5 h-5" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-bold text-white text-sm">Teňňäňiz azaldymy?</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Admin bilen göni habarlaşyň</p>
+            <p className="font-bold text-white text-sm">Real Coin almak isleýärsiňizmi?</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Owner bilen göni habarlaşyň</p>
           </div>
           <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Habar</span>
         </motion.button>
@@ -132,7 +151,7 @@ export default function Home() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Tazelik</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Täzelik</p>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{fmtDateShort(latestNews[0].createdAt)}</span>
                 </div>
                 <p className="text-sm font-bold text-white truncate">{latestNews[0].title}</p>
@@ -159,23 +178,17 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Leaderboard + VIP shortcut */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/leaderboard">
-            <motion.div whileTap={{ scale: 0.98 }} className="bg-card border border-primary/20 rounded-2xl p-4 flex flex-col items-center text-center gold-glow gap-1">
-              <Trophy className="w-6 h-6 text-primary" />
-              <p className="text-xs font-black text-white uppercase tracking-tight mt-1">Lider</p>
+        {/* Leaderboard shortcut */}
+        <Link href="/leaderboard">
+          <motion.div whileTap={{ scale: 0.98 }} className="bg-card border border-primary/20 rounded-2xl p-4 flex items-center gap-4 gold-glow">
+            <Trophy className="w-6 h-6 text-primary" />
+            <div>
+              <p className="text-xs font-black text-white uppercase tracking-tight">Liderler</p>
               <p className="text-[10px] text-muted-foreground uppercase">Iň gowular</p>
-            </motion.div>
-          </Link>
-          <Link href="/vip">
-            <motion.div whileTap={{ scale: 0.98 }} className="bg-gradient-to-br from-primary/15 to-card border border-primary/30 rounded-2xl p-4 flex flex-col items-center text-center gold-glow gap-1">
-              <Crown className="w-6 h-6 text-primary" />
-              <p className="text-xs font-black text-white uppercase tracking-tight mt-1">VIP</p>
-              <p className="text-[10px] text-muted-foreground uppercase">Premium</p>
-            </motion.div>
-          </Link>
-        </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-primary ml-auto" />
+          </motion.div>
+        </Link>
 
         {/* Recent Activity */}
         <div className="space-y-2">
@@ -219,9 +232,9 @@ function translateReason(source: string) {
     game_spin: "Bagt çarhy",
     game_luckybox: "Bagt gutusy",
     game_crash: "Bagt uçuşy",
-    admin_add: "Admin goşdy",
-    admin_remove: "Admin aýyrdy",
-    bonus: "Günlük bonus",
+    admin_add: "Owner goşdy",
+    admin_remove: "Owner aýyrdy",
+    bonus: "3 günlük Bonus",
     transfer_in: "TMT geldi",
     transfer_out: "TMT iberildi",
     register_bonus: "Hoşgeldiň bonus",

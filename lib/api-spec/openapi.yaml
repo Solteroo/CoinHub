@@ -1013,6 +1013,9 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 200
+                coinType:
+                  type: string
+                  description: "real | bonus (default: bonus)"
               required: [amount, reason]
       responses:
         "200":
@@ -1089,6 +1092,13 @@ components:
           type: string
         coins:
           type: integer
+          description: Total balance (bonusCoins + realCoins)
+        bonusCoins:
+          type: integer
+          description: Demo/bonus coins from 3-day claim or owner gift
+        realCoins:
+          type: integer
+          description: Real coins given only by owner
         createdAt:
           type: string
         isAdmin:
@@ -1107,7 +1117,7 @@ components:
           type: integer
         unreadDms:
           type: integer
-      required: [id, publicId, username, coins, createdAt, isAdmin, avatarColor, bonusReady, unreadNotifications, unreadDms]
+      required: [id, publicId, username, coins, bonusCoins, realCoins, createdAt, isAdmin, avatarColor, bonusReady, unreadNotifications, unreadDms]
 
     Transaction:
       type: object
@@ -1626,13 +1636,18 @@ components:
           nullable: true
         coins:
           type: integer
+          description: Total balance (bonusCoins + realCoins)
+        bonusCoins:
+          type: integer
+        realCoins:
+          type: integer
         avatarColor:
           type: string
         isAdmin:
           type: boolean
         createdAt:
           type: string
-      required: [id, publicId, username, coins, avatarColor, isAdmin, createdAt]
+      required: [id, publicId, username, coins, bonusCoins, realCoins, avatarColor, isAdmin, createdAt]
 
     AdminUserDetail:
       type: object

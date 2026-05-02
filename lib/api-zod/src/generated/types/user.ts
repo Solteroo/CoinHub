@@ -10,7 +10,12 @@ export interface User {
   id: string;
   publicId: string;
   username: string;
+  /** Total balance (bonusCoins + realCoins) */
   coins: number;
+  /** Demo/bonus coins from 3-day claim or owner gift */
+  bonusCoins: number;
+  /** Real coins given only by owner */
+  realCoins: number;
   createdAt: string;
   isAdmin: boolean;
   email?: string | null;

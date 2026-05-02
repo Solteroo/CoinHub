@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { CoinCounter } from "@/components/ui/coin-counter";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
-import { ArrowDownLeft, ArrowUpRight, ArrowRightLeft, MessageCircle, Crown, AlertCircle } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowRightLeft, MessageCircle, AlertCircle, Coins, Star } from "lucide-react";
 import { useState } from "react";
 
 export default function Wallet() {
@@ -28,19 +28,44 @@ export default function Wallet() {
 
   const goAdmin = () => {
     if (owner) setLocation(`/dm/${owner.id}`);
-    else setLocation("/vip");
   };
+
+  const bonusCoins = user?.bonusCoins ?? 0;
+  const realCoins = user?.realCoins ?? 0;
+  const totalCoins = user?.coins ?? 0;
 
   return (
     <Layout>
       <div className="p-4 space-y-5 pb-24">
-        {/* Balance card */}
-        <div className="bg-card border border-primary/20 rounded-3xl p-7 text-center relative overflow-hidden gold-glow shadow-xl">
+        {/* Total Balance Card */}
+        <div className="bg-card border border-primary/20 rounded-3xl p-6 text-center relative overflow-hidden gold-glow shadow-xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] rounded-full pointer-events-none" />
           <p className="text-[10px] text-primary/80 uppercase tracking-[0.25em] font-black mb-2 relative z-10">Jemi balans</p>
           <div className="flex items-baseline gap-2 justify-center relative z-10">
-            <CoinCounter value={user?.coins || 0} className="text-5xl font-black gold-text-gradient" />
+            <CoinCounter value={totalCoins} className="text-5xl font-black gold-text-gradient" />
             <span className="text-xl font-black gold-text-gradient">TMT</span>
+          </div>
+
+          {/* Dual coin split */}
+          <div className="mt-4 grid grid-cols-2 gap-3 relative z-10">
+            {/* Real Coins */}
+            <div className="bg-background/60 rounded-2xl p-3 border border-yellow-500/30">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Coins className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-yellow-400">Real</span>
+              </div>
+              <p className="text-2xl font-black text-yellow-400 tabular-nums">{fmtCoins(realCoins)}</p>
+              <p className="text-[9px] text-yellow-400/60 font-bold uppercase tracking-wider mt-0.5">Owner berdi</p>
+            </div>
+            {/* Bonus Coins */}
+            <div className="bg-background/60 rounded-2xl p-3 border border-primary/30">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Star className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Bonus</span>
+              </div>
+              <p className="text-2xl font-black text-primary tabular-nums">{fmtCoins(bonusCoins)}</p>
+              <p className="text-[9px] text-primary/60 font-bold uppercase tracking-wider mt-0.5">3 günlük demo</p>
+            </div>
           </div>
         </div>
 
@@ -54,36 +79,31 @@ export default function Wallet() {
           </Link>
           <button onClick={goAdmin} className="w-full h-14 rounded-2xl bg-card border border-primary/30 text-primary font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 active:scale-[0.98] hover:bg-primary/10">
             <MessageCircle className="w-4 h-4" />
-            Admin
+            Owner
           </button>
         </div>
 
-        {/* Tennaniz azaldymy banner */}
+        {/* Real coins info banner */}
+        <div className="bg-gradient-to-r from-yellow-500/10 via-card to-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center shrink-0">
+            <Coins className="w-5 h-5" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-black text-yellow-400 text-sm uppercase tracking-tight">Real Coin</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Diňe owner berip bilýär. Oýunlarda ulanylar (bonus gutarandan soň).</p>
+          </div>
+        </div>
+
+        {/* Support banner */}
         <button onClick={goAdmin} className="w-full bg-gradient-to-r from-primary/15 via-card to-primary/15 border border-primary/40 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.99] gold-glow">
           <div className="w-10 h-10 rounded-xl bg-primary text-black flex items-center justify-center shrink-0">
             <AlertCircle className="w-5 h-5" />
           </div>
           <div className="flex-1 text-left">
             <p className="font-black text-white text-sm uppercase tracking-tight">Teňňäňiz azaldymy?</p>
-            <p className="text-[11px] text-muted-foreground">Admin bilen göni habarlaşyň, çözeris</p>
+            <p className="text-[11px] text-muted-foreground">Owner bilen göni habarlaşyň, çözeris</p>
           </div>
         </button>
-
-        {/* VIP card */}
-        <Link href="/vip">
-          <div className="bg-card border border-primary/30 rounded-2xl p-5 flex items-center gap-4 active:scale-[0.99] gold-glow relative overflow-hidden">
-            <div className="absolute -right-4 -bottom-4 opacity-10">
-              <Crown className="w-24 h-24 text-primary" />
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-primary text-black flex items-center justify-center shrink-0 shadow-lg">
-              <Crown className="w-6 h-6" />
-            </div>
-            <div className="flex-1 relative">
-              <p className="font-black text-white text-sm uppercase tracking-tight">VIP sargyt</p>
-              <p className="text-[11px] text-muted-foreground">Premium mümkinçilikler we goşmaça TMT</p>
-            </div>
-          </div>
-        </Link>
 
         {/* Transactions */}
         <div>
@@ -147,9 +167,9 @@ function translateReason(source: string) {
     game_spin: "Bagt çarhy",
     game_luckybox: "Bagt gutusy",
     game_crash: "Bagt uçuşy",
-    admin_add: "Admin goşdy",
-    admin_remove: "Admin aýyrdy",
-    bonus: "Günlük bonus",
+    admin_add: "Owner goşdy",
+    admin_remove: "Owner aýyrdy",
+    bonus: "3 günlük Bonus",
     transfer_in: "TMT geldi",
     transfer_out: "TMT iberildi",
     register_bonus: "Hoşgeldiň bonus",

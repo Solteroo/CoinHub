@@ -17,7 +17,12 @@ export interface User {
   id: string;
   publicId: string;
   username: string;
+  /** Total balance (bonusCoins + realCoins) */
   coins: number;
+  /** Demo/bonus coins from 3-day claim or owner gift */
+  bonusCoins: number;
+  /** Real coins given only by owner */
+  realCoins: number;
   createdAt: string;
   isAdmin: boolean;
   email?: string | null;
@@ -295,7 +300,10 @@ export interface AdminUser {
   username: string;
   email?: string | null;
   passwordHash?: string | null;
+  /** Total balance (bonusCoins + realCoins) */
   coins: number;
+  bonusCoins: number;
+  realCoins: number;
   avatarColor: string;
   isAdmin: boolean;
   createdAt: string;
@@ -513,6 +521,8 @@ export type AdminAdjustCoinsBody = {
    * @maxLength 200
    */
   reason: string;
+  /** real | bonus (default: bonus) */
+  coinType?: string;
 };
 
 export type AdminListTransactionsParams = {

@@ -13,4 +13,6 @@ export type AdminAdjustCoinsBody = {
    * @maxLength 200
    */
   reason: string;
+  /** real | bonus (default: bonus) */
+  coinType?: string;
 };

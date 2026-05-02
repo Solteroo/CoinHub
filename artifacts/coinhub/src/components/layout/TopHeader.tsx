@@ -7,7 +7,7 @@ import {
   useLogoutUser,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Coins, Globe } from "lucide-react";
+import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Coins, Globe, Star } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
@@ -140,9 +140,18 @@ export function TopHeader() {
 
         {user && (
           <Link href="/wallet">
-            <div className="flex items-center gap-1.5 bg-card border border-primary/20 px-3 py-1.5 rounded-full gold-glow active:scale-95">
-              <Coins className="w-3.5 h-3.5 text-primary" />
-              <span className="font-black text-primary text-sm tabular-nums">{fmtCoins(user.coins)}</span>
+            <div className="flex items-center gap-1 bg-card border border-primary/20 px-2.5 py-1.5 rounded-full gold-glow active:scale-95">
+              {/* Real coin indicator */}
+              {(user.realCoins ?? 0) > 0 && (
+                <>
+                  <Coins className="w-3 h-3 text-yellow-400" />
+                  <span className="font-black text-yellow-400 text-xs tabular-nums">{fmtCoins(user.realCoins ?? 0)}</span>
+                  <span className="text-muted-foreground/40 text-[9px] font-bold">|</span>
+                </>
+              )}
+              {/* Bonus coin indicator */}
+              <Star className="w-3 h-3 text-primary" />
+              <span className="font-black text-primary text-xs tabular-nums">{fmtCoins(user.bonusCoins ?? user.coins)}</span>
               <span className="text-[9px] font-bold text-primary/70 tracking-widest">TMT</span>
             </div>
           </Link>

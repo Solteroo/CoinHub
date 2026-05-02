@@ -4,11 +4,15 @@ export function serializeUser(
   u: UserRow,
   extras?: { bonusReady?: boolean; unreadNotifications?: number; unreadDms?: number },
 ) {
+  const bonusCoins = u.coins;
+  const realCoins = u.realCoins;
   return {
     id: u.id,
     publicId: u.publicId,
     username: u.username,
-    coins: u.coins,
+    bonusCoins,
+    realCoins,
+    coins: bonusCoins + realCoins,
     createdAt: u.createdAt.toISOString(),
     isAdmin: u.isAdmin === 1,
     email: u.email ?? null,
@@ -31,13 +35,17 @@ export function serializePublicUser(u: UserRow) {
 }
 
 export function serializeAdminUser(u: UserRow) {
+  const bonusCoins = u.coins;
+  const realCoins = u.realCoins;
   return {
     id: u.id,
     publicId: u.publicId,
     username: u.username,
     email: u.email ?? null,
     passwordHash: u.passwordHash ?? null,
-    coins: u.coins,
+    bonusCoins,
+    realCoins,
+    coins: bonusCoins + realCoins,
     avatarColor: u.avatarColor,
     isAdmin: u.isAdmin === 1,
     createdAt: u.createdAt.toISOString(),

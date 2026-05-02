@@ -9,6 +9,7 @@ export const usersTable = pgTable(
     passwordHash: text("password_hash"),
     googleId: text("google_id").unique(),
     coins: integer("coins").notNull().default(0),
+    realCoins: integer("real_coins").notNull().default(0),
     isAdmin: integer("is_admin").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastDailyClaimAt: timestamp("last_daily_claim_at", { withTimezone: true }),

@@ -80,7 +80,7 @@ router.get("/me/stats", requireUser, async (req, res) => {
   const [rankRow] = await db
     .select({ c: sql<number>`count(*)::int + 1`.as("c") })
     .from(usersTable)
-    .where(gt(usersTable.coins, user.coins));
+    .where(gt(sql`${usersTable.coins} + ${usersTable.realCoins}`, user.coins + user.realCoins));
 
   const totalEarned = Number(earnedRow?.total ?? 0);
   const totalSpent = Math.abs(Number(spentRow?.total ?? 0));
@@ -144,7 +144,9 @@ router.post("/me/transfer", requireUser, async (req, res) => {
     res.status(400).json({ error: "Özüňize geçirip bilmersiňiz" });
     return;
   }
-  if (sender.coins < amount) {
+
+  const senderTotal = sender.coins + sender.realCoins;
+  if (senderTotal < amount) {
     res.status(400).json({ error: "Ýeterlik TMT ýok" });
     return;
   }
@@ -160,16 +162,34 @@ router.post("/me/transfer", requireUser, async (req, res) => {
   }
 
   await db.transaction(async (tx) => {
-    const [debited] = await tx
+    // Re-read sender balance inside transaction
+    const [current] = await tx
+      .select({ coins: usersTable.coins, realCoins: usersTable.realCoins })
+      .from(usersTable)
+      .where(eq(usersTable.id, sender.id))
+      .limit(1);
+    const curBonus = current?.coins ?? 0;
+    const curReal = current?.realCoins ?? 0;
+    if (curBonus + curReal < amount) throw new Error("INSUFFICIENT");
+
+    // Deduct from bonus first, then real
+    const fromBonus = Math.min(amount, curBonus);
+    const fromReal = amount - fromBonus;
+
+    await tx
       .update(usersTable)
-      .set({ coins: sql`${usersTable.coins} - ${amount}` })
-      .where(and(eq(usersTable.id, sender.id), gt(usersTable.coins, amount - 1)))
-      .returning({ coins: usersTable.coins });
-    if (!debited) throw new Error("INSUFFICIENT");
+      .set({
+        coins: sql`${usersTable.coins} - ${fromBonus}`,
+        realCoins: sql`${usersTable.realCoins} - ${fromReal}`,
+      })
+      .where(eq(usersTable.id, sender.id));
+
+    // Recipient receives as bonus coins
     await tx
       .update(usersTable)
       .set({ coins: sql`${usersTable.coins} + ${amount}` })
       .where(eq(usersTable.id, recipient.id));
+
     await tx.insert(transactionsTable).values([
       {
         userId: sender.id,
@@ -208,7 +228,7 @@ router.post("/me/transfer", requireUser, async (req, res) => {
 
   res.json({
     ok: true,
-    senderBalance: refreshed?.coins ?? sender.coins - amount,
+    senderBalance: (refreshed?.coins ?? 0) + (refreshed?.realCoins ?? 0),
     recipient: serializePublicUser(recipient),
     amount,
   });
@@ -221,13 +241,14 @@ router.post("/me/claim-bonus", requireUser, async (req, res) => {
     res.json({
       granted: false,
       amount: 0,
-      newBalance: user.coins,
+      newBalance: user.coins + user.realCoins,
       nextAvailableAt: new Date(next).toISOString(),
     });
     return;
   }
   const now = new Date();
   await db.transaction(async (tx) => {
+    // Bonus goes to bonus coins (coins column)
     await tx
       .update(usersTable)
       .set({
@@ -244,7 +265,7 @@ router.post("/me/claim-bonus", requireUser, async (req, res) => {
     await tx.insert(notificationsTable).values({
       userId: user.id,
       title: "Bonus alyndy",
-      body: `Size ${BONUS_AMOUNT} TMT bonus berildi.`,
+      body: `Size ${BONUS_AMOUNT} Bonus TMT berildi.`,
       kind: "bonus",
     });
   });
@@ -256,7 +277,7 @@ router.post("/me/claim-bonus", requireUser, async (req, res) => {
   res.json({
     granted: true,
     amount: BONUS_AMOUNT,
-    newBalance: refreshed?.coins ?? user.coins + BONUS_AMOUNT,
+    newBalance: (refreshed?.coins ?? 0) + (refreshed?.realCoins ?? 0),
     nextAvailableAt: new Date(now.getTime() + BONUS_INTERVAL_MS).toISOString(),
   });
 });

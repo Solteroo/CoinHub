@@ -12,7 +12,10 @@ export interface AdminUser {
   username: string;
   email?: string | null;
   passwordHash?: string | null;
+  /** Total balance (bonusCoins + realCoins) */
   coins: number;
+  bonusCoins: number;
+  realCoins: number;
   avatarColor: string;
   isAdmin: boolean;
   createdAt: string;

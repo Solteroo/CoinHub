@@ -40,7 +40,11 @@ export const RegisterUserResponse = zod.object({
     id: zod.string(),
     publicId: zod.string(),
     username: zod.string(),
-    coins: zod.number(),
+    coins: zod.number().describe("Total balance (bonusCoins + realCoins)"),
+    bonusCoins: zod
+      .number()
+      .describe("Demo\/bonus coins from 3-day claim or owner gift"),
+    realCoins: zod.number().describe("Real coins given only by owner"),
     createdAt: zod.string(),
     isAdmin: zod.boolean(),
     email: zod.string().nullish(),
@@ -65,7 +69,11 @@ export const LoginUserResponse = zod.object({
     id: zod.string(),
     publicId: zod.string(),
     username: zod.string(),
-    coins: zod.number(),
+    coins: zod.number().describe("Total balance (bonusCoins + realCoins)"),
+    bonusCoins: zod
+      .number()
+      .describe("Demo\/bonus coins from 3-day claim or owner gift"),
+    realCoins: zod.number().describe("Real coins given only by owner"),
     createdAt: zod.string(),
     isAdmin: zod.boolean(),
     email: zod.string().nullish(),
@@ -91,7 +99,11 @@ export const GetMeResponse = zod.object({
   id: zod.string(),
   publicId: zod.string(),
   username: zod.string(),
-  coins: zod.number(),
+  coins: zod.number().describe("Total balance (bonusCoins + realCoins)"),
+  bonusCoins: zod
+    .number()
+    .describe("Demo\/bonus coins from 3-day claim or owner gift"),
+  realCoins: zod.number().describe("Real coins given only by owner"),
   createdAt: zod.string(),
   isAdmin: zod.boolean(),
   email: zod.string().nullish(),
@@ -142,7 +154,11 @@ export const UpdateMyProfileResponse = zod.object({
   id: zod.string(),
   publicId: zod.string(),
   username: zod.string(),
-  coins: zod.number(),
+  coins: zod.number().describe("Total balance (bonusCoins + realCoins)"),
+  bonusCoins: zod
+    .number()
+    .describe("Demo\/bonus coins from 3-day claim or owner gift"),
+  realCoins: zod.number().describe("Real coins given only by owner"),
   createdAt: zod.string(),
   isAdmin: zod.boolean(),
   email: zod.string().nullish(),
@@ -819,7 +835,9 @@ export const AdminListUsersResponseItem = zod.object({
   username: zod.string(),
   email: zod.string().nullish(),
   passwordHash: zod.string().nullish(),
-  coins: zod.number(),
+  coins: zod.number().describe("Total balance (bonusCoins + realCoins)"),
+  bonusCoins: zod.number(),
+  realCoins: zod.number(),
   avatarColor: zod.string(),
   isAdmin: zod.boolean(),
   createdAt: zod.string(),
@@ -840,7 +858,9 @@ export const AdminGetUserResponse = zod.object({
     username: zod.string(),
     email: zod.string().nullish(),
     passwordHash: zod.string().nullish(),
-    coins: zod.number(),
+    coins: zod.number().describe("Total balance (bonusCoins + realCoins)"),
+    bonusCoins: zod.number(),
+    realCoins: zod.number(),
     avatarColor: zod.string(),
     isAdmin: zod.boolean(),
     createdAt: zod.string(),
@@ -869,6 +889,7 @@ export const adminAdjustCoinsBodyReasonMax = 200;
 export const AdminAdjustCoinsBody = zod.object({
   amount: zod.number(),
   reason: zod.string().min(1).max(adminAdjustCoinsBodyReasonMax),
+  coinType: zod.string().optional().describe("real | bonus (default: bonus)"),
 });
 
 export const AdminAdjustCoinsResponse = zod.object({
@@ -878,7 +899,9 @@ export const AdminAdjustCoinsResponse = zod.object({
     username: zod.string(),
     email: zod.string().nullish(),
     passwordHash: zod.string().nullish(),
-    coins: zod.number(),
+    coins: zod.number().describe("Total balance (bonusCoins + realCoins)"),
+    bonusCoins: zod.number(),
+    realCoins: zod.number(),
     avatarColor: zod.string(),
     isAdmin: zod.boolean(),
     createdAt: zod.string(),

@@ -10,7 +10,7 @@ import {
   getGetAdminOwnerQueryKey,
 } from "@workspace/api-client-react";
 import { fmtCoins, fmtDate, cn } from "@/lib/utils";
-import { ArrowLeft, Plus, Minus, ArrowDownLeft, ArrowUpRight, Crown, ShieldOff } from "lucide-react";
+import { ArrowLeft, Plus, Minus, ArrowDownLeft, ArrowUpRight, Crown, ShieldOff, Coins, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -29,6 +29,7 @@ export default function AdminUserDetail() {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [isAdding, setIsAdding] = useState(true);
+  const [coinType, setCoinType] = useState<"real" | "bonus">("real");
 
   const adjustCoins = useAdminAdjustCoins();
   const setAdmin = useAdminSetAdmin();
@@ -48,9 +49,10 @@ export default function AdminUserDetail() {
     }
 
     const finalAmount = isAdding ? numAmount : -numAmount;
-    adjustCoins.mutate({ userId, data: { amount: finalAmount, reason } }, {
+    adjustCoins.mutate({ userId, data: { amount: finalAmount, reason, coinType } }, {
       onSuccess: () => {
-        toast({ title: "TMT üýtgedildi" });
+        const typeLabel = coinType === "real" ? "Real" : "Bonus";
+        toast({ title: `${typeLabel} TMT üýtgedildi` });
         setAmount("");
         setReason("");
         queryClient.invalidateQueries({ queryKey: getAdminGetUserQueryKey(userId) });
@@ -91,6 +93,7 @@ export default function AdminUserDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-6">
+            {/* User info card */}
             <div className="bg-[#0a0a0f] border border-destructive/20 rounded-2xl p-6 text-center">
               <div
                 className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-black text-white"
@@ -109,13 +112,31 @@ export default function AdminUserDetail() {
               </div>
               <p className="text-sm font-mono text-muted-foreground mb-4">#{user.publicId}</p>
 
-              <div className="bg-destructive/5 rounded-xl p-4 border border-destructive/10">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Balans</p>
+              {/* Dual balance display */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-yellow-500/10 rounded-xl p-3 border border-yellow-500/20">
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <Coins className="w-3 h-3 text-yellow-400" />
+                    <p className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold">Real</p>
+                  </div>
+                  <p className="text-xl font-bold text-yellow-400 tabular-nums">{fmtCoins(user.realCoins ?? 0)}</p>
+                </div>
+                <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <Star className="w-3 h-3 text-primary" />
+                    <p className="text-[9px] text-primary uppercase tracking-widest font-bold">Bonus</p>
+                  </div>
+                  <p className="text-xl font-bold text-primary tabular-nums">{fmtCoins(user.bonusCoins ?? 0)}</p>
+                </div>
+              </div>
+              <div className="bg-destructive/5 rounded-xl p-3 border border-destructive/10">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Jemi</p>
                 <p className="text-3xl font-bold text-primary tabular-nums">{fmtCoins(user.coins)}</p>
                 <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest mt-1">TMT</p>
               </div>
             </div>
 
+            {/* Owner role */}
             <div className="bg-[#0a0a0f] border border-destructive/20 rounded-2xl p-6">
               <h3 className="font-bold text-white mb-4">Owner roly</h3>
               <p className="text-xs text-muted-foreground mb-3">
@@ -128,22 +149,36 @@ export default function AdminUserDetail() {
                 className={cn("w-full h-11 font-bold flex items-center gap-2", user.isAdmin ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90 text-black")}
               >
                 {user.isAdmin ? (
-                  <>
-                    <ShieldOff className="w-4 h-4" />
-                    Owner aýyr
-                  </>
+                  <><ShieldOff className="w-4 h-4" />Owner aýyr</>
                 ) : (
-                  <>
-                    <Crown className="w-4 h-4" />
-                    Owner et
-                  </>
+                  <><Crown className="w-4 h-4" />Owner et</>
                 )}
               </Button>
             </div>
 
+            {/* Coin adjust panel */}
             <div className="bg-[#0a0a0f] border border-destructive/20 rounded-2xl p-6">
-              <h3 className="font-bold text-white mb-4">TMT goş/aýyr</h3>
+              <h3 className="font-bold text-white mb-4">Teňňe goş / aýyr</h3>
 
+              {/* Coin type selector */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setCoinType("real")}
+                  className={cn("py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 border", coinType === "real" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/50" : "bg-transparent text-muted-foreground border-transparent hover:text-white")}
+                >
+                  <Coins className="w-3.5 h-3.5" /> Real
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCoinType("bonus")}
+                  className={cn("py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 border", coinType === "bonus" ? "bg-primary/20 text-primary border-primary/50" : "bg-transparent text-muted-foreground border-transparent hover:text-white")}
+                >
+                  <Star className="w-3.5 h-3.5" /> Bonus
+                </button>
+              </div>
+
+              {/* Add / Remove toggle */}
               <div className="flex gap-2 mb-4">
                 <button
                   type="button"
@@ -163,7 +198,9 @@ export default function AdminUserDetail() {
 
               <form onSubmit={handleAdjust} className="space-y-4">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Möçberi (TMT)</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Möçberi ({coinType === "real" ? "Real" : "Bonus"} TMT)
+                  </label>
                   <Input
                     type="number"
                     min="1"
@@ -187,12 +224,13 @@ export default function AdminUserDetail() {
                   disabled={adjustCoins.isPending}
                   className={cn("w-full h-11 font-bold", isAdding ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-destructive hover:bg-destructive/90 text-white")}
                 >
-                  Tassykla
+                  {coinType === "real" ? "Real" : "Bonus"} · Tassykla
                 </Button>
               </form>
             </div>
           </div>
 
+          {/* Transaction history */}
           <div className="lg:col-span-2">
             <div className="bg-[#0a0a0f] border border-destructive/20 rounded-2xl overflow-hidden flex flex-col h-full max-h-[800px]">
               <div className="p-6 border-b border-destructive/10">

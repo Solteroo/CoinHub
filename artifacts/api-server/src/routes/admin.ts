@@ -101,6 +101,9 @@ router.post("/admin/users/:userId/coins", requireAdmin, async (req, res) => {
     return;
   }
   const { amount, reason } = parsed.data;
+  // coinType: "real" | "bonus" (default: bonus)
+  const coinType = (req.body as { coinType?: string }).coinType === "real" ? "real" : "bonus";
+
   if (amount === 0) {
     res.status(400).json({ error: "Möçberi 0 bolup bilmez" });
     return;
@@ -116,22 +119,46 @@ router.post("/admin/users/:userId/coins", requireAdmin, async (req, res) => {
     return;
   }
 
-  if (amount < 0 && user.coins + amount < 0) {
-    res.status(400).json({ error: "Ulanyjyda ýeterlik teňňe ýok" });
-    return;
+  // Validate balance for removals
+  if (amount < 0) {
+    const balance = coinType === "real" ? user.realCoins : user.coins;
+    if (balance + amount < 0) {
+      res.status(400).json({ error: "Ulanyjyda ýeterlik teňňe ýok" });
+      return;
+    }
   }
 
-  await db
-    .update(usersTable)
-    .set({ coins: sql`${usersTable.coins} + ${amount}` })
-    .where(eq(usersTable.id, user.id));
+  // Update the correct column
+  if (coinType === "real") {
+    await db
+      .update(usersTable)
+      .set({ realCoins: sql`${usersTable.realCoins} + ${amount}` })
+      .where(eq(usersTable.id, user.id));
+  } else {
+    await db
+      .update(usersTable)
+      .set({ coins: sql`${usersTable.coins} + ${amount}` })
+      .where(eq(usersTable.id, user.id));
+  }
 
+  const sourceLabel = coinType === "real" ? "real" : "bonus";
   await db.insert(transactionsTable).values({
     userId: user.id,
     amount,
-    reason,
+    reason: `${reason} [${sourceLabel}]`,
     source: amount > 0 ? "admin_add" : "admin_remove",
   });
+
+  // Notify user
+  if (amount > 0) {
+    const coinLabel = coinType === "real" ? "Real" : "Bonus";
+    await db.insert(notificationsTable).values({
+      userId: user.id,
+      title: `${coinLabel} teňňe geldi`,
+      body: `Size ${amount} ${coinLabel} TMT berildi.`,
+      kind: "bonus",
+    });
+  }
 
   const [updated] = await db
     .select()
@@ -217,6 +244,9 @@ router.get("/admin/stats", requireAdmin, async (_req, res) => {
   const [coinsRow] = await db
     .select({ total: sum(usersTable.coins).as("total") })
     .from(usersTable);
+  const [realCoinsRow] = await db
+    .select({ total: sum(usersTable.realCoins).as("total") })
+    .from(usersTable);
   const [txRow] = await db
     .select({ c: sql<number>`count(*)::int`.as("c") })
     .from(transactionsTable);
@@ -234,7 +264,7 @@ router.get("/admin/stats", requireAdmin, async (_req, res) => {
 
   res.json({
     totalUsers: Number(usersRow?.c ?? 0),
-    totalCoinsInCirculation: Number(coinsRow?.total ?? 0),
+    totalCoinsInCirculation: Number(coinsRow?.total ?? 0) + Number(realCoinsRow?.total ?? 0),
     totalTransactions: Number(txRow?.c ?? 0),
     coinsAddedToday: Number(todayAddedRow?.total ?? 0),
   });
