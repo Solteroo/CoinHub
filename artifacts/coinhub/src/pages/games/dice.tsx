@@ -31,14 +31,11 @@ export default function DiceGame() {
     setRolling(true);
     setResult(null);
     playClick();
-
     let ticks = 0;
     const interval = setInterval(() => {
       setDisplayDice([Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)]);
-      ticks++;
-      if (ticks >= 12) clearInterval(interval);
-    }, 80);
-
+      if (++ticks >= 14) clearInterval(interval);
+    }, 75);
     try {
       const res = await fetch("/api/games/dice", {
         method: "POST",
@@ -53,56 +50,43 @@ export default function DiceGame() {
       setResult(data);
       if (data.netChange > 0) {
         playWin();
-        confetti({ particleCount: 80, spread: 55, origin: { y: 0.6 }, colors: ["#10b981", "#34d399"] });
-      } else {
-        playLose();
-      }
+        confetti({ particleCount: 100, spread: 60, origin: { y: 0.5 }, colors: ["#10b981", "#34d399"] });
+      } else { playLose(); }
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
       qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
-    } catch {
-      toast({ title: t("error"), variant: "destructive" });
-    } finally {
-      setRolling(false);
-    }
+    } catch { toast({ title: t("error"), variant: "destructive" }); }
+    finally { setRolling(false); }
   };
 
-  const rollBtn = (
-    <button
-      onClick={handleRoll}
-      disabled={rolling || !choice || !user || bet > (user?.coins ?? 0)}
-      className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
-      style={{
-        background: rolling || !choice
-          ? "rgba(255,255,255,0.1)"
-          : `linear-gradient(135deg, ${ACCENT}, #059669)`,
-        boxShadow: !rolling && choice ? `0 0 30px ${ACCENT}50` : undefined,
-        color: rolling || !choice ? "rgba(255,255,255,0.4)" : "#000",
-      }}
-    >
-      {rolling ? "⚀ ⚁ ⚂..." : choice ? `${choice === "high" ? "▲ " + t("dice_high") : "▼ " + t("dice_low")} — ${t("roll_btn") || "ROLL"}` : t("choose_side")}
-    </button>
-  );
-
   return (
-    <GameLayout title={t("game_dice_title")} emoji="🎲" accentColor={ACCENT} bottomAction={rollBtn}>
-      <div className="flex flex-col items-center gap-5 px-4 pt-6 pb-4">
-
+    <GameLayout title={t("game_dice_title")} emoji="🎲" accentColor={ACCENT}>
+      <div
+        className="flex-1 flex flex-col px-4 pt-4 gap-3"
+        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+      >
+        {/* Dice visual — fills remaining space */}
         <div
-          className="w-full rounded-3xl p-8 flex flex-col items-center gap-5 border"
-          style={{ background: "rgba(16,185,129,0.05)", borderColor: "rgba(16,185,129,0.2)" }}
+          className="flex-1 min-h-0 rounded-3xl flex flex-col items-center justify-center gap-4 border relative overflow-hidden"
+          style={{ background: "rgba(16,185,129,0.04)", borderColor: "rgba(16,185,129,0.18)" }}
         >
-          <div className="flex gap-8 items-center">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${ACCENT}10, transparent 70%)` }}
+          />
+          <div className="flex gap-7 items-center">
             {[0, 1].map((i) => (
               <motion.div
                 key={i}
-                animate={rolling ? { rotate: [0, 180, 360], scale: [1, 0.8, 1.1, 1] } : {}}
-                transition={{ duration: 0.5, repeat: rolling ? Infinity : 0, ease: "linear" }}
-                className="w-24 h-24 rounded-2xl border-2 flex items-center justify-center text-6xl shadow-2xl select-none"
+                animate={rolling ? { rotate: [0, 180, 360], scale: [1, 0.85, 1.1, 1] } : {}}
+                transition={{ duration: 0.4, repeat: rolling ? Infinity : 0, ease: "linear" }}
+                className="w-28 h-28 rounded-3xl border-2 flex items-center justify-center select-none"
                 style={{
                   background: "rgba(255,255,255,0.04)",
-                  borderColor: rolling ? ACCENT : "rgba(255,255,255,0.1)",
-                  boxShadow: rolling ? `0 0 30px ${ACCENT}40` : undefined,
+                  borderColor: rolling ? `${ACCENT}80` : "rgba(255,255,255,0.1)",
+                  boxShadow: rolling ? `0 0 40px ${ACCENT}40` : displayDice ? `0 0 20px ${ACCENT}20` : undefined,
+                  fontSize: "72px",
+                  lineHeight: 1,
                 }}
               >
                 {displayDice ? DICE_FACES[(displayDice[i] ?? 1) - 1] : "?"}
@@ -110,21 +94,27 @@ export default function DiceGame() {
             ))}
           </div>
 
-          {displayDice && !rolling && (
-            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
-              <p className="text-3xl font-black" style={{ color: ACCENT }}>
-                {t("total_label")}: {displayDice[0] + displayDice[1]}
-              </p>
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {displayDice && !rolling && (
+              <motion.p
+                key={displayDice[0] + displayDice[1]}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-4xl font-black tabular-nums"
+                style={{ color: ACCENT, textShadow: `0 0 20px ${ACCENT}60` }}
+              >
+                {displayDice[0] + displayDice[1]}
+              </motion.p>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                initial={{ scale: 0.8, opacity: 0, y: 8 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
                 className={cn(
-                  "px-8 py-3 rounded-2xl font-black text-lg uppercase tracking-wider border",
+                  "px-8 py-2.5 rounded-2xl font-black text-lg uppercase tracking-wider border",
                   result.netChange > 0
                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
                     : "bg-red-500/20 text-red-400 border-red-500/40",
@@ -136,46 +126,50 @@ export default function DiceGame() {
           </AnimatePresence>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 w-full">
-          <button
-            onClick={() => { setChoice("high"); playClick(); }}
-            className={cn(
-              "h-20 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 font-black text-sm uppercase tracking-tight transition-all active:scale-[0.97]",
-              choice === "high"
-                ? "border-emerald-400 text-emerald-400"
-                : "border-white/10 text-white/50 hover:border-emerald-400/50 hover:text-emerald-400/70",
-            )}
-            style={{
-              background: choice === "high" ? "rgba(52,211,153,0.15)" : "rgba(255,255,255,0.03)",
-              boxShadow: choice === "high" ? "0 0 30px rgba(52,211,153,0.2)" : undefined,
-            }}
-          >
-            <TrendingUp className="w-6 h-6" />
-            <span>{t("dice_high")}</span>
-            <span className="text-[10px] font-bold opacity-70">8-12 · 1.96×</span>
-          </button>
-          <button
-            onClick={() => { setChoice("low"); playClick(); }}
-            className={cn(
-              "h-20 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 font-black text-sm uppercase tracking-tight transition-all active:scale-[0.97]",
-              choice === "low"
-                ? "border-blue-400 text-blue-400"
-                : "border-white/10 text-white/50 hover:border-blue-400/50 hover:text-blue-400/70",
-            )}
-            style={{
-              background: choice === "low" ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.03)",
-              boxShadow: choice === "low" ? "0 0 30px rgba(96,165,250,0.2)" : undefined,
-            }}
-          >
-            <TrendingDown className="w-6 h-6" />
-            <span>{t("dice_low")}</span>
-            <span className="text-[10px] font-bold opacity-70">2-6 · 1.96×</span>
-          </button>
+        {/* HIGH / LOW buttons */}
+        <div className="grid grid-cols-2 gap-3 shrink-0">
+          {([
+            { id: "high", icon: TrendingUp, label: t("dice_high"), range: "8–12", color: "#34d399", bg: "rgba(52,211,153,0.12)" },
+            { id: "low",  icon: TrendingDown, label: t("dice_low"),  range: "2–6",  color: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
+          ] as const).map(({ id, icon: Icon, label, range, color, bg }) => (
+            <button
+              key={id}
+              onClick={() => { setChoice(id); playClick(); }}
+              className="h-16 rounded-2xl border-2 flex items-center justify-center gap-2.5 font-black text-sm uppercase tracking-tight transition-all active:scale-[0.97]"
+              style={{
+                background: choice === id ? bg : "rgba(255,255,255,0.03)",
+                borderColor: choice === id ? color : "rgba(255,255,255,0.08)",
+                color: choice === id ? color : "rgba(255,255,255,0.45)",
+                boxShadow: choice === id ? `0 0 24px ${color}35` : undefined,
+              }}
+            >
+              <Icon className="w-5 h-5 shrink-0" />
+              <div className="text-left">
+                <div>{label}</div>
+                <div className="text-[9px] font-bold opacity-60">{range} · 1.96×</div>
+              </div>
+            </button>
+          ))}
         </div>
 
-        <div className="w-full">
+        {/* Bet */}
+        <div className="shrink-0">
           <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
         </div>
+
+        {/* PLAY button */}
+        <button
+          onClick={handleRoll}
+          disabled={rolling || !choice || !user || bet > (user?.coins ?? 0)}
+          className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-35 active:scale-[0.98] transition-all"
+          style={{
+            background: !rolling && choice ? `linear-gradient(135deg, ${ACCENT}, #059669)` : "rgba(255,255,255,0.08)",
+            boxShadow: !rolling && choice ? `0 0 36px ${ACCENT}55, 0 0 80px ${ACCENT}18` : undefined,
+            color: !rolling && choice ? "#000" : "rgba(255,255,255,0.35)",
+          }}
+        >
+          {rolling ? "⚀ ⚁ ⚂..." : choice ? `${choice === "high" ? "▲ " + t("dice_high") : "▼ " + t("dice_low")} — ${t("roll_btn") || "ROLL"}` : t("choose_side")}
+        </button>
       </div>
     </GameLayout>
   );

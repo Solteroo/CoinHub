@@ -16,13 +16,11 @@ const PAYOUTS = {
   medium: [3.0, 1.8, 1.2, 0.6, 0.2, 0.6, 1.2, 1.8, 3.0],
   high:   [16,  5.0, 2.0, 0.8, 0.0, 0.8, 2.0, 5.0, 16 ],
 };
-
 const BUCKET_COLORS = {
   low:    ["#D4AF37","#a07d1f","#665216","#3a3a4f","#2a2a3a","#3a3a4f","#665216","#a07d1f","#D4AF37"],
   medium: ["#ef4444","#D4AF37","#a07d1f","#665216","#1a1a24","#665216","#a07d1f","#D4AF37","#ef4444"],
   high:   ["#ef4444","#f97316","#D4AF37","#665216","#1a1a24","#665216","#D4AF37","#f97316","#ef4444"],
 };
-
 const ROWS = 8;
 const ACCENT = "#06b6d4";
 
@@ -40,12 +38,7 @@ export default function PlinkoGame() {
 
   const handleDrop = async () => {
     if (dropping || !user || bet > user.coins) return;
-    setDropping(true);
-    setResult(null);
-    setBallPath([]);
-    setBallRow(-1);
-    playClick();
-
+    setDropping(true); setResult(null); setBallPath([]); setBallRow(-1); playClick();
     try {
       const res = await fetch("/api/games/plinko", {
         method: "POST",
@@ -55,32 +48,21 @@ export default function PlinkoGame() {
       });
       const data = await res.json();
       if (!res.ok) { toast({ title: data.error ?? t("error"), variant: "destructive" }); setDropping(false); return; }
-
       setBallPath(data.path ?? []);
-
       let row = 0;
       const interval = setInterval(() => {
-        setBallRow(row);
-        row++;
+        setBallRow(row++);
         if (row > ROWS) {
           clearInterval(interval);
-          setResult(data);
-          setDropping(false);
-          if (data.netChange > 0) {
-            playWin();
-            if (data.multiplier >= 5) confetti({ particleCount: 120, spread: 60, origin: { y: 0.6 }, colors: [ACCENT, "#67e8f9"] });
-          } else {
-            playLose();
-          }
+          setResult(data); setDropping(false);
+          if (data.netChange > 0) { playWin(); if (data.multiplier >= 5) confetti({ particleCount: 120, spread: 60, origin: { y: 0.6 }, colors: [ACCENT, "#67e8f9"] }); }
+          else playLose();
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
           qc.invalidateQueries({ queryKey: getGetMyTransactionsQueryKey() });
           qc.invalidateQueries({ queryKey: getGetMyStatsQueryKey() });
         }
       }, 150);
-    } catch {
-      toast({ title: t("error"), variant: "destructive" });
-      setDropping(false);
-    }
+    } catch { toast({ title: t("error"), variant: "destructive" }); setDropping(false); }
   };
 
   const payouts = PAYOUTS[risk];
@@ -88,134 +70,105 @@ export default function PlinkoGame() {
 
   const getBallXPercent = () => {
     if (ballRow < 0 || ballPath.length === 0) return 50;
-    const pathSlice = ballPath.slice(0, ballRow + 1);
-    const offset = pathSlice.reduce((acc, dir) => acc + (dir === 1 ? 1 : -1), 0);
+    const offset = ballPath.slice(0, ballRow + 1).reduce((acc, dir) => acc + (dir === 1 ? 1 : -1), 0);
     return 50 + offset * (40 / ROWS);
   };
 
-  const dropBtn = (
-    <button
-      onClick={handleDrop}
-      disabled={dropping || !user || bet > (user?.coins ?? 0)}
-      className="w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-40 active:scale-[0.98] transition-all"
-      style={{
-        background: !dropping ? `linear-gradient(135deg, ${ACCENT}, #0891b2)` : "rgba(255,255,255,0.07)",
-        boxShadow: !dropping ? `0 0 30px ${ACCENT}50` : undefined,
-        color: !dropping ? "#000" : "rgba(255,255,255,0.3)",
-      }}
-    >
-      {dropping ? t("dropping") : t("drop_ball")}
-    </button>
-  );
-
   return (
-    <GameLayout title={t("game_plinko_title")} emoji="⬇️" accentColor={ACCENT} bottomAction={dropBtn}>
-      <div className="flex flex-col gap-4 px-4 pt-4 pb-4">
-
+    <GameLayout title={t("game_plinko_title")} emoji="⬇️" accentColor={ACCENT}>
+      <div
+        className="flex-1 flex flex-col px-4 pt-4 gap-3"
+        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+      >
+        {/* Plinko board — fills remaining space */}
         <div
-          className="w-full rounded-3xl border overflow-hidden relative"
-          style={{
-            height: "220px",
-            background: "linear-gradient(180deg, #030812 0%, #060f1a 100%)",
-            borderColor: `${ACCENT}30`,
-          }}
+          className="flex-1 min-h-0 rounded-3xl border relative overflow-hidden"
+          style={{ background: "linear-gradient(180deg, #030812 0%, #060f1a 100%)", borderColor: `${ACCENT}30` }}
         >
+          {/* Pegs */}
           {Array.from({ length: ROWS }, (_, row) => (
-            <div
-              key={row}
-              className="absolute w-full flex justify-center"
-              style={{ top: `${(row + 1) * (75 / (ROWS + 1))}%` }}
-            >
+            <div key={row} className="absolute w-full flex justify-center" style={{ top: `${(row + 1) * (72 / (ROWS + 1))}%` }}>
               {Array.from({ length: row + 2 }, (_, col) => {
                 const spacing = 100 / (row + 3);
-                const leftPct = (col + 1) * spacing;
                 return (
-                  <div
-                    key={col}
-                    className="absolute w-2.5 h-2.5 rounded-full"
-                    style={{
-                      left: `${leftPct}%`,
-                      transform: "translateX(-50%)",
-                      background: ACCENT,
-                      boxShadow: `0 0 6px ${ACCENT}80`,
-                      opacity: 0.6,
-                    }}
+                  <div key={col} className="absolute w-2.5 h-2.5 rounded-full"
+                    style={{ left: `${(col + 1) * spacing}%`, transform: "translateX(-50%)", background: ACCENT, boxShadow: `0 0 6px ${ACCENT}80`, opacity: 0.65 }}
                   />
                 );
               })}
             </div>
           ))}
 
+          {/* Ball */}
           <AnimatePresence>
             {dropping && (
               <motion.div
                 className="absolute w-5 h-5 rounded-full z-10"
                 style={{
                   left: `${getBallXPercent()}%`,
-                  top: `${Math.min(ballRow / ROWS * 78 + 5, 78)}%`,
+                  top: `${Math.min(ballRow / ROWS * 68 + 5, 70)}%`,
                   transform: "translate(-50%, -50%)",
                   background: "white",
-                  boxShadow: "0 0 12px rgba(255,255,255,0.9)",
+                  boxShadow: "0 0 14px rgba(255,255,255,0.95)",
                 }}
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
               />
             )}
           </AnimatePresence>
 
-          <div className="grid absolute bottom-0 left-0 right-0 px-2 pb-3" style={{ gridTemplateColumns: `repeat(${payouts.length}, 1fr)`, gap: "3px" }}>
+          {/* Buckets */}
+          <div className="grid absolute bottom-0 left-0 right-0 px-2 pb-2" style={{ gridTemplateColumns: `repeat(${payouts.length}, 1fr)`, gap: "3px" }}>
             {payouts.map((p, i) => (
-              <motion.div
-                key={i}
-                animate={result?.bucket === i ? { scale: [1, 1.15, 1] } : {}}
-                transition={{ duration: 0.4 }}
-                className="h-9 rounded-lg flex items-center justify-center text-[11px] font-black border"
-                style={{
-                  background: `${colors[i]}20`,
-                  borderColor: `${colors[i]}60`,
-                  color: colors[i],
-                  boxShadow: result?.bucket === i ? `0 0 15px ${colors[i]}60` : undefined,
-                }}
-              >
+              <motion.div key={i} animate={result?.bucket === i ? { scale: [1, 1.18, 1] } : {}} transition={{ duration: 0.35 }}
+                className="h-9 rounded-lg flex items-center justify-center text-[10px] font-black border"
+                style={{ background: `${colors[i]}20`, borderColor: `${colors[i]}60`, color: colors[i], boxShadow: result?.bucket === i ? `0 0 18px ${colors[i]}70` : undefined }}>
                 {p}×
               </motion.div>
             ))}
           </div>
         </div>
 
-        {result && (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className={cn(
-              "text-center p-4 rounded-2xl font-black text-lg uppercase tracking-wider border",
-              result.netChange > 0
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
-                : "bg-red-500/20 text-red-400 border-red-500/40",
-            )}
-          >
-            {result.multiplier}× · {result.netChange > 0 ? "+" : ""}{fmtCoins(result.netChange)} {COIN}
-          </motion.div>
-        )}
+        {/* Result */}
+        <AnimatePresence>
+          {result && (
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              className={cn("shrink-0 text-center py-3 rounded-2xl font-black text-base uppercase tracking-wider border",
+                result.netChange > 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "bg-red-500/20 text-red-400 border-red-500/40"
+              )}>
+              {result.multiplier}× · {result.netChange > 0 ? "+" : ""}{fmtCoins(result.netChange)} {COIN}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div className="grid grid-cols-3 gap-2">
+        {/* Risk */}
+        <div className="shrink-0 grid grid-cols-3 gap-2">
           {(["low", "medium", "high"] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => { setRisk(r); playClick(); }}
-              className="h-11 rounded-xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 border-2"
-              style={{
-                background: risk === r ? `${ACCENT}20` : "rgba(255,255,255,0.03)",
-                borderColor: risk === r ? ACCENT : "rgba(255,255,255,0.08)",
-                color: risk === r ? ACCENT : "rgba(255,255,255,0.5)",
-                boxShadow: risk === r ? `0 0 15px ${ACCENT}30` : undefined,
-              }}
-            >
+            <button key={r} onClick={() => { setRisk(r); playClick(); }}
+              className="h-10 rounded-xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 border-2"
+              style={{ background: risk === r ? `${ACCENT}20` : "rgba(255,255,255,0.03)", borderColor: risk === r ? ACCENT : "rgba(255,255,255,0.08)", color: risk === r ? ACCENT : "rgba(255,255,255,0.5)", boxShadow: risk === r ? `0 0 15px ${ACCENT}30` : undefined }}>
               {r === "low" ? t("risk_low") : r === "medium" ? t("risk_medium") : t("risk_high")}
             </button>
           ))}
         </div>
 
-        <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
+        {/* Bet */}
+        <div className="shrink-0">
+          <BetSelector value={bet} onChange={setBet} min={5} max={Math.min(10000, user?.coins ?? 10000)} />
+        </div>
+
+        {/* Drop button */}
+        <button
+          onClick={handleDrop}
+          disabled={dropping || !user || bet > (user?.coins ?? 0)}
+          className="shrink-0 w-full h-16 rounded-2xl font-black text-base uppercase tracking-widest disabled:opacity-35 active:scale-[0.98] transition-all"
+          style={{
+            background: !dropping ? `linear-gradient(135deg, ${ACCENT}, #0891b2)` : "rgba(255,255,255,0.07)",
+            boxShadow: !dropping ? `0 0 36px ${ACCENT}55` : undefined,
+            color: !dropping ? "#000" : "rgba(255,255,255,0.3)",
+          }}
+        >
+          {dropping ? t("dropping") : t("drop_ball")}
+        </button>
       </div>
     </GameLayout>
   );
