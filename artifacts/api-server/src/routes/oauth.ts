@@ -14,10 +14,13 @@ function pickAvatarColor(): string {
   return AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)] ?? "#D4AF37";
 }
 
-function getRedirectUri(req: Request): string {
-  const proto = req.get("x-forwarded-proto") || "https";
-  const host = req.get("x-forwarded-host") || req.get("host") || "localhost";
-  return `${proto}://${host}/api/auth/google/callback`;
+function getRedirectUri(_req: Request): string {
+  const domains = process.env["REPLIT_DOMAINS"] ?? "";
+  const primaryDomain = domains.split(",")[0]?.trim();
+  if (primaryDomain) {
+    return `https://${primaryDomain}/api/auth/google/callback`;
+  }
+  return `http://localhost:80/api/auth/google/callback`;
 }
 
 router.get("/auth/google", (req, res) => {
