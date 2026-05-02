@@ -52,6 +52,21 @@ This workspace contains the **CoinHub** project — a premium virtual casino pla
 - **Public Profiles**: avatar with colored initial, bio, rank, coins
 - **Avatar colors**: user-selectable from 8 preset colors
 
+### PRO UI Components (v2)
+- **Hero Section** (home): animated floating orbs, gold grid pattern bg, shimmer jackpot pool counter, VIP badge, deposit/transfer CTA buttons
+- **Live Activity Feed** (`LiveActivityFeed.tsx`): real-time simulated wins/losses ticker with AnimatePresence
+- **VIP Level System** (`VipLevelBar.tsx` + `lib/vip-level.ts`): Bronze/Silver/Gold/VIP tiers from coin balance, XP progress bar
+- **Games Grid**: 2-column PRO cards with gradient backgrounds, hover glow effects, PLAY buttons
+- **Wallet**: glassmorphism hero, income/expense stats, animated tx list
+- **TopHeader**: `+` deposit button (DMs owner), VIP badge in drawer
+
+### CSS PRO Effects (`index.css`)
+- `.shimmer-text` — animated gold shimmer for jackpot counter
+- `.float-orb` / `.float-orb-2` / `.float-orb-3` — floating gradient blobs for hero bg
+- `.neon-pulse` — pulsing gold glow on CTA buttons
+- `.hero-grid` — subtle gold grid pattern overlay
+- `.glass-card` — glassmorphism surface
+
 ### Pages
 Home, Wallet (transfer + history), Profile (edit bio/color/email), Leaderboard (podium top 3),
 Chat, Settings, Notifications, Friends, DM, DM-Thread, Public-Profile, Transfer,

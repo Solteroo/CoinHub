@@ -5,12 +5,15 @@ import {
   getGetMeQueryKey,
   useSearchUsers,
   useLogoutUser,
+  useGetAdminOwner,
+  getGetAdminOwnerQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Coins, Globe, Star } from "lucide-react";
+import { Menu, Search, ChevronLeft, X, Settings, Newspaper, Users, Bell, HelpCircle, Info, LogOut, ShieldCheck, Globe, Plus } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/Avatar";
 import { OwnerBadge } from "@/components/OwnerBadge";
+import { VipLevelBar } from "@/components/VipLevelBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { fmtCoins, cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -26,6 +29,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 export function TopHeader() {
   const [location, setLocation] = useLocation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user } });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -52,12 +56,16 @@ export function TopHeader() {
     setLocation(href);
   };
 
+  const goDeposit = () => {
+    if (owner) setLocation(`/dm/${owner.id}`);
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl border-b border-primary/10">
+    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-2xl border-b border-primary/10">
       <div className="max-w-md mx-auto h-14 px-3 flex items-center gap-2">
         {showBack ? (
           <button
-            onClick={() => setLocation("/home")}
+            onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/home")}
             className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95"
             aria-label={t("back")}
           >
@@ -72,23 +80,26 @@ export function TopHeader() {
               >
                 <Menu className="w-5 h-5" />
                 {(user?.unreadNotifications ?? 0) + (user?.unreadDms ?? 0) > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-destructive" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
                 )}
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] bg-background border-primary/20 p-0">
-              <SheetHeader className="p-5 border-b border-primary/10">
+            <SheetContent side="left" className="w-[285px] bg-background border-primary/20 p-0">
+              <SheetHeader className="p-5 border-b border-primary/10 bg-card/30">
                 <SheetTitle className="text-left">
                   {user ? (
                     <Link href="/profile">
                       <button onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 w-full">
                         <Avatar username={user.username} color={user.avatarColor} size="md" />
                         <div className="text-left flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-sm font-bold text-white truncate">{user.username}</span>
                             {user.isAdmin && <OwnerBadge size="xs" />}
                           </div>
                           <span className="text-[10px] font-mono text-muted-foreground">#{user.publicId}</span>
+                          <div className="mt-1.5">
+                            <VipLevelBar coins={user.coins} compact />
+                          </div>
                         </div>
                       </button>
                     </Link>
@@ -111,7 +122,6 @@ export function TopHeader() {
                   <DrawerItem icon={ShieldCheck} label={t("owner_panel")} onClick={() => goAndClose("/admin/dashboard")} highlight />
                 )}
                 <div className="border-t border-primary/10 my-2" />
-                {/* Language switcher in drawer */}
                 <div className="px-3 py-2 flex items-center gap-3">
                   <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
                   <LanguageSwitcher compact />
@@ -132,26 +142,31 @@ export function TopHeader() {
 
         <button
           onClick={() => setSearchOpen((v) => !v)}
-          className={cn("w-9 h-9 rounded-lg flex items-center justify-center active:scale-95", searchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}
+          className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center active:scale-95",
+            searchOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary",
+          )}
           aria-label={t("search_label")}
         >
           {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
         </button>
 
+        {/* Deposit button */}
+        {user && (
+          <button
+            onClick={goDeposit}
+            className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/25 active:scale-95 transition-all"
+            aria-label={t("deposit_btn")}
+            title={t("deposit_btn")}
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
+
         {user && (
           <Link href="/wallet">
-            <div className="flex items-center gap-1 bg-card border border-primary/20 px-2.5 py-1.5 rounded-full gold-glow active:scale-95">
-              {/* Real coin indicator */}
-              {(user.realCoins ?? 0) > 0 && (
-                <>
-                  <Coins className="w-3 h-3 text-yellow-400" />
-                  <span className="font-black text-yellow-400 text-xs tabular-nums">{fmtCoins(user.realCoins ?? 0)}</span>
-                  <span className="text-muted-foreground/40 text-[9px] font-bold">|</span>
-                </>
-              )}
-              {/* Bonus coin indicator */}
-              <Star className="w-3 h-3 text-primary" />
-              <span className="font-black text-primary text-xs tabular-nums">{fmtCoins(user.bonusCoins ?? user.coins)}</span>
+            <div className="flex items-center gap-1 bg-card border border-primary/20 px-2.5 py-1.5 rounded-full gold-glow active:scale-95 hover:border-primary/40 transition-colors">
+              <span className="font-black text-primary text-xs tabular-nums">{fmtCoins(user.coins)}</span>
               <span className="text-[9px] font-bold text-primary/70 tracking-widest">TMT</span>
             </div>
           </Link>
@@ -159,7 +174,7 @@ export function TopHeader() {
       </div>
 
       {searchOpen && (
-        <div className="border-t border-primary/10 px-3 py-2 bg-background/95">
+        <div className="border-t border-primary/10 px-3 py-2 bg-background/98">
           <input
             autoFocus
             value={q}

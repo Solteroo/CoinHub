@@ -62,7 +62,7 @@ router.post("/auth/register", async (req, res) => {
     res.status(500).json({ error: "Ulanyjy döredilmedi" });
     return;
   }
-  createSession(res, user.id);
+  await createSession(res, user.id);
   res.json({ user: serializeUser(user, { bonusReady: true }) });
 });
 
@@ -82,7 +82,7 @@ router.post("/auth/login", async (req, res) => {
     res.status(401).json({ error: "Ulanyjy ady ýa-da açar söz nädogry" });
     return;
   }
-  createSession(res, user.id);
+  await createSession(res, user.id);
   res.json({ user: serializeUser(user) });
 });
 

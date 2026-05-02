@@ -347,6 +347,12 @@ export const translations = {
     badge_classic: "Классика",
     badge_new: "Новый",
     badge_fast: "Быстрый",
+
+    // ── PRO UI ──
+    deposit_btn: "Пополнить",
+    withdraw_btn: "Вывести",
+    jackpot_pool: "Джекпот Пул",
+    live_feed_title: "Live Победы",
   },
 
   en: {
@@ -658,6 +664,12 @@ export const translations = {
     badge_classic: "Classic",
     badge_new: "New",
     badge_fast: "Fast",
+
+    // ── PRO UI ──
+    deposit_btn: "Deposit",
+    withdraw_btn: "Withdraw",
+    jackpot_pool: "Jackpot Pool",
+    live_feed_title: "Live Wins",
   },
 
   tm: {
@@ -969,6 +981,12 @@ export const translations = {
     badge_classic: "Klassik",
     badge_new: "Täze",
     badge_fast: "Çalt",
+
+    // ── PRO UI ──
+    deposit_btn: "Goýmak",
+    withdraw_btn: "Almak",
+    jackpot_pool: "Jekpot Pul",
+    live_feed_title: "Canlı Utuşlar",
   },
 
   uz: {
@@ -1280,6 +1298,12 @@ export const translations = {
     badge_classic: "Klassik",
     badge_new: "Yangi",
     badge_fast: "Tez",
+
+    // ── PRO UI ──
+    deposit_btn: "To'ldirish",
+    withdraw_btn: "Yechish",
+    jackpot_pool: "Jekpot Jamg'armasi",
+    live_feed_title: "Jonli Yutuqlar",
   },
 } as const;
 
