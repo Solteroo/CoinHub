@@ -19,7 +19,7 @@ export const translations = {
     // ── Экран входа ──
     tagline: "Premium Coin Game",
     platform_desc: "Premium Coin Game платформа",
-    bonus_100: "Зарегистрируйтесь и получите 100 TMT бонус",
+    bonus_100: "Зарегистрируйтесь и получите 100 ¢ бонус",
     has_account: "Уже есть аккаунт",
     create_account: "Создать аккаунт",
     login_with_google: "Войти через Google",
@@ -69,8 +69,8 @@ export const translations = {
     real: "Real",
     bonus: "Bonus",
     bonus_ready: "Бонус готов!",
-    bonus_ready_tap: "Нажмите и получите +50 Bonus TMT",
-    bonus_ready_desc: "Каждые 3 дня — 50 TMT бесплатно",
+    bonus_ready_tap: "Нажмите и получите +50 Bonus ¢",
+    bonus_ready_desc: "Каждые 3 дня — 50 ¢ бесплатно",
     claim_bonus: "Получить бонус",
     bonus_claimed: "Бонус получен",
     bonus_not_ready: "Бонус ещё не готов",
@@ -125,11 +125,11 @@ export const translations = {
     // ── Кошелёк ──
     wallet: "Кошелёк",
     total_balance: "Общий баланс",
-    transfer: "Перевод TMT",
+    transfer: "Перевод ¢",
     tx_in: "Входящие",
     tx_out: "Исходящие",
     tx_all: "Все",
-    transfer_btn: "Перевести TMT",
+    transfer_btn: "Перевести ¢",
     contact_support: "Написать владельцу",
     low_balance: "Мало монет?",
     low_balance_desc: "Напишите владельцу для пополнения",
@@ -275,7 +275,7 @@ export const translations = {
     vip_to_order: "Для заявки",
     vip_contact_desc: "Общайтесь с администратором напрямую",
     owner_not_set: "Владелец не назначен",
-    vip_b1: "Дополнительный ежедневный TMT бонус",
+    vip_b1: "Дополнительный ежедневный ¢ бонус",
     vip_b2: "Специальный VIP значок и цвет",
     vip_b3: "Прямое общение с владельцем",
     vip_b4: "Персональная поддержка (1-на-1)",
@@ -299,7 +299,7 @@ export const translations = {
     dm_no_conv: "Нет переписок",
 
     // ── Перевод ──
-    transfer_title: "Перевод TMT",
+    transfer_title: "Перевод ¢",
     recipient_id: "ID получателя",
     amount: "Сумма",
     transfer_confirm: "Перевести",
@@ -335,8 +335,8 @@ export const translations = {
     tx_admin_add: "Пополнено владельцем",
     tx_admin_remove: "Списано владельцем",
     tx_bonus: "3-дневный бонус",
-    tx_transfer_in: "TMT получено",
-    tx_transfer_out: "TMT отправлено",
+    tx_transfer_in: "¢ получено",
+    tx_transfer_out: "¢ отправлено",
     tx_register_bonus: "Приветственный бонус",
 
     // ── Games Hub ──
@@ -365,7 +365,7 @@ export const translations = {
     deposit_btn: "Пополнить",
     withdraw_btn: "Вывести",
     jackpot_pool: "Джекпот Пул",
-    live_feed_title: "Live Победы",
+    live_feed_title: "LIVE",
 
     // ── Deposit ──
     deposit_title: "Запрос на пополнение",
@@ -399,7 +399,7 @@ export const translations = {
 
     tagline: "Premium Coin Game",
     platform_desc: "Premium Coin Game platform",
-    bonus_100: "Sign up and get 100 TMT bonus",
+    bonus_100: "Sign up and get 100 ¢ bonus",
     has_account: "I have an account",
     create_account: "Create account",
     login_with_google: "Sign in with Google",
@@ -446,8 +446,8 @@ export const translations = {
     real: "Real",
     bonus: "Bonus",
     bonus_ready: "Bonus ready!",
-    bonus_ready_tap: "Tap to get +50 Bonus TMT",
-    bonus_ready_desc: "Every 3 days — 50 TMT free",
+    bonus_ready_tap: "Tap to get +50 Bonus ¢",
+    bonus_ready_desc: "Every 3 days — 50 ¢ free",
     claim_bonus: "Claim bonus",
     bonus_claimed: "Bonus claimed",
     bonus_not_ready: "Bonus not ready yet",
@@ -499,11 +499,11 @@ export const translations = {
 
     wallet: "Wallet",
     total_balance: "Total balance",
-    transfer: "Transfer TMT",
+    transfer: "Transfer ¢",
     tx_in: "Received",
     tx_out: "Sent",
     tx_all: "All",
-    transfer_btn: "Transfer TMT",
+    transfer_btn: "Transfer ¢",
     contact_support: "Message owner",
     low_balance: "Low balance?",
     low_balance_desc: "Write to owner for top-up",
@@ -632,7 +632,7 @@ export const translations = {
     vip_to_order: "To order",
     vip_contact_desc: "Chat with the admin directly",
     owner_not_set: "Owner not assigned",
-    vip_b1: "Extra daily TMT bonus",
+    vip_b1: "Extra daily ¢ bonus",
     vip_b2: "Special VIP badge and color",
     vip_b3: "Direct access to owner",
     vip_b4: "Personal support (1-on-1)",
@@ -653,7 +653,7 @@ export const translations = {
     dm_ph: "Type a message...",
     dm_no_conv: "No conversations yet",
 
-    transfer_title: "Transfer TMT",
+    transfer_title: "Transfer ¢",
     recipient_id: "Recipient ID",
     amount: "Amount",
     transfer_confirm: "Transfer",
@@ -687,8 +687,8 @@ export const translations = {
     tx_admin_add: "Added by owner",
     tx_admin_remove: "Removed by owner",
     tx_bonus: "3-day bonus",
-    tx_transfer_in: "TMT received",
-    tx_transfer_out: "TMT sent",
+    tx_transfer_in: "¢ received",
+    tx_transfer_out: "¢ sent",
     tx_register_bonus: "Welcome bonus",
 
     // ── Games Hub ──
@@ -717,7 +717,7 @@ export const translations = {
     deposit_btn: "Deposit",
     withdraw_btn: "Withdraw",
     jackpot_pool: "Jackpot Pool",
-    live_feed_title: "Live Wins",
+    live_feed_title: "LIVE",
 
     // ── Deposit ──
     deposit_title: "Deposit Request",
@@ -743,7 +743,7 @@ export const translations = {
   },
 
   tm: {
-    nav_home: "Ana sahypa",
+    nav_home: "Baş sahypa",
     nav_games: "Oýunlar",
     nav_top: "Lider",
     nav_wallet: "Gapjyk",
@@ -751,7 +751,7 @@ export const translations = {
 
     tagline: "Premium Coin Game",
     platform_desc: "Premium Coin Game platformasy",
-    bonus_100: "Agza bolup 100 TMT bonus alyň",
+    bonus_100: "Agza bolup 100 ¢ bonus alyň",
     has_account: "Hasabym bar",
     create_account: "Hasap döretmek",
     login_with_google: "Google bilen giriň",
@@ -798,8 +798,8 @@ export const translations = {
     real: "Real",
     bonus: "Bonus",
     bonus_ready: "Bonus taýýar!",
-    bonus_ready_tap: "Basyň we +50 Bonus TMT alyň",
-    bonus_ready_desc: "Her 3 günden — 50 TMT mugt",
+    bonus_ready_tap: "Basyň we +50 Bonus ¢ alyň",
+    bonus_ready_desc: "Her 3 günden — 50 ¢ mugt",
     claim_bonus: "Bonus al",
     bonus_claimed: "Bonus alyndy",
     bonus_not_ready: "Bonus heniz taýýar däl",
@@ -851,11 +851,11 @@ export const translations = {
 
     wallet: "Gapjyk",
     total_balance: "Jemi balans",
-    transfer: "TMT geçir",
+    transfer: "¢ geçir",
     tx_in: "Geldi",
     tx_out: "Gitdi",
     tx_all: "Hemmesi",
-    transfer_btn: "TMT geçir",
+    transfer_btn: "¢ geçir",
     contact_support: "Owner bilen habarlaş",
     low_balance: "Teňňäňiz azaldymy?",
     low_balance_desc: "Goşmak üçin owner bilen habarlaşyň",
@@ -984,7 +984,7 @@ export const translations = {
     vip_to_order: "Sargyt etmek üçin",
     vip_contact_desc: "Admin bilen göni habar arkaly gepleşiň",
     owner_not_set: "Häzir owner bellenilmedi",
-    vip_b1: "Goşmaça günlük TMT bonus",
+    vip_b1: "Goşmaça günlük ¢ bonus",
     vip_b2: "Ýörite VIP belgi we reňk",
     vip_b3: "Owner bilen göni habarlaşmak",
     vip_b4: "Şahsy ýardam (1-e-1)",
@@ -1005,7 +1005,7 @@ export const translations = {
     dm_ph: "Habar ýazyň...",
     dm_no_conv: "Häzir ýazyşma ýok",
 
-    transfer_title: "TMT geçiriş",
+    transfer_title: "¢ geçiriş",
     recipient_id: "Alyjynyň ID-si",
     amount: "Möçber",
     transfer_confirm: "Geçir",
@@ -1039,8 +1039,8 @@ export const translations = {
     tx_admin_add: "Owner goşdy",
     tx_admin_remove: "Owner aýyrdy",
     tx_bonus: "3 günlük Bonus",
-    tx_transfer_in: "TMT geldi",
-    tx_transfer_out: "TMT iberildi",
+    tx_transfer_in: "¢ geldi",
+    tx_transfer_out: "¢ iberildi",
     tx_register_bonus: "Hoşgeldiň bonus",
 
     // ── Games Hub ──
@@ -1069,7 +1069,7 @@ export const translations = {
     deposit_btn: "Goýmak",
     withdraw_btn: "Almak",
     jackpot_pool: "Jekpot Pul",
-    live_feed_title: "Canlı Utuşlar",
+    live_feed_title: "LIVE",
 
     // ── Deposit ──
     deposit_title: "Goýum soragy",
@@ -1103,7 +1103,7 @@ export const translations = {
 
     tagline: "Premium Coin Game",
     platform_desc: "Premium Coin Game platformasi",
-    bonus_100: "Ro'yxatdan o'ting va 100 TMT bonus oling",
+    bonus_100: "Ro'yxatdan o'ting va 100 ¢ bonus oling",
     has_account: "Hisobim bor",
     create_account: "Hisob yaratish",
     login_with_google: "Google orqali kirish",
@@ -1150,8 +1150,8 @@ export const translations = {
     real: "Real",
     bonus: "Bonus",
     bonus_ready: "Bonus tayyor!",
-    bonus_ready_tap: "Bosing va +50 Bonus TMT oling",
-    bonus_ready_desc: "Har 3 kunda — 50 TMT bepul",
+    bonus_ready_tap: "Bosing va +50 Bonus ¢ oling",
+    bonus_ready_desc: "Har 3 kunda — 50 ¢ bepul",
     claim_bonus: "Bonus olish",
     bonus_claimed: "Bonus olindi",
     bonus_not_ready: "Bonus hali tayyor emas",
@@ -1203,11 +1203,11 @@ export const translations = {
 
     wallet: "Hamyon",
     total_balance: "Jami balans",
-    transfer: "TMT o'tkazish",
+    transfer: "¢ o'tkazish",
     tx_in: "Keldi",
     tx_out: "Ketdi",
     tx_all: "Hammasi",
-    transfer_btn: "TMT o'tkazish",
+    transfer_btn: "¢ o'tkazish",
     contact_support: "Egasi bilan bog'lanish",
     low_balance: "Balans kam?",
     low_balance_desc: "To'ldirish uchun egasiga yozing",
@@ -1336,7 +1336,7 @@ export const translations = {
     vip_to_order: "Buyurtma berish uchun",
     vip_contact_desc: "Admin bilan to'g'ridan to'g'ri gaplashing",
     owner_not_set: "Hozir egasi belgilanmagan",
-    vip_b1: "Qo'shimcha kunlik TMT bonus",
+    vip_b1: "Qo'shimcha kunlik ¢ bonus",
     vip_b2: "Maxsus VIP belgi va rang",
     vip_b3: "Egasi bilan to'g'ridan to'g'ri muloqot",
     vip_b4: "Shaxsiy yordam (1-ga-1)",
@@ -1357,7 +1357,7 @@ export const translations = {
     dm_ph: "Xabar yozing...",
     dm_no_conv: "Hozircha suhbat yo'q",
 
-    transfer_title: "TMT o'tkazish",
+    transfer_title: "¢ o'tkazish",
     recipient_id: "Qabul qiluvchi ID",
     amount: "Miqdor",
     transfer_confirm: "O'tkazish",
@@ -1391,8 +1391,8 @@ export const translations = {
     tx_admin_add: "Egasi qo'shdi",
     tx_admin_remove: "Egasi olib tashladi",
     tx_bonus: "3 kunlik Bonus",
-    tx_transfer_in: "TMT keldi",
-    tx_transfer_out: "TMT yuborildi",
+    tx_transfer_in: "¢ keldi",
+    tx_transfer_out: "¢ yuborildi",
     tx_register_bonus: "Xush kelibsiz bonusi",
 
     // ── Games Hub ──
@@ -1421,7 +1421,7 @@ export const translations = {
     deposit_btn: "To'ldirish",
     withdraw_btn: "Yechish",
     jackpot_pool: "Jekpot Jamg'armasi",
-    live_feed_title: "Jonli Yutuqlar",
+    live_feed_title: "LIVE",
 
     // ── Deposit ──
     deposit_title: "To'ldirish so'rovi",

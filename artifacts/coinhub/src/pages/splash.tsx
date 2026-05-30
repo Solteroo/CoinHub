@@ -87,7 +87,7 @@ export default function Splash() {
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 select-none">
             CoinHub
           </span>
-          <LanguageSwitcher navbar />
+          <LanguageSwitcher />
         </div>
       </div>
 

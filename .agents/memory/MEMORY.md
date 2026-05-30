@@ -1,0 +1,3 @@
+- [Fake leaderboard players](fake-players.md) — 13 fake users seeded at startup in ensureFakePlayers(); they appear in search/leaderboard but can't log in (no passwordHash/email).
+- [Coin symbol](coin-symbol.md) — COIN = "¢" (cent sign), not "©" or "TMT"; all display strings use this constant from lib/coin.ts.
+- [TopHeader navigation](top-header-nav.md) — Always shows hamburger menu (no back button anywhere); language selector moved out of inline header into drawer as a beautiful bottom sheet modal.

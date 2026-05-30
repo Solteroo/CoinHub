@@ -8,7 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Menu, Search, ChevronLeft, ChevronRight, X,
+  Menu, Search, ChevronRight, X,
   Settings, Newspaper, Users, Bell, HelpCircle, Info,
   LogOut, ShieldCheck, Plus, Send, Loader2,
 } from "lucide-react";
@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { COIN } from "@/lib/coin";
 
 export function TopHeader() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user } });
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -43,8 +43,6 @@ export function TopHeader() {
   const qc = useQueryClient();
   const { t } = useI18n();
   const { toast } = useToast();
-
-  const showBack = location !== "/home" && location !== "/";
 
   const handleLogout = () => {
     logout.mutate(undefined, {
@@ -86,65 +84,61 @@ export function TopHeader() {
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-2xl border-b border-primary/10">
       {/* ── Single main row ── */}
       <div className="max-w-md mx-auto h-12 px-2 flex items-center gap-1">
-        {/* Left: Back or Hamburger */}
-        {showBack ? (
-          <button
-            onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/home")}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary active:scale-95 shrink-0"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-        ) : (
-          <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-            <SheetTrigger asChild>
-              <button className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95 shrink-0">
-                <Menu className="w-5 h-5" />
-                {(user?.unreadNotifications ?? 0) + (user?.unreadDms ?? 0) > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
-                )}
-              </button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] bg-background border-primary/20 p-0">
-              <SheetHeader className="p-4 border-b border-primary/10 bg-card/30">
-                <SheetTitle className="text-left">
-                  {user ? (
-                    <Link href="/profile">
-                      <button onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 w-full">
-                        <Avatar username={user.username} color={user.avatarColor} emoji={user.avatarEmoji} size="md" />
-                        <div className="text-left flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-sm font-bold text-white truncate">{user.username}</span>
-                            {user.isAdmin && <OwnerBadge size="xs" />}
-                          </div>
-                          <span className="text-[10px] font-mono text-muted-foreground">#{user.publicId}</span>
-                          <div className="mt-1.5"><VipLevelBar coins={user.coins} compact /></div>
+
+        {/* Left: Always hamburger menu — no back button */}
+        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <SheetTrigger asChild>
+            <button className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary relative active:scale-95 shrink-0">
+              <Menu className="w-5 h-5" />
+              {(user?.unreadNotifications ?? 0) + (user?.unreadDms ?? 0) > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
+              )}
+            </button>
+          </SheetTrigger>
+
+          <SheetContent side="left" className="w-[280px] bg-background border-primary/20 p-0">
+            <SheetHeader className="p-4 border-b border-primary/10 bg-card/30">
+              <SheetTitle className="text-left">
+                {user ? (
+                  <Link href="/profile">
+                    <button onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 w-full">
+                      <Avatar username={user.username} color={user.avatarColor} emoji={user.avatarEmoji} size="md" />
+                      <div className="text-left flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-sm font-bold text-white truncate">{user.username}</span>
+                          {user.isAdmin && <OwnerBadge size="xs" />}
                         </div>
-                      </button>
-                    </Link>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Logo className="w-7 h-7" />
-                      <span className="font-bold gold-text-gradient">CoinHub</span>
-                    </div>
-                  )}
-                </SheetTitle>
-              </SheetHeader>
-              <nav className="p-3 space-y-0.5">
-                <DrawerItem icon={Settings} label={t("settings")} onClick={() => goAndClose("/settings")} />
-                <DrawerItem icon={Bell} label={t("notifications")} onClick={() => goAndClose("/notifications")} badge={user?.unreadNotifications} />
-                <DrawerItem icon={Users} label={t("friends")} onClick={() => goAndClose("/friends")} />
-                <DrawerItem icon={Newspaper} label={t("news")} onClick={() => goAndClose("/news")} />
-                <DrawerItem icon={HelpCircle} label={t("faq")} onClick={() => goAndClose("/faq")} />
-                <DrawerItem icon={Info} label={t("about")} onClick={() => goAndClose("/about")} />
-                {user?.isAdmin && (
-                  <DrawerItem icon={ShieldCheck} label={t("owner_panel")} onClick={() => goAndClose("/admin/dashboard")} highlight />
+                        <span className="text-[10px] font-mono text-muted-foreground">#{user.publicId}</span>
+                        <div className="mt-1.5"><VipLevelBar coins={user.coins} compact /></div>
+                      </div>
+                    </button>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Logo className="w-7 h-7" />
+                    <span className="font-bold gold-text-gradient">CoinHub</span>
+                  </div>
                 )}
-                <div className="border-t border-primary/10 my-2" />
-                <DrawerItem icon={LogOut} label={t("logout")} onClick={handleLogout} destructive />
-              </nav>
-            </SheetContent>
-          </Sheet>
-        )}
+              </SheetTitle>
+            </SheetHeader>
+            <nav className="p-3 space-y-0.5">
+              <DrawerItem icon={Settings} label={t("settings")} onClick={() => goAndClose("/settings")} />
+              <DrawerItem icon={Bell} label={t("notifications")} onClick={() => goAndClose("/notifications")} badge={user?.unreadNotifications} />
+              <DrawerItem icon={Users} label={t("friends")} onClick={() => goAndClose("/friends")} />
+              <DrawerItem icon={Newspaper} label={t("news")} onClick={() => goAndClose("/news")} />
+              <DrawerItem icon={HelpCircle} label={t("faq")} onClick={() => goAndClose("/faq")} />
+              <DrawerItem icon={Info} label={t("about")} onClick={() => goAndClose("/about")} />
+              {user?.isAdmin && (
+                <DrawerItem icon={ShieldCheck} label={t("owner_panel")} onClick={() => goAndClose("/admin/dashboard")} highlight />
+              )}
+              <div className="border-t border-primary/10 my-2" />
+              {/* Language selector — opens beautiful bottom sheet */}
+              <LanguageSwitcher compact className="w-full" />
+              <div className="border-t border-primary/10 my-2" />
+              <DrawerItem icon={LogOut} label={t("logout")} onClick={handleLogout} destructive />
+            </nav>
+          </SheetContent>
+        </Sheet>
 
         {/* Logo */}
         {!searchOpen && (
@@ -152,11 +146,6 @@ export function TopHeader() {
             <Logo className="w-6 h-6" />
             <span className="font-black text-xs tracking-tight gold-text-gradient hidden xs:block">CoinHub</span>
           </Link>
-        )}
-
-        {/* Language switcher — inline, compact */}
-        {!searchOpen && (
-          <LanguageSwitcher navbar className="shrink-0" />
         )}
 
         <div className="flex-1" />

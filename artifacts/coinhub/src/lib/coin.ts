@@ -1,1 +1,1 @@
-export const COIN = "©";
+export const COIN = "¢";

@@ -1,30 +1,21 @@
 import { Layout } from "@/components/layout/Layout";
 import { Link, useLocation } from "wouter";
 import {
-  useGetMe,
-  getGetMeQueryKey,
-  useGetMyTransactions,
-  getGetMyTransactionsQueryKey,
-  useGetAdminOwner,
-  getGetAdminOwnerQueryKey,
+  useGetMe, getGetMeQueryKey,
+  useGetMyTransactions, getGetMyTransactionsQueryKey,
+  useGetAdminOwner, getGetAdminOwnerQueryKey,
 } from "@workspace/api-client-react";
 import { CoinCounter } from "@/components/ui/coin-counter";
 import { VipLevelBar } from "@/components/VipLevelBar";
 import { fmtCoins, fmtDateShort, cn } from "@/lib/utils";
 import { COIN } from "@/lib/coin";
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  ArrowRightLeft,
-  MessageCircle,
-  Coins,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Wallet as WalletIcon,
+  ArrowDownLeft, ArrowUpRight, ArrowRightLeft, MessageCircle,
+  Coins, Star, TrendingUp, TrendingDown, Wallet as WalletIcon,
+  ChevronDown, ChevronUp, Gamepad2, Gift, UserCheck, Send,
 } from "lucide-react";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/i18n";
 
 export default function Wallet() {
@@ -41,14 +32,11 @@ export default function Wallet() {
     return true;
   });
 
-  const goAdmin = () => {
-    if (owner) setLocation(`/dm/${owner.id}`);
-  };
+  const goAdmin = () => { if (owner) setLocation(`/dm/${owner.id}`); };
 
   const bonusCoins = user?.bonusCoins ?? 0;
   const realCoins = user?.realCoins ?? 0;
   const totalCoins = user?.coins ?? 0;
-
   const totalIn = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
   const totalOut = Math.abs(transactions.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0));
 
@@ -61,7 +49,6 @@ export default function Wallet() {
           <div className="absolute bottom-0 left-0 w-36 h-36 bg-blue-500/8 rounded-full blur-[50px] pointer-events-none float-orb-2" />
 
           <div className="relative z-10 space-y-4">
-            {/* Header row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center shadow">
@@ -72,12 +59,7 @@ export default function Wallet() {
               {user && <VipLevelBar coins={user.coins} compact />}
             </div>
 
-            {/* Main balance */}
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-center"
-            >
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black mb-1">{t("total_balance")}</p>
               <div className="flex items-baseline justify-center gap-2">
                 <CoinCounter value={totalCoins} className="text-5xl font-black gold-text-gradient drop-shadow-[0_0_18px_rgba(212,175,55,0.5)]" />
@@ -85,7 +67,6 @@ export default function Wallet() {
               </div>
             </motion.div>
 
-            {/* Real / Bonus cards */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-black/30 rounded-2xl p-3.5 border border-yellow-500/25 backdrop-blur-sm">
                 <div className="flex items-center gap-1.5 mb-2">
@@ -105,21 +86,15 @@ export default function Wallet() {
               </div>
             </div>
 
-            {/* Quick actions */}
             <div className="grid grid-cols-2 gap-3">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={goAdmin}
-                className="w-full h-12 rounded-2xl gold-gradient text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 neon-pulse shadow-[0_0_15px_rgba(212,175,55,0.35)]"
-              >
+              <motion.button whileTap={{ scale: 0.97 }} onClick={goAdmin}
+                className="w-full h-12 rounded-2xl gold-gradient text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 neon-pulse shadow-[0_0_15px_rgba(212,175,55,0.35)]">
                 <ArrowDownLeft className="w-4 h-4" />
                 {t("deposit_btn")}
               </motion.button>
               <Link href="/transfer">
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full h-12 rounded-2xl bg-card border border-primary/40 text-primary font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
-                >
+                <motion.button whileTap={{ scale: 0.97 }}
+                  className="w-full h-12 rounded-2xl bg-card border border-primary/40 text-primary font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
                   <ArrowRightLeft className="w-4 h-4" />
                   {t("transfer_btn")}
                 </motion.button>
@@ -152,11 +127,8 @@ export default function Wallet() {
           </div>
 
           {/* Support banner */}
-          <motion.button
-            whileTap={{ scale: 0.99 }}
-            onClick={goAdmin}
-            className="w-full bg-gradient-to-r from-primary/15 via-card to-primary/15 border border-primary/30 rounded-2xl p-4 flex items-center gap-3 gold-glow"
-          >
+          <motion.button whileTap={{ scale: 0.99 }} onClick={goAdmin}
+            className="w-full bg-gradient-to-r from-primary/15 via-card to-primary/15 border border-primary/30 rounded-2xl p-4 flex items-center gap-3 gold-glow">
             <div className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
               <MessageCircle className="w-5 h-5" />
             </div>
@@ -172,14 +144,9 @@ export default function Wallet() {
               <h2 className="text-sm font-black italic text-white uppercase tracking-tight">{t("tx_history")}</h2>
               <div className="flex bg-card rounded-xl p-1 border border-primary/10">
                 {(["all", "in", "out"] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={cn(
-                      "px-3 py-1.5 text-[10px] rounded-lg font-bold uppercase tracking-wider transition-all",
-                      filter === f ? "bg-primary text-black shadow-lg" : "text-muted-foreground",
-                    )}
-                  >
+                  <button key={f} onClick={() => setFilter(f)}
+                    className={cn("px-3 py-1.5 text-[10px] rounded-lg font-bold uppercase tracking-wider transition-all",
+                      filter === f ? "bg-primary text-black shadow-lg" : "text-muted-foreground")}>
                     {f === "all" ? t("tx_all") : f === "in" ? t("tx_in") : t("tx_out")}
                   </button>
                 ))}
@@ -193,32 +160,7 @@ export default function Wallet() {
                 </div>
               ) : (
                 filteredTxs.map((tx, i) => (
-                  <motion.div
-                    key={tx.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                    className="bg-card/50 border border-primary/5 rounded-2xl p-3.5 flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-9 h-9 rounded-xl flex items-center justify-center",
-                        tx.amount > 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive",
-                      )}>
-                        {tx.amount > 0 ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm text-white">{translateReason(tx.source, t)}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{fmtDateShort(tx.createdAt)}</p>
-                      </div>
-                    </div>
-                    <div className={cn(
-                      "font-black text-sm tabular-nums",
-                      tx.amount > 0 ? "text-emerald-500" : "text-white/80",
-                    )}>
-                      {tx.amount > 0 ? "+" : ""}{fmtCoins(tx.amount)} <span className="text-[9px] opacity-60">{COIN}</span>
-                    </div>
-                  </motion.div>
+                  <CollapsibleTxRow key={tx.id} tx={tx} index={i} t={t} />
                 ))
               )}
             </div>
@@ -229,13 +171,90 @@ export default function Wallet() {
   );
 }
 
+function CollapsibleTxRow({ tx, index, t }: { tx: any; index: number; t: (k: any) => string }) {
+  const [open, setOpen] = useState(false);
+  const isIn = tx.amount > 0;
+  const icon = getTxIcon(tx.source);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.02 }}
+      className={cn("rounded-2xl border overflow-hidden transition-all", isIn ? "border-emerald-500/15" : "border-white/8")}
+      style={{ background: isIn ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)" }}
+    >
+      {/* Main row — click to expand */}
+      <button className="w-full flex items-center gap-3 p-3.5 text-left active:scale-[0.99] transition-transform"
+        onClick={() => setOpen(v => !v)}>
+        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+          isIn ? "bg-emerald-500/12 text-emerald-500" : "bg-white/6 text-white/50")}>
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm text-white">{translateReason(tx.source, t)}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{fmtDateShort(tx.createdAt)}</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={cn("font-black text-sm tabular-nums", isIn ? "text-emerald-500" : "text-white/70")}>
+            {isIn ? "+" : ""}{fmtCoins(tx.amount)}{COIN}
+          </span>
+          {open
+            ? <ChevronUp className="w-4 h-4 text-white/30" />
+            : <ChevronDown className="w-4 h-4 text-white/30" />
+          }
+        </div>
+      </button>
+
+      {/* Expanded details */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3.5 pb-3.5 pt-0 space-y-2 border-t border-white/5 mt-0">
+              <div className="flex items-center justify-between py-1">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">ID</span>
+                <span className="text-[10px] font-mono text-white/50">{tx.id?.slice(0, 16)}…</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{isIn ? "+" : "−"} {fmtCoins(Math.abs(tx.amount))}{COIN}</span>
+                <span className={cn("text-[10px] font-black uppercase px-2 py-0.5 rounded-full",
+                  isIn ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400")}>
+                  {isIn ? "✓ IN" : "↑ OUT"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Source</span>
+                <span className="text-[10px] font-mono text-white/50">{tx.source}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function getTxIcon(source: string) {
+  if (source?.startsWith("game_")) return <Gamepad2 className="w-4 h-4" />;
+  if (source === "bonus" || source === "register_bonus") return <Gift className="w-4 h-4" />;
+  if (source?.startsWith("transfer")) return <Send className="w-4 h-4" />;
+  if (source?.startsWith("admin")) return <UserCheck className="w-4 h-4" />;
+  return <Coins className="w-4 h-4" />;
+}
+
 function translateReason(source: string, t: (k: any) => string) {
   const map: Record<string, any> = {
     game_slot: "tx_game_slot", game_spin: "tx_game_spin", game_luckybox: "tx_game_luckybox",
     game_crash: "tx_game_crash", game_dice: "tx_game_dice", game_roulette: "tx_game_roulette",
-    game_plinko: "tx_game_plinko", game_mines: "tx_game_mines", admin_add: "tx_admin_add",
-    admin_remove: "tx_admin_remove", bonus: "tx_bonus", transfer_in: "tx_transfer_in",
-    transfer_out: "tx_transfer_out", register_bonus: "tx_register_bonus",
+    game_plinko: "tx_game_plinko", game_mines: "tx_game_mines", game_hilo: "tx_game_mines",
+    admin_add: "tx_admin_add", admin_remove: "tx_admin_remove", bonus: "tx_bonus",
+    transfer_in: "tx_transfer_in", transfer_out: "tx_transfer_out", register_bonus: "tx_register_bonus",
   };
   return map[source] ? t(map[source]) : source;
 }
