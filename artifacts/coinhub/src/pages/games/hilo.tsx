@@ -49,6 +49,7 @@ export default function HiLoGame() {
       setTimeout(() => {
         setShowResult(true);
         if (data.netChange > 0) { playWin(); confetti({ particleCount: 80, spread: 55, origin: { y: 0.5 }, colors: [ACCENT, "#fde047"] }); }
+        else if (data.netChange === 0) { /* push — no sound */ }
         else playLose();
       }, 300);
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
@@ -76,9 +77,11 @@ export default function HiLoGame() {
               width: "min(150px, 42vw)",
               height: "min(210px, 55vw)",
               background: result !== null ? "#fff" : "rgba(255,255,255,0.06)",
-              borderColor: result !== null ? (result.netChange > 0 ? "#22c55e" : "#ef4444") : "rgba(255,255,255,0.15)",
+              borderColor: result !== null
+                ? (result.netChange > 0 ? "#22c55e" : result.netChange === 0 ? "#a78bfa" : "#ef4444")
+                : "rgba(255,255,255,0.15)",
               boxShadow: result !== null
-                ? (result.netChange > 0 ? "0 0 50px rgba(34,197,94,0.5)" : "0 0 50px rgba(239,68,68,0.35)")
+                ? (result.netChange > 0 ? "0 0 50px rgba(34,197,94,0.5)" : result.netChange === 0 ? "0 0 40px rgba(167,139,250,0.45)" : "0 0 50px rgba(239,68,68,0.35)")
                 : `0 0 40px ${ACCENT}35`,
             }}
           >
@@ -105,9 +108,9 @@ export default function HiLoGame() {
             })}
           </div>
           <div className="flex gap-5 text-[10px] font-bold">
-            <span style={{ color: "#60a5fa" }}>▼ LO: A–6</span>
-            <span className="text-white/25">7=0</span>
-            <span style={{ color: ACCENT }}>▲ HI: 8–K</span>
+            <span style={{ color: "#60a5fa" }}>▼ LO: A–6 · 1.92×</span>
+            <span className="text-white/40 px-2 py-0.5 rounded-md border border-white/10" style={{ background: "rgba(255,255,255,0.05)" }}>7=PUSH</span>
+            <span style={{ color: ACCENT }}>▲ HI: 8–K · 1.92×</span>
           </div>
         </div>
 
@@ -123,13 +126,13 @@ export default function HiLoGame() {
               className="h-16 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] disabled:opacity-35 border-2 transition-all"
               style={{ background: `${ACCENT}18`, borderColor: `${ACCENT}60`, color: ACCENT, boxShadow: `0 0 28px ${ACCENT}35` }}>
               <ArrowUp className="w-5 h-5" />
-              HI (8–K) · 1.85×
+              HI (8–K) · 1.92×
             </button>
             <button onClick={() => handlePlay("low")} disabled={loading || !user || bet > (user?.coins ?? 0)}
               className="h-16 rounded-2xl font-black text-sm uppercase tracking-tight flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] disabled:opacity-35 border-2 transition-all"
               style={{ background: "rgba(96,165,250,0.15)", borderColor: "rgba(96,165,250,0.5)", color: "#60a5fa", boxShadow: "0 0 28px rgba(96,165,250,0.25)" }}>
               <ArrowDown className="w-5 h-5" />
-              LO (A–6) · 1.85×
+              LO (A–6) · 1.92×
             </button>
           </div>
         ) : (

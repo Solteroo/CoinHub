@@ -90,7 +90,14 @@ export default function LuckyBoxGame() {
 
         {/* 3×3 box grid */}
         <div className="flex-1 min-h-0 flex items-center justify-center">
-          <div className="w-full grid grid-cols-3 gap-3" style={{ maxHeight: "100%" }}>
+          <div
+            className="w-full grid grid-cols-3 gap-3 p-3 rounded-2xl"
+            style={{
+              background: "rgba(245,158,11,0.04)",
+              border: "1px solid rgba(245,158,11,0.12)",
+              boxShadow: "inset 0 2px 40px rgba(0,0,0,0.35)",
+            }}
+          >
             {Array.from({ length: 9 }).map((_, i) => {
               const isPicked = pickedIndex === i;
               const reveal = result?.boxes?.[i];
@@ -101,25 +108,63 @@ export default function LuckyBoxGame() {
                 <AnimatePresence key={i} mode="wait">
                   {!isRevealed ? (
                     <motion.button key="closed"
-                      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-                      whileHover={!playing ? { scale: 1.06, y: -4 } : {}} whileTap={!playing ? { scale: 0.92 } : {}}
-                      onClick={() => handleOpen(i)} transition={{ delay: i * 0.03 }}
-                      className="aspect-square rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all"
-                      style={{ background: isPicked ? `${ACCENT}25` : "rgba(255,255,255,0.04)", borderColor: isPicked ? ACCENT : "rgba(255,255,255,0.1)", boxShadow: isPicked ? `0 0 28px ${ACCENT}45` : undefined }}>
-                      <Lock className="w-8 h-8" style={{ color: isPicked ? ACCENT : "rgba(255,255,255,0.2)" }} />
-                      <span className="text-[10px] font-bold text-white/30">#{i + 1}</span>
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      whileHover={!playing ? { scale: 1.07, y: -5 } : {}}
+                      whileTap={!playing ? { scale: 0.9 } : {}}
+                      onClick={() => handleOpen(i)}
+                      transition={{ delay: i * 0.04 }}
+                      className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 relative overflow-hidden"
+                      style={{
+                        background: isPicked
+                          ? `linear-gradient(145deg, ${ACCENT}35, ${ACCENT}18)`
+                          : "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
+                        border: `2px solid ${isPicked ? ACCENT : "rgba(255,255,255,0.1)"}`,
+                        boxShadow: isPicked
+                          ? `0 0 32px ${ACCENT}55, inset 0 1px 0 rgba(255,255,255,0.2)`
+                          : "inset 0 1px 0 rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none"
+                        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.09), transparent)", borderRadius: "14px 14px 0 0" }} />
+                      <span className="text-3xl leading-none select-none" style={{ filter: `drop-shadow(0 4px 8px rgba(0,0,0,0.5)) drop-shadow(0 0 16px ${ACCENT}60)` }}>
+                        {isPicked ? "📦" : "🎁"}
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: isPicked ? ACCENT : "rgba(255,255,255,0.25)" }}>
+                        #{i + 1}
+                      </span>
                     </motion.button>
                   ) : (
                     <motion.div key="revealed"
-                      initial={{ rotateY: 90, scale: 0.8 }} animate={{ rotateY: 0, scale: isPicked ? 1.06 : 1 }}
-                      transition={{ delay: i * 0.06, type: "spring", stiffness: 200, damping: 20 }}
-                      className="aspect-square rounded-2xl border-2 flex flex-col items-center justify-center gap-1"
-                      style={{ background: isPicked && hasWin ? "rgba(52,211,153,0.15)" : isPicked && !hasWin ? "rgba(239,68,68,0.15)" : !isPicked && hasWin ? `${ACCENT}10` : "rgba(255,255,255,0.03)", borderColor: isPicked && hasWin ? "rgba(52,211,153,0.5)" : isPicked && !hasWin ? "rgba(239,68,68,0.4)" : !isPicked && hasWin ? `${ACCENT}40` : "rgba(255,255,255,0.06)", boxShadow: isPicked && hasWin ? "0 0 25px rgba(52,211,153,0.35)" : isPicked && !hasWin ? "0 0 20px rgba(239,68,68,0.2)" : undefined }}>
+                      initial={{ rotateY: 90, scale: 0.8 }}
+                      animate={{ rotateY: 0, scale: isPicked ? 1.07 : 1 }}
+                      transition={{ delay: i * 0.05, type: "spring", stiffness: 220, damping: 22 }}
+                      className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 relative overflow-hidden"
+                      style={{
+                        background:
+                          isPicked && hasWin ? "linear-gradient(145deg, rgba(52,211,153,0.25), rgba(52,211,153,0.12))"
+                          : isPicked && !hasWin ? "linear-gradient(145deg, rgba(239,68,68,0.22), rgba(239,68,68,0.12))"
+                          : hasWin ? `linear-gradient(145deg, ${ACCENT}18, ${ACCENT}08)`
+                          : "linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
+                        border: `2px solid ${isPicked && hasWin ? "rgba(52,211,153,0.55)" : isPicked && !hasWin ? "rgba(239,68,68,0.45)" : hasWin ? `${ACCENT}45` : "rgba(255,255,255,0.07)"}`,
+                        boxShadow:
+                          isPicked && hasWin ? "0 0 28px rgba(52,211,153,0.4), inset 0 1px 0 rgba(255,255,255,0.15)"
+                          : isPicked && !hasWin ? "0 0 22px rgba(239,68,68,0.3)"
+                          : undefined,
+                      }}>
+                      <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none"
+                        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.07), transparent)", borderRadius: "14px 14px 0 0" }} />
                       {reveal && (
                         <>
-                          <Unlock className={cn("w-5 h-5", hasWin ? "text-emerald-400" : "text-white/20")} />
-                          <span className="text-2xl font-black italic tabular-nums"
-                            style={{ color: hasWin ? (isPicked ? "#34d399" : ACCENT) : "rgba(255,255,255,0.2)" }}>
+                          <span className="text-xl leading-none select-none">
+                            {isPicked && hasWin ? "✨" : isPicked && !hasWin ? "💨" : hasWin ? "💎" : "📭"}
+                          </span>
+                          <span className="text-xl font-black italic tabular-nums"
+                            style={{
+                              color: hasWin ? (isPicked ? "#34d399" : ACCENT) : "rgba(255,255,255,0.18)",
+                              textShadow: hasWin ? `0 0 16px ${isPicked ? "rgba(52,211,153,0.7)" : `${ACCENT}70`}` : undefined,
+                            }}>
                             {reveal.multiplier}×
                           </span>
                           {isPicked && result?.rarity && <RarityBadge rarity={result.rarity} className="scale-90" />}

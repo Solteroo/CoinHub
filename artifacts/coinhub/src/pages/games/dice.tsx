@@ -96,9 +96,9 @@ export default function DiceGame() {
         {/* HIGH / LOW buttons */}
         <div className="shrink-0 grid grid-cols-2 gap-3">
           {([
-            { id: "high", icon: TrendingUp, label: t("dice_high"), range: "8–12", color: "#34d399", bg: "rgba(52,211,153,0.12)" },
-            { id: "low",  icon: TrendingDown, label: t("dice_low"),  range: "2–6",  color: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
-          ] as const).map(({ id, icon: Icon, label, range, color, bg }) => (
+            { id: "high", icon: TrendingUp, label: t("dice_high"), range: "7–12", mult: "1.60×", color: "#34d399", bg: "rgba(52,211,153,0.12)" },
+            { id: "low",  icon: TrendingDown, label: t("dice_low"),  range: "2–6",  mult: "2.15×", color: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
+          ] as const).map(({ id, icon: Icon, label, range, mult, color, bg }) => (
             <button
               key={id}
               onClick={() => { setChoice(id); playClick(); }}
@@ -114,7 +114,7 @@ export default function DiceGame() {
               <Icon className="w-5 h-5 shrink-0" />
               <div className="text-left">
                 <div>{label}</div>
-                <div className="text-[9px] font-bold opacity-60">{range} · 1.96×</div>
+                <div className="text-[9px] font-bold opacity-60">{range} · {mult}</div>
               </div>
             </button>
           ))}

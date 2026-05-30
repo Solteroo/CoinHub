@@ -10,7 +10,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { LiveActivityFeed } from "@/components/LiveActivityFeed";
-import { GamePreviewModal, type GameModalInfo } from "@/components/GamePreviewModal";
 import { GAME_META, type GameMeta } from "@/lib/game-data";
 import { playClick, playWin } from "@/lib/sounds";
 import { Search, Gift, Loader2, ChevronRight, TrendingUp, Zap, MessageCircle } from "lucide-react";
@@ -195,7 +194,6 @@ export default function Home() {
   const claimBonus = useClaimBonus();
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [selectedGame, setSelectedGame] = useState<GameModalInfo | null>(null);
   const [gameSearch, setGameSearch] = useState("");
 
   useEffect(() => {
@@ -214,23 +212,6 @@ export default function Home() {
       onError: (err: any) => {
         toast({ title: t("bonus_not_ready"), description: err?.message ?? "", variant: "destructive" });
       },
-    });
-  };
-
-  const openGame = (meta: GameMeta) => {
-    playClick();
-    setSelectedGame({
-      title: t(meta.titleKey),
-      desc: t(meta.descKey),
-      href: meta.href,
-      emoji: meta.emoji,
-      badge: t(meta.badgeKey),
-      badgeClass: meta.badgeClass,
-      gradient: meta.gradient,
-      rtp: meta.rtp,
-      maxWin: meta.maxWin,
-      volatility: meta.volatility,
-      accentText: meta.accentText,
     });
   };
 
@@ -318,7 +299,7 @@ export default function Home() {
               <div className="overflow-x-auto no-scrollbar">
                 <div className="flex gap-2.5 px-3 pb-1">
                   {filteredGames.map((meta, i) => (
-                    <GameCard key={meta.href} meta={meta} index={i} onClick={() => openGame(meta)} />
+                    <GameCard key={meta.href} meta={meta} index={i} onClick={() => { playClick(); setLocation(meta.href); }} />
                   ))}
                   {/* Load more card */}
                   <Link href="/games" className="shrink-0">
@@ -400,7 +381,6 @@ export default function Home() {
         </div>
       </div>
 
-      <GamePreviewModal game={selectedGame} onClose={() => setSelectedGame(null)} />
     </Layout>
   );
 }

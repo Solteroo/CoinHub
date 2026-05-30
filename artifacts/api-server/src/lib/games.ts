@@ -19,14 +19,14 @@ interface SlotOutcome {
 }
 
 const SLOT_OUTCOMES: SlotOutcome[] = [
-  { weight: 78, multiplier: 0, type: "lose", rarity: "common", label: "Şowsuz" },
-  { weight: 12, multiplier: 1.3, type: "two_match", rarity: "common", label: "Iki sany" },
-  { weight: 4, multiplier: 2.2, type: "triple_bar", symbols: "BAR", rarity: "common", label: "Üç BAR" },
-  { weight: 3, multiplier: 3.5, type: "triple_club", symbols: "♣", rarity: "rare", label: "Üç ♣" },
-  { weight: 1.6, multiplier: 6, type: "triple_heart", symbols: "♥", rarity: "rare", label: "Üç ♥" },
-  { weight: 0.8, multiplier: 12, type: "triple_diamond", symbols: "♦", rarity: "epic", label: "Üç ♦" },
-  { weight: 0.5, multiplier: 30, type: "triple_star", symbols: "★", rarity: "epic", label: "Üç ★" },
-  { weight: 0.1, multiplier: 150, type: "triple_seven", symbols: "7", rarity: "legendary", label: "JEKPOT 777" },
+  { weight: 65, multiplier: 0,   type: "lose",          rarity: "common",    label: "Şowsuz" },
+  { weight: 20, multiplier: 1.3, type: "two_match",     rarity: "common",    label: "Iki sany" },
+  { weight: 7,  multiplier: 2.2, type: "triple_bar",    symbols: "BAR", rarity: "common",    label: "Üç BAR" },
+  { weight: 4,  multiplier: 3.5, type: "triple_club",   symbols: "♣",   rarity: "rare",      label: "Üç ♣" },
+  { weight: 2,  multiplier: 6,   type: "triple_heart",  symbols: "♥",   rarity: "rare",      label: "Üç ♥" },
+  { weight: 1,  multiplier: 12,  type: "triple_diamond",symbols: "♦",   rarity: "epic",      label: "Üç ♦" },
+  { weight: 0.5,multiplier: 30,  type: "triple_star",   symbols: "★",   rarity: "epic",      label: "Üç ★" },
+  { weight: 0.1,multiplier: 150, type: "triple_seven",  symbols: "7",   rarity: "legendary", label: "JEKPOT 777" },
 ];
 
 export function spinSlot(): { symbols: [SlotSymbol, SlotSymbol, SlotSymbol]; multiplier: number; rarity: SlotOutcome["rarity"]; label: string; outcome: SlotOutcome["type"] } {
@@ -118,9 +118,11 @@ export function rollDice(): { dice1: number; dice2: number; total: number } {
   return { dice1, dice2, total: dice1 + dice2 };
 }
 
+// HIGH = 7-12 (P=21/36=58.3%), pays 1.60x → RTP 93%
+// LOW  = 2-6  (P=15/36=41.7%), pays 2.15x → RTP 90%
 export function diceMultiplier(choice: "high" | "low", total: number): number {
-  if (choice === "high" && total >= 8) return 1.85;
-  if (choice === "low" && total <= 6) return 1.85;
+  if (choice === "high" && total >= 7) return 1.6;
+  if (choice === "low" && total <= 6)  return 2.15;
   return 0;
 }
 
@@ -179,14 +181,16 @@ export function rollPlinko(risk: "low" | "medium" | "high"): { bucket: number; p
 }
 
 // ─── HI-LO ────────────────────────────────────────────────────────────────────
-// Card 1-13. High = 8-13, Low = 1-6, 7 = push (neither). Payout 1.85x
+// Card 1-13. High = 8-13 (6/13=46.2%), Low = 1-6 (6/13=46.2%), 7 = PUSH (return bet).
+// Payout: WIN pays 1.92x, PUSH returns bet (1.0x). RTP ≈ 96%.
 export function rollHiLo(): { card: number } {
   return { card: Math.ceil(Math.random() * 13) };
 }
 
 export function hiLoMultiplier(choice: "high" | "low", card: number): number {
-  if (choice === "high" && card >= 8) return 1.85;
-  if (choice === "low" && card <= 6) return 1.85;
+  if (card === 7) return 1.0;                          // PUSH — return bet
+  if (choice === "high" && card >= 8) return 1.92;
+  if (choice === "low"  && card <= 6) return 1.92;
   return 0;
 }
 

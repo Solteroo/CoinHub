@@ -108,21 +108,79 @@ export default function MinesGame() {
 
         {/* Mine grid */}
         <div className="flex-1 min-h-0 flex items-center justify-center">
-          <div className="w-full grid grid-cols-5 gap-2" style={{ maxHeight: "100%" }}>
+          <div
+            className="w-full grid grid-cols-5 gap-2 p-3 rounded-2xl"
+            style={{
+              background: "rgba(249,115,22,0.04)",
+              border: "1px solid rgba(249,115,22,0.12)",
+              boxShadow: "inset 0 2px 30px rgba(0,0,0,0.3)",
+            }}
+          >
             {Array.from({ length: 25 }, (_, i) => {
               const state = getCellState(i);
               return (
-                <motion.button key={i} onClick={() => togglePick(i)} whileTap={!submitted ? { scale: 0.85 } : {}}
-                  className="aspect-square rounded-xl flex items-center justify-center border-2 transition-all"
+                <motion.button
+                  key={i}
+                  onClick={() => togglePick(i)}
+                  whileTap={!submitted ? { scale: 0.82 } : {}}
+                  whileHover={!submitted && state === "default" ? { scale: 1.06, y: -2 } : {}}
+                  className="aspect-square rounded-xl flex items-center justify-center border transition-all relative overflow-hidden"
                   style={{
-                    background: state === "default" ? "rgba(255,255,255,0.04)" : state === "picked" ? "rgba(249,115,22,0.18)" : state === "safe" ? "rgba(52,211,153,0.18)" : "rgba(239,68,68,0.18)",
-                    borderColor: state === "default" ? "rgba(255,255,255,0.07)" : state === "picked" ? "rgba(249,115,22,0.7)" : state === "safe" ? "rgba(52,211,153,0.7)" : "rgba(239,68,68,0.7)",
-                    boxShadow: state === "picked" ? `0 0 14px ${ACCENT}45` : state === "safe" ? "0 0 14px rgba(52,211,153,0.35)" : state === "mine" ? "0 0 14px rgba(239,68,68,0.35)" : undefined,
-                  }}>
-                  <AnimatePresence>
-                    {state === "safe" && <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}><Star className="w-4 h-4 text-emerald-400" /></motion.div>}
-                    {state === "mine" && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Bomb className="w-4 h-4 text-red-400" /></motion.div>}
-                    {state === "picked" && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-xs font-black" style={{ color: ACCENT }}>{picks.indexOf(i) + 1}</motion.span>}
+                    background:
+                      state === "default"
+                        ? "linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))"
+                        : state === "picked"
+                        ? `linear-gradient(145deg, ${ACCENT}30, ${ACCENT}18)`
+                        : state === "safe"
+                        ? "linear-gradient(145deg, rgba(52,211,153,0.28), rgba(52,211,153,0.15))"
+                        : "linear-gradient(145deg, rgba(239,68,68,0.3), rgba(239,68,68,0.18))",
+                    borderColor:
+                      state === "default"
+                        ? "rgba(255,255,255,0.09)"
+                        : state === "picked"
+                        ? `${ACCENT}80`
+                        : state === "safe"
+                        ? "rgba(52,211,153,0.7)"
+                        : "rgba(239,68,68,0.75)",
+                    boxShadow:
+                      state === "picked"
+                        ? `0 0 18px ${ACCENT}50, inset 0 1px 0 rgba(255,255,255,0.12)`
+                        : state === "safe"
+                        ? "0 0 18px rgba(52,211,153,0.45), inset 0 1px 0 rgba(255,255,255,0.15)"
+                        : state === "mine"
+                        ? "0 0 18px rgba(239,68,68,0.45), inset 0 1px 0 rgba(255,100,100,0.2)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.06)",
+                  }}
+                >
+                  {/* Cell inner shine */}
+                  {state === "default" && (
+                    <div className="absolute inset-x-0 top-0 h-1/2 rounded-t-xl pointer-events-none"
+                      style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.07), transparent)" }} />
+                  )}
+                  <AnimatePresence mode="wait">
+                    {state === "safe" && (
+                      <motion.div key="safe" initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 320, damping: 18 }}>
+                        <Star className="w-4 h-4 fill-emerald-400 text-emerald-400" style={{ filter: "drop-shadow(0 0 6px rgba(52,211,153,0.8))" }} />
+                      </motion.div>
+                    )}
+                    {state === "mine" && (
+                      <motion.div key="mine" initial={{ scale: 0, rotate: 30 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 280, damping: 15 }}>
+                        <Bomb className="w-4 h-4 text-red-400" style={{ filter: "drop-shadow(0 0 8px rgba(239,68,68,0.9))" }} />
+                      </motion.div>
+                    )}
+                    {state === "picked" && (
+                      <motion.span key="picked" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                        className="text-sm font-black" style={{ color: ACCENT, textShadow: `0 0 10px ${ACCENT}` }}>
+                        {picks.indexOf(i) + 1}
+                      </motion.span>
+                    )}
+                    {state === "default" && (
+                      <motion.span key="default" className="text-[11px] text-white/10 font-bold select-none">
+                        {i + 1}
+                      </motion.span>
+                    )}
                   </AnimatePresence>
                 </motion.button>
               );
