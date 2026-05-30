@@ -1,16 +1,15 @@
-import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 import { Gamepad2, Percent } from "lucide-react";
 import { GAME_META, type GameMeta } from "@/lib/game-data";
-import { GamePreviewModal, type GameModalInfo } from "@/components/GamePreviewModal";
 import { playClick } from "@/lib/sounds";
+import { useLocation } from "wouter";
 
 export default function GamesHub() {
   const { t } = useI18n();
-  const [selected, setSelected] = useState<GameModalInfo | null>(null);
+  const [, setLocation] = useLocation();
 
   const games = GAME_META.map((g) => ({
     ...g,
@@ -19,27 +18,9 @@ export default function GamesHub() {
     badge: t(g.badgeKey),
   }));
 
-  const open = (g: (typeof games)[number]) => {
-    playClick();
-    setSelected({
-      title: g.title,
-      desc: g.desc,
-      href: g.href,
-      emoji: g.emoji,
-      badge: g.badge,
-      badgeClass: g.badgeClass,
-      gradient: g.gradient,
-      rtp: g.rtp,
-      maxWin: g.maxWin,
-      volatility: g.volatility,
-      accentText: g.accentText,
-    });
-  };
-
   return (
     <Layout>
       <div className="pb-28">
-        {/* Games Header with animated bg */}
         <div className="relative overflow-hidden hero-grid px-4 pt-5 pb-6">
           <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-[60px] pointer-events-none float-orb" />
           <div className="absolute bottom-0 left-0 w-36 h-36 bg-purple-500/10 rounded-full blur-[50px] pointer-events-none float-orb-2" />
@@ -58,17 +39,19 @@ export default function GamesHub() {
           </div>
         </div>
 
-        {/* 2-column PRO Grid */}
         <div className="px-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
             {games.map((game, i) => (
-              <GameCard key={game.href} game={game} index={i} onOpen={() => open(game)} />
+              <GameCard
+                key={game.href}
+                game={game}
+                index={i}
+                onOpen={() => { playClick(); setLocation(game.href); }}
+              />
             ))}
           </div>
         </div>
       </div>
-
-      <GamePreviewModal game={selected} onClose={() => setSelected(null)} />
     </Layout>
   );
 }
@@ -97,14 +80,10 @@ function GameCard({
       )}
       style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)" }}
     >
-      {/* Top section */}
       <div className="p-4 flex-1 flex flex-col gap-2">
-        {/* Animated emoji */}
         <div className={cn("text-4xl leading-none drop-shadow-lg select-none w-fit", game.animClass)}>
           {game.emoji}
         </div>
-
-        {/* Title + badge */}
         <div>
           <h3 className="font-black text-sm text-white uppercase tracking-tight italic leading-tight">
             {game.title}
@@ -113,8 +92,6 @@ function GameCard({
             {game.badge}
           </span>
         </div>
-
-        {/* RTP badge */}
         <div className="flex items-center gap-1 mt-auto pt-1">
           <Percent className="w-2.5 h-2.5 text-muted-foreground" />
           <span className="text-[9px] font-bold text-muted-foreground">RTP {game.rtp}</span>
@@ -123,7 +100,6 @@ function GameCard({
         </div>
       </div>
 
-      {/* Play button bar */}
       <div className="px-3 py-2.5 border-t border-white/5 flex items-center justify-between bg-black/20">
         <span className={cn("text-[10px] font-black uppercase tracking-widest", game.accentText)}>
           PLAY
@@ -133,7 +109,6 @@ function GameCard({
         </div>
       </div>
 
-      {/* Shine overlay on hover */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-tr from-transparent via-white/[0.04] to-transparent pointer-events-none transition-opacity duration-300" />
     </motion.div>
   );
