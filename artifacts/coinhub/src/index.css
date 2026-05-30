@@ -48,16 +48,16 @@
 }
 
 :root, .dark {
-  --background: 240 10% 5%; /* #0a0a0f */
-  --foreground: 43 20% 90%; /* warm light gray */
+  --background: 210 42% 10%; /* #0f1923 Stake navy */
+  --foreground: 210 20% 92%;
   
-  --card: 240 15% 9%; /* #14141c */
-  --card-foreground: 43 20% 90%;
-  --card-border: 43 30% 20%;
+  --card: 208 40% 15%; /* #192839 */
+  --card-foreground: 210 20% 92%;
+  --card-border: 210 30% 22%;
   
-  --popover: 240 15% 9%;
-  --popover-foreground: 43 20% 90%;
-  --popover-border: 43 30% 20%;
+  --popover: 208 40% 13%;
+  --popover-foreground: 210 20% 92%;
+  --popover-border: 210 30% 22%;
   
   --primary: 43 80% 55%; /* gold */
   --primary-foreground: 240 10% 5%;
@@ -65,8 +65,8 @@
   --secondary: 43 20% 15%;
   --secondary-foreground: 43 50% 70%;
   
-  --muted: 240 10% 15%;
-  --muted-foreground: 43 10% 60%;
+  --muted: 210 30% 18%;
+  --muted-foreground: 210 15% 52%;
   
   --accent: 43 80% 55%;
   --accent-foreground: 240 10% 5%;
@@ -74,8 +74,8 @@
   --destructive: 0 60% 40%;
   --destructive-foreground: 0 0% 100%;
   
-  --border: 43 30% 15%;
-  --input: 240 10% 15%;
+  --border: 210 30% 20%;
+  --input: 210 30% 18%;
   --ring: 43 80% 55%;
   
   --app-font-sans: 'Space Grotesk', sans-serif;
@@ -88,9 +88,7 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30 selection:text-primary;
-    background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent 40%),
-                      radial-gradient(circle at bottom left, rgba(212, 175, 55, 0.05), transparent 40%);
-    background-attachment: fixed;
+    background-image: none;
   }
 }
 
@@ -228,3 +226,7 @@
 
 /* ── pb-safe for notch devices ── */
 .pb-safe { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+
+/* ── Hide scrollbars (horizontal game scroll) ── */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
