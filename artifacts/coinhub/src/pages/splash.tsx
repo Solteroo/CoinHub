@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Link } from "wouter";
 
 type Mode = "choose" | "login" | "register";
 
@@ -210,6 +211,17 @@ export default function Splash() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : mode === "login" ? t("submit_login") : t("submit_register")}
               </Button>
+
+              {mode === "login" && (
+                <div className="text-center pt-1">
+                  <Link
+                    href="/reset-password"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {t("forgot_password")}
+                  </Link>
+                </div>
+              )}
             </motion.form>
           )}
         </AnimatePresence>

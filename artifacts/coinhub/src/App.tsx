@@ -41,6 +41,7 @@ import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminUserDetail from "@/pages/admin/user-detail";
 import AdminTransactions from "@/pages/admin/transactions";
+import ResetPassword from "@/pages/reset-password";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,8 @@ function Router() {
       <Route path="/dm/:userId" component={DmThread} />
       <Route path="/u/:publicId" component={PublicProfile} />
       <Route path="/transfer" component={Transfer} />
+
+      <Route path="/reset-password" component={ResetPassword} />
 
       <Route path="/admin" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />

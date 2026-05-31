@@ -3,3 +3,4 @@ export * from "./transactions";
 export * from "./chat";
 export * from "./social";
 export * from "./sessions";
+export * from "./password-resets";
