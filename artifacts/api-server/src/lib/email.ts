@@ -37,7 +37,8 @@ export async function sendPasswordResetEmail(to: string, code: string): Promise<
       `,
     });
     return true;
-  } catch {
+  } catch (err) {
+    console.error("[email] sendMail failed:", err);
     return false;
   }
 }
