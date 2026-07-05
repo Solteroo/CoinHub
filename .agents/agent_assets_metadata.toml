@@ -12,3 +12,9 @@ id = "9D1sSOC6NrEHbu56Rj7-H"
 uri = "file://coinhub-html.zip"
 type = "unspecified"
 title = "CoinHub — Standalone HTML/CSS/JS (indirip açyp işlediň)"
+
+[[outputs]]
+id = "fqb1lhd8MInOsoH6OnXu6"
+uri = "file://coinhub-files.zip"
+type = "unspecified"
+title = "CoinHub — index.html + style.css + app.js"
