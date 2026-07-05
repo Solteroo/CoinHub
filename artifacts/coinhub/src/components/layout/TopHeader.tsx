@@ -29,7 +29,7 @@ import { COIN } from "@/lib/coin";
 export function TopHeader() {
   const [, setLocation] = useLocation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
-  const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user } });
+  const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user, staleTime: 10 * 60_000 } });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);

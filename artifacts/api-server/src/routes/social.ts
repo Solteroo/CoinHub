@@ -102,7 +102,8 @@ router.get("/friends", requireUser, async (req, res) => {
       createdAt: friendshipsTable.createdAt,
     })
     .from(friendshipsTable)
-    .where(or(eq(friendshipsTable.userIdA, me.id), eq(friendshipsTable.userIdB, me.id)));
+    .where(or(eq(friendshipsTable.userIdA, me.id), eq(friendshipsTable.userIdB, me.id)))
+    .limit(500);
   const otherIds = rows.map((r) => (r.userIdA === me.id ? r.userIdB : r.userIdA));
   const users = otherIds.length
     ? await db

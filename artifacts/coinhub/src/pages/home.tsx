@@ -190,7 +190,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const { t } = useI18n();
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
-  const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user } });
+  const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), enabled: !!user, staleTime: 10 * 60_000 } });
   const claimBonus = useClaimBonus();
   const qc = useQueryClient();
   const { toast } = useToast();

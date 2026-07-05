@@ -21,7 +21,7 @@ import { useI18n } from "@/i18n";
 export default function Wallet() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: transactions = [] } = useGetMyTransactions({ query: { queryKey: getGetMyTransactionsQueryKey() } });
-  const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey() } });
+  const { data: owner } = useGetAdminOwner({ query: { queryKey: getGetAdminOwnerQueryKey(), staleTime: 10 * 60_000 } });
   const [, setLocation] = useLocation();
   const [filter, setFilter] = useState<"all" | "in" | "out">("all");
   const { t } = useI18n();
