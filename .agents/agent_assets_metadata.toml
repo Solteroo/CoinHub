@@ -18,3 +18,9 @@ id = "fqb1lhd8MInOsoH6OnXu6"
 uri = "file://coinhub-files.zip"
 type = "unspecified"
 title = "CoinHub — index.html + style.css + app.js"
+
+[[outputs]]
+id = "sqOpGeYJ_6_k_mcQ0mG1r"
+uri = "file://coinhub-full.zip"
+type = "unspecified"
+title = "CoinHub Doly Wersiýa (4 faýl)"
