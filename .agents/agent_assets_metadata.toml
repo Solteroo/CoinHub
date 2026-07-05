@@ -6,3 +6,9 @@ id = "GyZ3ZeuK780YWqW6zjmDU"
 uri = "file://coinhub-standalone.zip"
 type = "unspecified"
 title = "CoinHub — Standalone HTML (ZIP)"
+
+[[outputs]]
+id = "9D1sSOC6NrEHbu56Rj7-H"
+uri = "file://coinhub-html.zip"
+type = "unspecified"
+title = "CoinHub — Standalone HTML/CSS/JS (indirip açyp işlediň)"

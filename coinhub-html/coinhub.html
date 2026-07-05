@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoinHub — Wirtual Kazino</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#D4AF37;--gold2:#b8963e;--bg:#0a0a0f;--s1:#141420;--s2:#1e1e2e;
+  --border:#2a2a3e;--text:#e5e5e5;--muted:#8888aa;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+#app{max-width:480px;margin:0 auto;min-height:100vh;position:relative}
+
+/* UTILS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:.2s}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000}
+.btn-gold:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-gold:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none}
+.btn-out{background:transparent;border:1.5px solid var(--gold);color:var(--gold)}
+.btn-out:hover{background:rgba(212,175,55,.1)}
+.btn-out:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff}
+.btn-red:disabled{opacity:.4;cursor:not-allowed}
+input{background:var(--s2);border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-size:15px;width:100%;outline:none}
+input:focus{border-color:var(--gold)}
+input[type=number]::-webkit-inner-spin-button{display:none}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:18px}
+.section-title{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.gold{color:var(--gold)}
+.shimmer{background:linear-gradient(90deg,var(--gold) 0%,#fff8dc 40%,var(--gold) 60%,var(--gold2) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shim 2.5s linear infinite}
+@keyframes shim{to{background-position:200% center}}
+.fade{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.gap{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:8px}
+
+/* HEADER */
+.hdr{position:sticky;top:0;background:rgba(10,10,15,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+.hdr-logo{font-size:19px;font-weight:900;background:linear-gradient(90deg,var(--gold),#fff8dc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-bal{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;color:var(--gold);font-weight:700}
+
+/* BOTTOM NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--s1);border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 11px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;transition:.15s}
+.nav-btn.on{color:var(--gold)}
+.nav-icon{font-size:20px}
+
+/* PAGE */
+.page{padding:14px 14px 80px}
+
+/* LOGIN */
+.login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px 22px;gap:22px}
+.login-logo{font-size:38px;font-weight:900;text-align:center}
+.login-sub{color:var(--muted);font-size:13px;text-align:center}
+.tabs{display:flex;background:var(--s2);border-radius:10px;padding:4px;gap:3px;width:100%}
+.tab{flex:1;padding:8px;border-radius:7px;border:none;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:.2s}
+.tab.on{background:var(--s1);color:var(--text)}
+.login-form{width:100%;max-width:350px;display:flex;flex-direction:column;gap:10px}
+
+/* GAMES */
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.game-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:.2s;text-align:center}
+.game-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 6px 20px rgba(212,175,55,.12)}
+.game-icon{font-size:34px}
+.game-name{font-size:12px;font-weight:700}
+.game-max{font-size:11px;color:var(--gold)}
+.game-play-btn{width:100%;margin-top:3px;padding:7px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:11px;font-weight:700;border:none;cursor:pointer}
+
+/* GAME LAYOUT */
+.game-page{padding:14px 14px 80px;display:flex;flex-direction:column;gap:13px}
+.game-hdr{display:flex;align-items:center;gap:10px}
+.back-btn{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:7px 12px;color:var(--text);cursor:pointer;font-size:13px;font-weight:600}
+.game-title{font-size:17px;font-weight:800}
+.game-sub-label{font-size:11px;color:var(--muted)}
+
+/* BET */
+.bet-box{background:var(--s1);border:1px solid var(--border);border-radius:13px;padding:14px;display:flex;flex-direction:column;gap:9px}
+.bet-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.bet-input{flex:1;padding:9px 13px;font-size:17px;font-weight:700;color:var(--gold);background:var(--s2);border:1.5px solid var(--border);border-radius:9px;outline:none}
+.bet-input:focus{border-color:var(--gold)}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{padding:4px 9px;border-radius:6px;background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--gold);color:var(--gold)}
+
+/* RESULT */
+.res-win{background:rgba(34,197,94,.08);border:1.5px solid #22c55e;border-radius:12px;padding:14px;text-align:center}
+.res-lose{background:rgba(239,68,68,.08);border:1.5px solid #ef4444;border-radius:12px;padding:14px;text-align:center}
+.res-big{font-size:22px;font-weight:900}
+.res-big.w{color:#22c55e}
+.res-big.l{color:#ef4444}
+.res-msg{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* SLOT */
+.slot-reels{display:flex;gap:7px;justify-content:center;background:var(--s2);border-radius:13px;padding:18px;border:2px solid var(--border)}
+.reel{width:78px;height:86px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:42px;border:1.5px solid var(--border)}
+.reel.spin{animation:rs .15s steps(1) infinite}
+@keyframes rs{0%{transform:translateY(0)}50%{transform:translateY(-5px)}100%{transform:translateY(5px)}}
+
+/* WHEEL */
+.wheel-wrap{display:flex;justify-content:center;position:relative;padding-top:14px}
+.wheel-ptr{position:absolute;top:2px;left:50%;transform:translateX(-50%);color:var(--gold);font-size:24px;filter:drop-shadow(0 0 8px var(--gold))}
+canvas.wc{border-radius:50%;border:3px solid var(--gold);box-shadow:0 0 25px rgba(212,175,55,.25)}
+
+/* CRASH */
+.crash-box{background:var(--s2);border-radius:13px;padding:28px;text-align:center;border:2px solid var(--border)}
+.crash-mult{font-size:60px;font-weight:900;font-variant-numeric:tabular-nums;transition:.1s}
+.crash-lbl{font-size:13px;color:var(--muted);margin-top:5px}
+.c-live{color:var(--gold)}
+.c-dead{color:#ef4444}
+.c-cash{color:#22c55e}
+
+/* DICE */
+.dice-row{display:flex;justify-content:center;gap:14px;padding:18px;background:var(--s2);border-radius:13px;border:1px solid var(--border)}
+.die{width:68px;height:68px;background:var(--bg);border-radius:12px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:34px}
+.opts{display:flex;gap:7px;flex-wrap:wrap}
+.opt{padding:7px 13px;border-radius:8px;border:1.5px solid var(--border);background:var(--s2);color:var(--muted);font-size:13px;cursor:pointer;transition:.15s;font-weight:600}
+.opt:hover,.opt.on{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.08)}
+
+/* MINES */
+.mines-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.mc{aspect-ratio:1;border-radius:9px;border:2px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:.15s;user-select:none}
+.mc:hover:not(.mc-open){border-color:var(--gold);background:rgba(212,175,55,.08)}
+.mc.mc-safe{background:rgba(34,197,94,.1);border-color:#22c55e;cursor:default}
+.mc.mc-bomb{background:rgba(239,68,68,.1);border-color:#ef4444;cursor:default}
+.mc.mc-open{cursor:default}
+
+/* ROULETTE */
+.rou-ball{text-align:center;font-size:42px;padding:14px;background:var(--s2);border-radius:12px;border:1px solid var(--border);letter-spacing:6px}
+
+/* BOXES */
+.boxes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.box{aspect-ratio:1;border-radius:12px;background:var(--s2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;transition:.2s;flex-direction:column;gap:3px;user-select:none}
+.box:hover:not(.box-open){border-color:var(--gold);background:rgba(212,175,55,.08);transform:scale(1.05)}
+.box.box-open{cursor:default}
+.box-mul{font-size:11px;font-weight:700;color:var(--gold)}
+
+/* HILO */
+.hilo-card{width:110px;height:155px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 6px 24px rgba(0,0,0,.4);margin:0 auto;border:3px solid var(--border);font-size:36px;font-weight:900;background:#fff}
+.hc-r{color:#dc2626}
+.hc-b{color:#111}
+
+/* PLINKO */
+canvas#plinko{display:block;margin:0 auto;border-radius:12px;background:var(--bg);border:1px solid var(--border)}
+
+/* WALLET */
+.tx-item{display:flex;justify-content:space-between;align-items:center;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.tx-desc{font-size:13px}
+.tx-date{font-size:11px;color:var(--muted);margin-top:2px}
+.tx-amt{font-size:14px;font-weight:700}
+.tx-amt.p{color:#22c55e}
+.tx-amt.n{color:#ef4444}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:13px;text-align:center}
+.stat-val{font-size:19px;font-weight:800;color:var(--gold)}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* PROFILE */
+.avatar{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;border:3px solid var(--gold);margin:0 auto 10px}
+
+/* NOTIF */
+.notif{position:fixed;top:66px;left:50%;transform:translateX(-50%);background:var(--s1);border:1px solid var(--gold);border-radius:10px;padding:9px 18px;font-size:13px;color:var(--gold);z-index:9999;text-align:center;white-space:nowrap;max-width:90vw;pointer-events:none}
+
+/* SELECT */
+select{background:var(--s2);border:1.5px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-size:14px;outline:none;cursor:pointer}
+select:focus{border-color:var(--gold)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ==================== CONFIG ====================
+const START_COINS = 1000;
+const MIN_BET = 5;
+const MAX_BET = 10000;
+
+// ==================== STATE ====================
+let S = { page:'login', user:null, gameid:null };
+
+function loadS(){
+  try{ const u=localStorage.getItem('ch_user'); if(u){ S.user=JSON.parse(u); S.page='home'; } }catch(e){}
+}
+function saveU(){
+  if(S.user) localStorage.setItem('ch_user',JSON.stringify(S.user));
+}
+function allUsers(){
+  try{ return JSON.parse(localStorage.getItem('ch_all')||'{}'); }catch(e){ return {}; }
+}
+function saveAll(a){ localStorage.setItem('ch_all',JSON.stringify(a)); }
+
+function addTx(desc,amount,src){
+  if(!S.user) return;
+  const tx={id:Date.now(),desc,amount,src,at:new Date().toISOString()};
+  S.user.txs=[tx,...(S.user.txs||[])].slice(0,100);
+  S.user.coins=Math.max(0,S.user.coins+amount);
+  // sync to all users store
+  const a=allUsers(); a[S.user.username]=S.user; saveAll(a);
+  saveU();
+}
+
+function parseBet(v){
+  const n=parseInt(String(v).replace(/[^\d]/g,''),10)||MIN_BET;
+  return Math.max(MIN_BET,Math.min(MAX_BET,n));
+}
+function getBet(id){
+  const el=document.getElementById('bet-'+id);
+  return el ? parseBet(el.value) : MIN_BET;
+}
+function checkBal(bet){
+  if(S.user.coins<bet){ toast('Balansyňyz ýetmez'); return false; }
+  return true;
+}
+
+function toast(msg,dur=2500){
+  document.querySelectorAll('.notif').forEach(n=>n.remove());
+  const el=document.createElement('div');
+  el.className='notif'; el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),dur);
+}
+
+function updateBalDisp(){
+  const c=S.user?.coins??0;
+  document.querySelectorAll('.hdr-bal').forEach(el=>el.textContent='💰 '+c.toLocaleString()+' TMT');
+  document.querySelectorAll('.bal-inline').forEach(el=>el.textContent=c.toLocaleString()+' TMT');
+}
+
+// ==================== ROUTER ====================
+function go(page,gameid=null){
+  // cleanup timers
+  if(crashInt){ clearInterval(crashInt); crashInt=null; crashRunning=false; }
+  S.page=page; S.gameid=gameid;
+  render(); window.scrollTo(0,0);
+}
+
+// ==================== RENDER ====================
+function render(){
+  const app=document.getElementById('app');
+  if(S.page==='login'){ app.innerHTML=renderLogin(); return; }
+  const inner = S.page==='home' ? renderHome()
+    : S.page==='wallet' ? renderWallet()
+    : S.page==='profile' ? renderProfile()
+    : S.page==='game' ? renderGameWrap()
+    : '';
+  app.innerHTML=`${renderHdr()}<div class="fade">${inner}</div>${renderNav()}`;
+  afterRender();
+}
+
+function renderHdr(){
+  return `<div class="hdr">
+    <div class="hdr-logo">💎 CoinHub</div>
+    <div class="hdr-bal">💰 ${(S.user?.coins??0).toLocaleString()} TMT</div>
+  </div>`;
+}
+function renderNav(){
+  const p=S.page;
+  const on=(id)=>(p===id||(p==='game'&&id==='home'))?'on':'';
+  return `<div class="nav">
+    <button class="nav-btn ${on('home')}" onclick="go('home')"><span class="nav-icon">🏠</span>Baş sahypa</button>
+    <button class="nav-btn ${on('wallet')}" onclick="go('wallet')"><span class="nav-icon">💼</span>Gapjyk</button>
+    <button class="nav-btn ${on('profile')}" onclick="go('profile')"><span class="nav-icon">👤</span>Profil</button>
+  </div>`;
+}
+
+// ==================== LOGIN ====================
+function renderLogin(){
+  return `<div class="login-wrap">
+    <div>
+      <div class="login-logo shimmer">💎 CoinHub</div>
+      <div class="login-sub" style="margin-top:6px">Iň gowy wirtual kazino platformasy</div>
+    </div>
+    <div class="login-form">
+      <div class="tabs">
+        <button class="tab on" id="t-in" onclick="swTab('in')">Giriş</button>
+        <button class="tab" id="t-up" onclick="swTab('up')">Hasap açmak</button>
+      </div>
+      <div id="pane-in" class="gap">
+        <input type="text" id="lu" placeholder="Ulanyjy ady" autocomplete="username">
+        <input type="password" id="lp" placeholder="Açar sözi" autocomplete="current-password">
+        <button class="btn btn-gold" style="width:100%" onclick="doLogin()">Giriş ↗</button>
+      </div>
+      <div id="pane-up" class="gap" style="display:none">
+        <input type="text" id="ru" placeholder="Ulanyjy ady (3-24 harp)" autocomplete="username">
+        <input type="password" id="rp" placeholder="Açar sözi (min 4)" autocomplete="new-password">
+        <button class="btn btn-gold" style="width:100%" onclick="doReg()">Hasap açmak ↗</button>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--muted)">Täze hasap: ${START_COINS} TMT başlangyjy berilýär</div>
+    </div>
+  </div>`;
+}
+function swTab(t){
+  document.getElementById('t-in').className='tab'+(t==='in'?' on':'');
+  document.getElementById('t-up').className='tab'+(t==='up'?' on':'');
+  document.getElementById('pane-in').style.display=t==='in'?'':'none';
+  document.getElementById('pane-up').style.display=t==='up'?'':'none';
+}
+function doLogin(){
+  const u=document.getElementById('lu').value.trim();
+  const p=document.getElementById('lp').value;
+  if(!u||!p) return toast('Maglumatlary doldyryň');
+  const a=allUsers();
+  if(!a[u]||a[u].pass!==btoa(p)) return toast('Ady ýa-da açar sözi nädogry');
+  S.user={...a[u]}; saveU(); go('home');
+}
+function doReg(){
+  const u=document.getElementById('ru').value.trim().replace(/[^a-zA-Z0-9_]/g,'');
+  const p=document.getElementById('rp').value;
+  if(u.length<3) return toast('Ulanyjy ady iň az 3 harp bolmaly');
+  if(p.length<4) return toast('Açar sözi iň az 4 harp bolmaly');
+  const a=allUsers();
+  if(a[u]) return toast('Bu ulanyjy ady eýýäm bar');
+  const nu={username:u,pass:btoa(p),coins:START_COINS,txs:[],color:'#D4AF37',created:new Date().toISOString()};
+  a[u]=nu; saveAll(a); S.user={...nu}; saveU(); go('home');
+}
+
+// ==================== HOME ====================
+const GAMES=[
+  {id:'slot',name:'Slot Maşyn',icon:'🎰',max:'150×'},
+  {id:'wheel',name:'Bagt Çarhy',icon:'🎡',max:'100×'},
+  {id:'boxes',name:'Bagt Gutusy',icon:'🎁',max:'50×'},
+  {id:'crash',name:'Bagt Uçuşy',icon:'🚀',max:'100×'},
+  {id:'dice',name:'Zar',icon:'🎲',max:'5×'},
+  {id:'mines',name:'Minalar',icon:'💣',max:'100×'},
+  {id:'roulette',name:'Ruletka',icon:'🔴',max:'35×'},
+  {id:'plinko',name:'Plinko',icon:'⚡',max:'100×'},
+  {id:'hilo',name:'Hi-Lo',icon:'🃏',max:'50×'},
+];
+function renderHome(){
+  const u=S.user;
+  const txs=u.txs||[];
+  const games=txs.filter(t=>t.src&&t.src.startsWith('game')).length;
+  return `<div class="page">
+    <div style="text-align:center;padding:14px 0 18px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Balansyňyz</div>
+      <div style="font-size:34px;font-weight:900" class="shimmer">${u.coins.toLocaleString()} TMT</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">${games} oýun oýnaldy</div>
+    </div>
+    <div class="section-title">🎮 Oýunlar</div>
+    <div class="games-grid">
+      ${GAMES.map(g=>`<div class="game-card" onclick="go('game','${g.id}')">
+        <div class="game-icon">${g.icon}</div>
+        <div class="game-name">${g.name}</div>
+        <div class="game-max">Maks ${g.max}</div>
+        <button class="game-play-btn">OÝNA</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ==================== WALLET ====================
+function renderWallet(){
+  const txs=S.user.txs||[];
+  const earned=txs.filter(t=>t.amount>0).reduce((a,t)=>a+t.amount,0);
+  const spent=txs.filter(t=>t.amount<0).reduce((a,t)=>a+Math.abs(t.amount),0);
+  return `<div class="page">
+    <div class="section-title">💼 Gapjyk</div>
+    <div class="card" style="text-align:center;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--muted)">Häzirki balans</div>
+      <div style="font-size:30px;font-weight:900;color:var(--gold)">${S.user.coins.toLocaleString()} TMT</div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:14px">
+      <div class="stat-card"><div class="stat-val" style="color:#22c55e">+${earned.toLocaleString()}</div><div class="stat-lbl">Gazanylan</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#ef4444">-${spent.toLocaleString()}</div><div class="stat-lbl">Harçlanan</div></div>
+    </div>
+    <div class="section-title">📋 Geçmiş (soňky ${Math.min(txs.length,50)})</div>
+    <div class="gap">
+      ${txs.length===0?`<div style="text-align:center;color:var(--muted);padding:20px">Geçmiş ýok</div>`:
+        txs.slice(0,50).map(t=>`<div class="tx-item">
+          <div><div class="tx-desc">${t.desc}</div><div class="tx-date">${new Date(t.at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div></div>
+          <div class="tx-amt ${t.amount>=0?'p':'n'}">${t.amount>0?'+':''}${t.amount} ¢</div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ==================== PROFILE ====================
+function renderProfile(){
+  const u=S.user;
+  const txs=u.txs||[];
+  const games=txs.filter(t=>t.src&&t.src.startsWith('game')).length;
+  const wins=txs.filter(t=>t.src&&t.src.startsWith('game')&&t.amount>0).length;
+  return `<div class="page">
+    <div class="section-title">👤 Profil</div>
+    <div class="card" style="text-align:center;margin-bottom:12px">
+      <div class="avatar" style="background:${u.color||'#1e1e2e'}">${u.username[0].toUpperCase()}</div>
+      <div style="font-size:20px;font-weight:800">${u.username}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">CoinHub oýunçy</div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:12px">
+      <div class="stat-card"><div class="stat-val">${u.coins.toLocaleString()}</div><div class="stat-lbl">Balans</div></div>
+      <div class="stat-card"><div class="stat-val">${games}</div><div class="stat-lbl">Oýunlar</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#22c55e">${wins}</div><div class="stat-lbl">Ýeňişler</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#ef4444">${games-wins}</div><div class="stat-lbl">Ýeňilişler</div></div>
+    </div>
+    <div class="section-title">🎨 Reňk saýlamak</div>
+    <div class="row" style="flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      ${['#D4AF37','#7c3aed','#1d4ed8','#dc2626','#15803d','#ea580c','#db2777','#0e7490'].map(c=>`
+        <div onclick="pickColor('${c}')" style="width:38px;height:38px;border-radius:50%;background:${c};cursor:pointer;border:3px solid ${u.color===c?'#fff':'transparent'};transition:.2s"></div>
+      `).join('')}
+    </div>
+    <button class="btn btn-out" style="width:100%" onclick="doLogout()">Ulgamdan çykmak</button>
+  </div>`;
+}
+function pickColor(c){
+  if(!S.user) return;
+  S.user.color=c;
+  const a=allUsers(); a[S.user.username]=S.user; saveAll(a); saveU();
+  go('profile');
+}
+function doLogout(){
+  localStorage.removeItem('ch_user');
+  S.user=null; go('login');
+}
+
+// ==================== BET HELPER ====================
+function betBox(id,def=100){
+  return `<div class="bet-box">
+    <div class="bet-lbl">Goýum (${MIN_BET}–${MAX_BET} TMT)</div>
+    <div class="row"><input class="bet-input" id="bet-${id}" type="number" value="${def}" min="${MIN_BET}" max="${MAX_BET}"></div>
+    <div class="chips">
+      ${[25,50,100,500,1000].map(v=>`<span class="chip" onclick="document.getElementById('bet-${id}').value=${v}">${v}</span>`).join('')}
+      <span class="chip" onclick="document.getElementById('bet-${id}').value=Math.floor(S.user.coins/2)">½</span>
+      <span class="chip" onclick="document.getElementById('bet-${id}').value=S.user.coins">Max</span>
+    </div>
+  </div>`;
+}
+
+// ==================== GAME WRAPPER ====================
+function renderGameWrap(){
+  const g=GAMES.find(x=>x.id===S.gameid)||GAMES[0];
+  const body={
+    slot:renderSlot,wheel:renderWheel,boxes:renderBoxes,crash:renderCrash,
+    dice:renderDice,mines:renderMines,roulette:renderRoulette,plinko:renderPlinko,hilo:renderHilo
+  }[S.gameid]||renderSlot;
+  return `<div class="game-page">
+    <div class="game-hdr">
+      <button class="back-btn" onclick="go('home')">← Yza</button>
+      <div style="flex:1"><div class="game-title">${g.icon} ${g.name}</div><div class="game-sub-label">Maks ${g.max}</div></div>
+      <div class="hdr-bal bal-inline">💰 ${S.user.coins.toLocaleString()} TMT</div>
+    </div>
+    ${body()}
+  </div>`;
+}
+
+// ==================== 1. SLOT ====================
+const SYM=['🍒','🍋','🍊','🍇','⭐','7️⃣','💎','🎰'];
+const SMUL={🍒:2,🍋:3,🍊:4,🍇:5,'⭐':8,'7️⃣':15,'💎':30,'🎰':150};
+let slotSpin=false;
+function renderSlot(){
+  return `${betBox('slot')}
+    <div class="slot-reels"><div class="reel" id="r0">🍒</div><div class="reel" id="r1">🍋</div><div class="reel" id="r2">🍊</div></div>
+    <div id="sres"></div>
+    <button class="btn btn-gold" style="width:100%" id="sbtn" onclick="doSlot()">🎰 AÝLANMAK</button>`;
+}
+function doSlot(){
+  if(slotSpin) return;
+  const bet=getBet('slot'); if(!checkBal(bet)) return;
+  slotSpin=true; document.getElementById('sbtn').disabled=true;
+  const reels=[0,1,2].map(i=>document.getElementById('r'+i));
+  reels.forEach(r=>r.classList.add('spin'));
+  // pick result - house edge ~35%
+  let f=SYM.map(()=>SYM[Math.floor(Math.random()*SYM.length)]);
+  if(Math.random()>.28){ while(f[0]===f[1]&&f[1]===f[2]) f[2]=SYM[Math.floor(Math.random()*SYM.length)]; }
+  setTimeout(()=>{
+    reels.forEach((r,i)=>{r.classList.remove('spin'); r.textContent=f[i];});
+    let mult=0;
+    if(f[0]===f[1]&&f[1]===f[2]) mult=SMUL[f[0]]||2;
+    else if(f[0]===f[1]||f[1]===f[2]||f[0]===f[2]) mult=1.5;
+    const r=document.getElementById('sres');
+    if(mult>1){
+      const win=Math.round(bet*mult)-bet;
+      addTx(`Slot: ${f.join('')} × ${mult}`,win,'game_slot');
+      r.innerHTML=`<div class="res-win"><div class="res-big w">+${win} TMT</div><div class="res-msg">${f.join('')} — ${mult}× !</div></div>`;
+    } else {
+      addTx(`Slot: ${f.join('')}`,-bet,'game_slot');
+      r.innerHTML=`<div class="res-lose"><div class="res-big l">-${bet} TMT</div><div class="res-msg">Bagtyňyz ýokdy...</div></div>`;
+    }
+    updateBalDisp(); slotSpin=false; document.getElementById('sbtn').disabled=false;
+  },1300);
+}
+
+// ==================== 2. WHEEL ====================
+const WSEGS=[
+  {l:'0×',m:0,c:'#dc2626'},{l:'2×',m:2,c:'#1d4ed8'},{l:'0×',m:0,c:'#dc2626'},
+  {l:'1.5×',m:1.5,c:'#15803d'},{l:'0×',m:0,c:'#dc2626'},{l:'3×',m:3,c:'#7c3aed'},
+  {l:'1.5×',m:1.5,c:'#15803d'},{l:'0×',m:0,c:'#dc2626'},{l:'5×',m:5,c:'#D4AF37'},
+  {l:'0×',m:0,c:'#dc2626'},{l:'10×',m:10,c:'#D4AF37'},{l:'1.5×',m:1.5,c:'#15803d'},
+];
+let wAngle=0,wSpin=false;
+function renderWheel(){
+  return `${betBox('wheel')}
+    <div class="wheel-wrap"><div class="wheel-ptr">▼</div><canvas class="wc" id="wc" width="270" height="270"></canvas></div>
+    <div id="wres"></div>
+    <button class="btn btn-gold" style="width:100%" id="wbtn" onclick="doWheel()">🎡 AÝLANMAK</button>`;
+}
+function drawW(a){
+  const cv=document.getElementById('wc'); if(!cv) return;
+  const ctx=cv.getContext('2d'),cx=135,cy=135,r=128,n=WSEGS.length,arc=2*Math.PI/n;
+  ctx.clearRect(0,0,270,270);
+  WSEGS.forEach((s,i)=>{
+    const st=a+i*arc-Math.PI/2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,st,st+arc);
+    ctx.fillStyle=s.c; ctx.fill();
+    ctx.strokeStyle='#0a0a0f'; ctx.lineWidth=2; ctx.stroke();
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(st+arc/2);
+    ctx.fillStyle='#fff'; ctx.font='bold 13px system-ui'; ctx.textAlign='center';
+    ctx.fillText(s.l,r*.65,5); ctx.restore();
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,18,0,2*Math.PI); ctx.fillStyle='#D4AF37'; ctx.fill();
+}
+function doWheel(){
+  if(wSpin) return;
+  const bet=getBet('wheel'); if(!checkBal(bet)) return;
+  wSpin=true; document.getElementById('wbtn').disabled=true;
+  const n=WSEGS.length,arc=2*Math.PI/n;
+  const idx=Math.floor(Math.random()*n);
+  const target=wAngle+Math.PI*10-(idx*arc);
+  const t0=Date.now(),dur=3200,s0=wAngle;
+  function fr(){
+    const t=Math.min(1,(Date.now()-t0)/dur);
+    const e=1-Math.pow(1-t,4);
+    wAngle=s0+(target-s0)*e; drawW(wAngle);
+    if(t<1){requestAnimationFrame(fr);return;}
+    wSpin=false; document.getElementById('wbtn').disabled=false;
+    const seg=WSEGS[idx];
+    const r=document.getElementById('wres');
+    if(seg.m>1){const w=Math.round(bet*seg.m)-bet;addTx(`Çarhy: ${seg.l}`,w,'game_spin');r.innerHTML=`<div class="res-win"><div class="res-big w">+${w} TMT</div><div class="res-msg">${seg.l} !</div></div>`;}
+    else{addTx(`Çarhy: ${seg.l}`,-bet,'game_spin');r.innerHTML=`<div class="res-lose"><div class="res-big l">-${bet} TMT</div><div class="res-msg">Bagtyňyz ýokdy</div></div>`;}
+    updateBalDisp();
+  }
+  requestAnimationFrame(fr);
+}
+
+// ==================== 3. BOXES ====================
+let bPrizes=[],bBet=0,bActive=false;
+function renderBoxes(){
+  return `${betBox('boxes')}
+    <div class="boxes-grid" id="bxg">${Array.from({length:9},(_,i)=>`<div class="box" id="bx${i}" onclick="openBox(${i})">🎁</div>`).join('')}</div>
+    <div id="bres"></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:4px" id="bxbtn" onclick="startBoxes()">🎁 BAŞLA</button>`;
+}
+function startBoxes(){
+  const bet=getBet('boxes'); if(!checkBal(bet)) return;
+  bBet=bet; bActive=true;
+  const pool=[0,0,0,0,1.5,1.5,2,3,Math.random()<.04?50:5];
+  bPrizes=pool.sort(()=>Math.random()-.5);
+  document.getElementById('bres').innerHTML='';
+  document.getElementById('bxbtn').disabled=true;
+  for(let i=0;i<9;i++){const e=document.getElementById('bx'+i);e.innerHTML='🎁';e.className='box';e.style.borderColor='';}
+}
+function openBox(i){
+  if(!bActive) return;
+  const el=document.getElementById('bx'+i);
+  if(el.classList.contains('box-open')) return;
+  el.classList.add('box-open'); bActive=false;
+  const m=bPrizes[i];
+  if(m>0){
+    el.innerHTML=`💰<div class="box-mul">${m}×</div>`; el.style.borderColor='#D4AF37';
+    const w=Math.round(bBet*m)-bBet;
+    addTx(`Guty: ${m}×`,w,'game_luckybox');
+    document.getElementById('bres').innerHTML=`<div class="res-win"><div class="res-big w">+${w} TMT</div><div class="res-msg">${m}× !</div></div>`;
+  } else {
+    el.innerHTML='💨<div class="box-mul" style="color:var(--muted)">Boş</div>'; el.style.borderColor='#6b7280';
+    addTx('Guty: Boş',-bBet,'game_luckybox');
+    document.getElementById('bres').innerHTML=`<div class="res-lose"><div class="res-big l">-${bBet} TMT</div><div class="res-msg">Boş guty!</div></div>`;
+  }
+  // reveal all
+  for(let j=0;j<9;j++){
+    const e=document.getElementById('bx'+j);
+    if(!e.classList.contains('box-open')){
+      e.classList.add('box-open');
+      const mm=bPrizes[j];
+      e.innerHTML=mm>0?`💰<div class="box-mul">${mm}×</div>`:'💨<div class="box-mul" style="color:var(--muted)">Boş</div>';
+      if(mm>0) e.style.borderColor='#D4AF37';
+    }
+  }
+  updateBalDisp(); document.getElementById('bxbtn').disabled=false;
+}
+
+// ==================== 4. CRASH ====================
+let crashInt=null,crashMul=1,crashTarget=1,crashBet=0,crashCO=false,crashRunning=false;
+function renderCrash(){
+  return `${betBox('crash')}
+    <div class="crash-box"><div class="crash-mult c-live" id="cm">1.00×</div><div class="crash-lbl" id="cs">Başlamak üçin basyň</div></div>
+    <div id="cres"></div>
+    <div class="row">
+      <button class="btn btn-gold" style="flex:1" id="cbtn" onclick="startCrash()">🚀 BAŞLA</button>
+      <button class="btn btn-out" style="flex:1" id="cobtn" onclick="cashCrash()" disabled>💰 AL</button>
+    </div>`;
+}
+function crashGen(){
+  const r=Math.random();
+  if(r<.45) return 1+Math.random()*.6;
+  if(r<.72) return 1.6+Math.random()*1.4;
+  if(r<.88) return 3+Math.random()*5;
+  if(r<.96) return 8+Math.random()*22;
+  return 30+Math.random()*70;
+}
+function startCrash(){
+  if(crashRunning) return;
+  const bet=getBet('crash'); if(!checkBal(bet)) return;
+  crashBet=bet; crashMul=1.0; crashTarget=crashGen(); crashCO=false; crashRunning=true;
+  addTx('Crash: goýum',-bet,'game_crash'); updateBalDisp();
+  document.getElementById('cbtn').disabled=true;
+  document.getElementById('cobtn').disabled=false;
+  document.getElementById('cres').innerHTML='';
+  document.getElementById('cm').className='crash-mult c-live';
+  document.getElementById('cs').textContent='Uçuş dowam edýär...';
+  crashInt=setInterval(()=>{
+    crashMul=Math.min(crashTarget, crashMul+crashMul*.018);
+    const cm=document.getElementById('cm');
+    const cs=document.getElementById('cs');
+    if(!cm){clearInterval(crashInt);return;}
+    cm.textContent=crashMul.toFixed(2)+'×';
+    if(crashMul>=crashTarget){
+      clearInterval(crashInt); crashInt=null; crashRunning=false;
+      cm.className='crash-mult c-dead'; cm.textContent=crashTarget.toFixed(2)+'× 💥';
+      cs.textContent='UÇDY!';
+      document.getElementById('cbtn').disabled=false;
+      document.getElementById('cobtn').disabled=true;
+      if(!crashCO) document.getElementById('cres').innerHTML=`<div class="res-lose"><div class="res-big l">-${crashBet} TMT</div><div class="res-msg">Uçuş tamamlandy!</div></div>`;
+    }
+  },100);
+}
+function cashCrash(){
+  if(!crashRunning||crashCO) return;
+  clearInterval(crashInt); crashInt=null; crashRunning=false; crashCO=true;
+  const win=Math.round(crashBet*crashMul);
+  addTx(`Crash: ${crashMul.toFixed(2)}×`,win,'game_crash'); updateBalDisp();
+  document.getElementById('cbtn').disabled=false;
+  document.getElementById('cobtn').disabled=true;
+  document.getElementById('cm').className='crash-mult c-cash';
+  document.getElementById('cres').innerHTML=`<div class="res-win"><div class="res-big w">+${win} TMT</div><div class="res-msg">${crashMul.toFixed(2)}× çykyş!</div></div>`;
+}
+
+// ==================== 5. DICE ====================
+let dicePick='high';
+function renderDice(){
+  return `${betBox('dice')}
+    <div class="dice-row"><div class="die" id="d1">🎲</div><div class="die" id="d2">🎲</div></div>
+    <div style="margin:8px 0">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">BAHANY SAÝLAŇ</div>
+      <div class="opts">
+        <span class="opt on" id="dh" onclick="selDice('high')">Uly (7+) — 1.9×</span>
+        <span class="opt" id="dl" onclick="selDice('low')">Kiçi (≤6) — 1.9×</span>
+        <span class="opt" id="ds" onclick="selDice('seven')">Edil 7 — 5×</span>
+        <span class="opt" id="de" onclick="selDice('even')">Jüft — 1.9×</span>
+        <span class="opt" id="do" onclick="selDice('odd')">Täk — 1.9×</span>
+      </div>
+    </div>
+    <div id="dres"></div>
+    <button class="btn btn-gold" style="width:100%" onclick="doDice()">🎲 GÖÝBERMEK</button>`;
+}
+function selDice(v){
+  dicePick=v;
+  ['h','l','s','e','o'].forEach(k=>{const e=document.getElementById('d'+k);if(e)e.className='opt';});
+  const map={high:'h',low:'l',seven:'s',even:'e',odd:'o'};
+  const el=document.getElementById('d'+map[v]); if(el) el.className='opt on';
+}
+function doDice(){
+  const bet=getBet('dice'); if(!checkBal(bet)) return;
+  const d1=Math.ceil(Math.random()*6),d2=Math.ceil(Math.random()*6),sum=d1+d2;
+  const F=['','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'];
+  document.getElementById('d1').textContent=F[d1];
+  document.getElementById('d2').textContent=F[d2];
+  let win=false,mult=0;
+  if(dicePick==='high'&&sum>=7){win=true;mult=1.9;}
+  else if(dicePick==='low'&&sum<=6){win=true;mult=1.9;}
+  else if(dicePick==='seven'&&sum===7){win=true;mult=5;}
+  else if(dicePick==='even'&&sum%2===0){win=true;mult=1.9;}
+  else if(dicePick==='odd'&&sum%2===1){win=true;mult=1.9;}
+  const r=document.getElementById('dres');
+  if(win){const e=Math.round(bet*mult)-bet;addTx(`Zar: ${d1}+${d2}=${sum}`,e,'game_dice');r.innerHTML=`<div class="res-win"><div class="res-big w">+${e} TMT</div><div class="res-msg">Jemi ${sum} — Ýeňiş!</div></div>`;}
+  else{addTx(`Zar: ${d1}+${d2}=${sum}`,-bet,'game_dice');r.innerHTML=`<div class="res-lose"><div class="res-big l">-${bet} TMT</div><div class="res-msg">Jemi ${sum}</div></div>`;}
+  updateBalDisp();
+}
+
+// ==================== 6. MINES ====================
+let mGrid=[],mBet=0,mActive=false,mRev=0,mMul=1;
+const MCNT=5,MTOT=25;
+function renderMines(){
+  return `${betBox('mines',100)}
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+      <span style="color:var(--muted)">Häzirki köpeltme:</span>
+      <span class="gold" style="font-weight:700;font-size:16px" id="mm">1.00×</span>
+    </div>
+    <div class="mines-grid" id="mg">${Array.from({length:25},(_,i)=>`<div class="mc" id="mc${i}" onclick="mClick(${i})">❓</div>`).join('')}</div>
+    <div id="mres"></div>
+    <div class="row">
+      <button class="btn btn-gold" style="flex:1" id="mbtn" onclick="startMines()">💣 BAŞLA</button>
+      <button class="btn btn-out" style="flex:1" id="mcbtn" onclick="cashMines()" disabled>💰 AL</button>
+    </div>`;
+}
+function startMines(){
+  const bet=getBet('mines'); if(!checkBal(bet)) return;
+  mBet=bet; mActive=true; mRev=0; mMul=1.0;
+  mGrid=Array.from({length:MTOT},()=>false);
+  let b=0; while(b<MCNT){const i=Math.floor(Math.random()*MTOT);if(!mGrid[i]){mGrid[i]=true;b++;}}
+  for(let i=0;i<MTOT;i++){const e=document.getElementById('mc'+i);e.textContent='❓';e.className='mc';}
+  document.getElementById('mres').innerHTML='';
+  document.getElementById('mbtn').disabled=true;
+  document.getElementById('mcbtn').disabled=false;
+  document.getElementById('mm').textContent='1.00×';
+  addTx('Minalar: goýum',-bet,'game_mines'); updateBalDisp();
+}
+function mClick(i){
+  if(!mActive) return;
+  const el=document.getElementById('mc'+i);
+  if(el.classList.contains('mc-safe')||el.classList.contains('mc-bomb')) return;
+  if(mGrid[i]){
+    el.textContent='💣'; el.className='mc mc-bomb mc-open';
+    mActive=false;
+    for(let j=0;j<MTOT;j++) if(mGrid[j]&&j!==i){const e=document.getElementById('mc'+j);e.textContent='💣';e.className='mc mc-bomb mc-open';}
+    document.getElementById('mres').innerHTML=`<div class="res-lose"><div class="res-big l">-${mBet} TMT</div><div class="res-msg">Mina partlady! 💥</div></div>`;
+    document.getElementById('mbtn').disabled=false;
+    document.getElementById('mcbtn').disabled=true;
+  } else {
+    el.textContent='💎'; el.className='mc mc-safe mc-open';
+    mRev++;
+    mMul=parseFloat((1+mRev*(MCNT/(MTOT-MCNT))*0.85).toFixed(2));
+    document.getElementById('mm').textContent=mMul.toFixed(2)+'×';
+    if(mRev>=MTOT-MCNT) cashMines();
+  }
+}
+function cashMines(){
+  if(!mActive) return; mActive=false;
+  const w=Math.round(mBet*mMul);
+  addTx(`Minalar: ${mMul.toFixed(2)}×`,w,'game_mines'); updateBalDisp();
+  document.getElementById('mres').innerHTML=`<div class="res-win"><div class="res-big w">+${w} TMT</div><div class="res-msg">${mRev} öýjük — ${mMul.toFixed(2)}×</div></div>`;
+  document.getElementById('mbtn').disabled=false;
+  document.getElementById('mcbtn').disabled=true;
+}
+
+// ==================== 7. ROULETTE ====================
+const RED=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+let rPick='red';
+function renderRoulette(){
+  return `${betBox('roulette')}
+    <div class="opts" style="margin:8px 0">
+      <span class="opt on" id="rp-red" onclick="selRoul('red')">🔴 Gyzyl (2×)</span>
+      <span class="opt" id="rp-black" onclick="selRoul('black')">⚫ Gara (2×)</span>
+      <span class="opt" id="rp-green" onclick="selRoul('green')">🟢 Nol (35×)</span>
+      <span class="opt" id="rp-odd" onclick="selRoul('odd')">Täk (2×)</span>
+      <span class="opt" id="rp-even" onclick="selRoul('even')">Jüft (2×)</span>
+      <span class="opt" id="rp-low" onclick="selRoul('low')">1–18 (2×)</span>
+      <span class="opt" id="rp-high" onclick="selRoul('high')">19–36 (2×)</span>
+    </div>
+    <div class="rou-ball" id="rb">🎱</div>
+    <div id="rres"></div>
+    <button class="btn btn-gold" style="width:100%" onclick="doRoul()">🔴 AÝLANMAK</button>`;
+}
+function selRoul(v){
+  rPick=v;
+  ['red','black','green','odd','even','low','high'].forEach(k=>{const e=document.getElementById('rp-'+k);if(e)e.className='opt';});
+  const e=document.getElementById('rp-'+v); if(e) e.className='opt on';
+}
+function doRoul(){
+  const bet=getBet('roulette'); if(!checkBal(bet)) return;
+  const rb=document.getElementById('rb'); rb.textContent='🎱'; rb.style.fontSize='42px';
+  setTimeout(()=>{
+    const n=Math.floor(Math.random()*37);
+    const col=n===0?'green':RED.includes(n)?'red':'black';
+    const emoji=n===0?'🟢':col==='red'?'🔴':'⚫';
+    rb.textContent=`${emoji} ${n}`; rb.style.fontSize='28px';
+    let mult=0;
+    if(rPick==='red'&&col==='red') mult=2;
+    else if(rPick==='black'&&col==='black') mult=2;
+    else if(rPick==='green'&&n===0) mult=35;
+    else if(rPick==='odd'&&n>0&&n%2===1) mult=2;
+    else if(rPick==='even'&&n>0&&n%2===0) mult=2;
+    else if(rPick==='low'&&n>=1&&n<=18) mult=2;
+    else if(rPick==='high'&&n>=19) mult=2;
+    const r=document.getElementById('rres');
+    if(mult>1){const w=Math.round(bet*mult)-bet;addTx(`Ruletka: ${n}(${col})`,w,'game_roulette');r.innerHTML=`<div class="res-win"><div class="res-big w">+${w} TMT</div><div class="res-msg">${n} ${col} — ${mult}×</div></div>`;}
+    else{addTx(`Ruletka: ${n}(${col})`,-bet,'game_roulette');r.innerHTML=`<div class="res-lose"><div class="res-big l">-${bet} TMT</div><div class="res-msg">${n} ${col}</div></div>`;}
+    updateBalDisp();
+  },900);
+}
+
+// ==================== 8. PLINKO ====================
+const PMULS=[100,10,5,2,1,1,2,5,10,100];
+let plRunning=false;
+function renderPlinko(){
+  return `${betBox('plinko')}
+    <canvas id="plinko" width="310" height="320"></canvas>
+    <div id="plres"></div>
+    <button class="btn btn-gold" style="width:100%" id="plbtn" onclick="doPlinko()">⚡ TAŞLAMAK</button>`;
+}
+function drawPlinko(bx,by,hlit){
+  const cv=document.getElementById('plinko'); if(!cv) return;
+  const ctx=cv.getContext('2d'),W=310,H=320,rows=8;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#D4AF37';
+  for(let r=0;r<rows;r++){
+    const pegs=r+3,y=35+r*(H-100)/rows,sx=W/2-(pegs-1)*17;
+    for(let p=0;p<pegs;p++){ctx.beginPath();ctx.arc(sx+p*34,y,5,0,2*Math.PI);ctx.fill();}
+  }
+  const bw=W/PMULS.length;
+  PMULS.forEach((m,i)=>{
+    ctx.fillStyle=hlit===i?'#fff':(m>=10?'#D4AF37':m>=5?'#22c55e':m>=2?'#3b82f6':'#6b7280');
+    ctx.fillRect(i*bw+1,H-48,bw-2,42);
+    ctx.fillStyle=hlit===i?'#000':'#fff';
+    ctx.font='bold 10px system-ui'; ctx.textAlign='center';
+    ctx.fillText(m+'×',i*bw+bw/2,H-22);
+  });
+  if(bx!==null){ctx.beginPath();ctx.arc(bx,by,9,0,2*Math.PI);ctx.fillStyle='#fff';ctx.fill();}
+}
+function doPlinko(){
+  if(plRunning) return;
+  const bet=getBet('plinko'); if(!checkBal(bet)) return;
+  plRunning=true; document.getElementById('plbtn').disabled=true;
+  const W=310,H=320,rows=8;
+  let pos=W/2,step=0;
+  const path=[pos];
+  for(let r=0;r<rows;r++){pos+=(Math.random()<.5?-1:1)*17; pos=Math.max(20,Math.min(W-20,pos)); path.push(pos);}
+  function fr(){
+    if(step>rows){
+      const fi=path[rows],bi=Math.max(0,Math.min(PMULS.length-1,Math.floor(fi/W*PMULS.length)));
+      const m=PMULS[bi];
+      drawPlinko(fi,H-29,bi);
+      const net=Math.round(bet*m)-bet;
+      addTx(`Plinko: ${m}×`,net,'game_plinko'); updateBalDisp();
+      const r=document.getElementById('plres');
+      if(net>=0) r.innerHTML=`<div class="res-win"><div class="res-big w">+${net} TMT</div><div class="res-msg">${m}×</div></div>`;
+      else r.innerHTML=`<div class="res-lose"><div class="res-big l">${net} TMT</div><div class="res-msg">${m}×</div></div>`;
+      plRunning=false; document.getElementById('plbtn').disabled=false;
+      return;
+    }
+    const y=35+step*(H-100)/rows;
+    drawPlinko(path[step]||W/2,y,null);
+    step++; setTimeout(fr,140);
+  }
+  drawPlinko(W/2,18,null); setTimeout(fr,200);
+}
+
+// ==================== 9. HI-LO ====================
+const HVALS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const HSUITS=['♠','♥','♦','♣'];
+let hCard=null,hBet=0,hMul=1,hActive=false;
+function hDraw(){return{v:HVALS[Math.floor(Math.random()*13)],s:HSUITS[Math.floor(Math.random()*4)]};}
+function hVal(c){return HVALS.indexOf(c.v);}
+function hCol(c){return(c.s==='♥'||c.s==='♦')?'hc-r':'hc-b';}
+function renderHilo(){
+  hCard=hDraw();
+  return `${betBox('hilo')}
+    <div style="text-align:center">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Köpeltme: <span id="hm" class="gold" style="font-weight:700">1.00×</span></div>
+      <div class="hilo-card ${hCol(hCard)}" id="hc">${hCard.v}${hCard.s}</div>
+    </div>
+    <div id="hres"></div>
+    <div class="row">
+      <button class="btn btn-gold" style="flex:1" id="hhigh" onclick="hGuess('high')" disabled>▲ Ýokary</button>
+      <button class="btn btn-out" style="flex:1" id="hcash" onclick="hCash()" disabled>💰 Al</button>
+      <button class="btn btn-red" style="flex:1" id="hlow" onclick="hGuess('low')" disabled>▼ Aşak</button>
+    </div>
+    <button class="btn btn-out" style="width:100%;margin-top:6px" id="hstart" onclick="startHilo()">🃏 BAŞLA</button>`;
+}
+function startHilo(){
+  const bet=getBet('hilo'); if(!checkBal(bet)) return;
+  hBet=bet; hMul=1; hActive=true; hCard=hDraw();
+  addTx('HiLo: goýum',-bet,'game_hilo'); updateBalDisp();
+  document.getElementById('hc').className='hilo-card '+hCol(hCard);
+  document.getElementById('hc').textContent=hCard.v+hCard.s;
+  document.getElementById('hm').textContent='1.00×';
+  document.getElementById('hres').innerHTML='';
+  document.getElementById('hhigh').disabled=false;
+  document.getElementById('hlow').disabled=false;
+  document.getElementById('hcash').disabled=true;
+  document.getElementById('hstart').disabled=true;
+}
+function hGuess(dir){
+  if(!hActive) return;
+  const prev=hCard; hCard=hDraw();
+  document.getElementById('hc').className='hilo-card '+hCol(hCard);
+  document.getElementById('hc').textContent=hCard.v+hCard.s;
+  const pv=hVal(prev),nv=hVal(hCard);
+  const ok=(dir==='high'&&nv>=pv)||(dir==='low'&&nv<=pv);
+  if(ok){
+    hMul=parseFloat((hMul*1.55).toFixed(2));
+    document.getElementById('hm').textContent=hMul.toFixed(2)+'×';
+    document.getElementById('hres').innerHTML=`<div style="text-align:center;color:#22c55e;font-weight:700;padding:6px">✓ Dogry! ${hMul.toFixed(2)}×</div>`;
+    document.getElementById('hcash').disabled=false;
+  } else {
+    hActive=false;
+    document.getElementById('hhigh').disabled=true;
+    document.getElementById('hlow').disabled=true;
+    document.getElementById('hcash').disabled=true;
+    document.getElementById('hstart').disabled=false;
+    document.getElementById('hres').innerHTML=`<div class="res-lose"><div class="res-big l">-${hBet} TMT</div><div class="res-msg">Nädogry!</div></div>`;
+  }
+}
+function hCash(){
+  if(!hActive) return; hActive=false;
+  const w=Math.round(hBet*hMul);
+  addTx(`HiLo: ${hMul.toFixed(2)}×`,w,'game_hilo'); updateBalDisp();
+  document.getElementById('hhigh').disabled=true;
+  document.getElementById('hlow').disabled=true;
+  document.getElementById('hcash').disabled=true;
+  document.getElementById('hstart').disabled=false;
+  document.getElementById('hres').innerHTML=`<div class="res-win"><div class="res-big w">+${w} TMT</div><div class="res-msg">${hMul.toFixed(2)}× çykyş!</div></div>`;
+}
+
+// ==================== AFTER RENDER ====================
+function afterRender(){
+  setTimeout(()=>{
+    if(document.getElementById('wc')) drawW(wAngle);
+    if(document.getElementById('plinko')) drawPlinko(155,18,null);
+  },40);
+}
+
+// ==================== BOOT ====================
+loadS(); render();
+</script>
+</body>
+</html>
