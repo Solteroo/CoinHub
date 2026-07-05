@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "GyZ3ZeuK780YWqW6zjmDU"
+uri = "file://coinhub-standalone.zip"
+type = "unspecified"
+title = "CoinHub — Standalone HTML (ZIP)"
